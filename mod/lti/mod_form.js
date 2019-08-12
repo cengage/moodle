@@ -89,10 +89,38 @@
                         text: text
                     };
 
+                    var typeSelector = Y.one('#id_typeid');
+                    var course_tool_group = Y.one('#course_tool_group');
+        
+                    var dlIframeContainer = Y.Node.create('<div />')
+                                    .set('width', '100%')
+                                    .set('height', 600)
+                                    .set('id', 'dl-dialog');
+        
+                    Y.one('#region-main').append(dlIframeContainer);
+                    
+                    var dialogue = {
+                        setBody: function(promise) {
+                            if (promise.then) {
+                                promise.then(function(html, js) {
+                                    dlIframeContainer.setHTML(html);
+                                    if (js) {
+                                        var script   = document.createElement("script");
+                                        script.type = "text/javascript";
+                                        script.text = js;
+                                        document.getElementsByTagName('head')[0].appendChild(script);
+                                    }
+                                })
+                            }
+                        },
+                        show: function() {},
+                        hide: function() {} 
+                    }
+
                     require(['mod_lti/contentitem'], function(contentitem) {
                         contentitem.init(contentItemUrl, postData, function() {
                             M.mod_lti.editor.toggleGradeSection();
-                        });
+                        }, dialogue);
                     });
                 }
             });

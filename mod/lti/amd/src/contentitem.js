@@ -47,14 +47,14 @@ define(
              * @param {object} postData The data to be sent for the content item selection request.
              * @param {Function} cb The callback to run once the content item has been processed.
              */
-            init: function(url, postData, cb) {
+            init: function(url, postData, cb, dialogueOverride) {
                 doneCallback = cb;
                 var context = {
                     url: url,
                     postData: postData
                 };
                 var bodyPromise = templates.render('mod_lti/contentitem', context);
-
+                dialogue = dialogueOverride || dialogue;
                 if (dialogue) {
                     // Set dialogue body.
                     dialogue.setBody(bodyPromise);
