@@ -100,6 +100,7 @@ class mod_lti_mod_form extends moodleform_mod {
         $typeid = optional_param('typeid', false, PARAM_INT);
         if ($typeid) {
             $mform->getElement('typeid')->setValue($typeid);
+            $mform->updateAttributes(array("style"=>"display: none"));
         }
         $mform->addHelpButton('typeid', 'external_tool_type', 'lti');
         $toolproxy = array();
@@ -254,7 +255,8 @@ class mod_lti_mod_form extends moodleform_mod {
                         'warning_icon_url' => (string)$OUTPUT->image_url('warning', 'lti'),
                         'instructor_tool_type_edit_url' => $editurl->out(false),
                         'ajax_url' => $ajaxurl->out(true),
-                        'courseId' => $COURSE->id
+                        'courseId' => $COURSE->id,
+                        'autolaunch_content_selector' => !in_array($typeid, $allnoncontentitemtypes)
                   );
 
         $module = array(

@@ -38,7 +38,6 @@
 
             var self = this;
             this.settings = Y.JSON.parse(settings);
-
             this.urlCache = {};
             this.toolTypeCache = {};
 
@@ -74,7 +73,7 @@
             var contentItemButton = Y.one('[name="selectcontent"]');
             var contentItemUrl = contentItemButton.getAttribute('data-contentitemurl');
             // Handle configure from link button click.
-            contentItemButton.on('click', function() {
+            var openContentSelector = function() {
                 var contentItemId = self.getContentItemId();
                 if (contentItemId) {
                     // Get activity name and description values.
@@ -117,13 +116,20 @@
                         hide: function() {} 
                     }
 
+                    var onSelectionReturn = function() {
+                        M.mod_lti.editor.toggleGradeSection();
+                        if (self.settings.autolaunch_content_selector) {
+                            Y.one('#id_submitbutton2').simulate('click');
+                        } 
+                    };
+
                     require(['mod_lti/contentitem'], function(contentitem) {
-                        contentitem.init(contentItemUrl, postData, function() {
-                            M.mod_lti.editor.toggleGradeSection();
-                        }, dialogue);
+                        contentitem.init(contentItemUrl, postData, onSelectionReturn, dialogue);
                     });
                 }
-            });
+            };
+
+            contentItemButton.on('click', openContentSelector);
 
             this.createTypeEditorButtons();
 
@@ -150,6 +156,12 @@
             allowgrades.on('change', this.toggleGradeSection, this);
 
             updateToolMatches();
+
+            // The external tool page is set with an explicit content type that supports deep link
+            // Shortcut link create page and launch directly the content selector
+            if (self.settings.autolaunch_content_selector) {
+                openContentSelector();
+            }
         },
 
         toggleGradeSection: function(e) {
