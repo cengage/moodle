@@ -90,30 +90,48 @@
 
                     var typeSelector = Y.one('#id_typeid');
                     var course_tool_group = Y.one('#course_tool_group');
-        
-                    var dlIframeContainer = Y.Node.create('<div />')
-                                    .set('width', '100%')
-                                    .set('height', 600)
-                                    .set('id', 'dl-dialog');
-        
-                    Y.one('#region-main').append(dlIframeContainer);
-                    
-                    var dialogue = {
-                        setBody: function(promise) {
-                            if (promise.then) {
-                                promise.then(function(html, js) {
-                                    dlIframeContainer.setHTML(html);
-                                    if (js) {
-                                        var script   = document.createElement("script");
-                                        script.type = "text/javascript";
-                                        script.text = js;
-                                        document.getElementsByTagName('head')[0].appendChild(script);
-                                    }
-                                })
+                    var dialogue;
+                    if (self.settings.autolaunch_content_selector) {
+                        var dlIframeContainer = Y.Node.create('<div />')
+                                        .set('width', '100%')
+                                        .set('height', '100%')
+                                        .set('id', 'dl-dialog');
+            
+                        Y.one('#region-main').append(dlIframeContainer);
+                        //YUI().use("node", "event", function(Y) {
+                        var doc = Y.one("body");
+                        //var frame = Y.one("#contentframe");
+                        var padding = 15; //The bottom of the iframe wasn\'t visible on some themes. Probably because of border widths, etc.
+                        var lastHeight;
+                        var resize = function(e) {
+                            var viewportHeight = doc.get("winHeight");
+                            if(lastHeight !== Math.min(doc.get("docHeight"), viewportHeight)){
+                                dlIframeContainer.setStyle("height", viewportHeight - dlIframeContainer.getY() - padding + "px");
+                                lastHeight = Math.min(doc.get("docHeight"), doc.get("winHeight"));
                             }
-                        },
-                        show: function() {},
-                        hide: function() {} 
+                        };
+
+                        resize();
+
+                        Y.on("windowresize", resize);
+                            
+                        var dialogue = {
+                            setBody: function(promise) {
+                                if (promise.then) {
+                                    promise.then(function(html, js) {
+                                        dlIframeContainer.setHTML(html);
+                                        if (js) {
+                                            var script   = document.createElement("script");
+                                            script.type = "text/javascript";
+                                            script.text = js;
+                                            document.getElementsByTagName('head')[0].appendChild(script);
+                                        }
+                                    })
+                                }
+                            },
+                            show: function() {},
+                            hide: function() {} 
+                        }
                     }
 
                     var onSelectionReturn = function() {
