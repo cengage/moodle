@@ -98,22 +98,6 @@
                                         .set('id', 'dl-dialog');
             
                         Y.one('#region-main').append(dlIframeContainer);
-                        //YUI().use("node", "event", function(Y) {
-                        var doc = Y.one("body");
-                        //var frame = Y.one("#contentframe");
-                        var padding = 15; //The bottom of the iframe wasn\'t visible on some themes. Probably because of border widths, etc.
-                        var lastHeight;
-                        var resize = function(e) {
-                            var viewportHeight = doc.get("winHeight");
-                            if(lastHeight !== Math.min(doc.get("docHeight"), viewportHeight)){
-                                dlIframeContainer.setStyle("height", viewportHeight - dlIframeContainer.getY() - padding + "px");
-                                lastHeight = Math.min(doc.get("docHeight"), doc.get("winHeight"));
-                            }
-                        };
-
-                        resize();
-
-                        Y.on("windowresize", resize);
                             
                         var dialogue = {
                             setBody: function(promise) {
