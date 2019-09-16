@@ -73,24 +73,31 @@
         iframe.on('load', function() {
             loadingContainer.addClass('hidden');
             iframe.removeClass('hidden');
-            var lastHeight;
-            var padding = $('div.dl-dialog').length?20:50;
+            var containerWidth = $('div.contentitem-container').width();
+            
+            if ($('div.dl-dialog').length) {
+                // iframe is not in modal but in page, allowing for more estate and react to window resize
+                var lastHeight;
+                var resize = function resize() {
+                    // Adjust iframe's width to the fit the container's width.
+                    $('#contentitem-page-iframe').width(containerWidth + 'px');
 
-            var resize = function resize() {
-                // Adjust iframe's width to the fit the container's width.
-                var containerWidth = $('div.contentitem-container').width();
+                    var height = $('body').height() - 20  - $('div.contentitem-container').offset().top;
+                    height = Math.max(height, 500);
+                    if(lastHeight !== height){
+                        $('#contentitem-page-iframe').height(height + 'px');
+                        lastHeight = height;
+                    }
+                };
+                resize();
+                $( window ).resize( resize );
+            } else {
                 $('#contentitem-page-iframe').width(containerWidth + 'px');
-
-                var height = $('body').height() - padding  - $('div.contentitem-container').offset().top;
-                height = Math.max(height, 500);
-                if(lastHeight !== height){
-                    $('#contentitem-page-iframe').height(height + 'px');
-                    lastHeight = height;
-                }
-            };
-
-            resize();
-            $( window ).resize( resize );
+                // Adjust iframe's height to 75% of the width.
+                var containerHeight = containerWidth * 0.75;
+                $('#contentitem-page-iframe').height(containerHeight + 'px');
+            }
+            
         });
     });
 {{/js}}

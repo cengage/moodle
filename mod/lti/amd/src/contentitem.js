@@ -119,18 +119,20 @@ define(
             }
 
             // Populate LTI configuration fields from return data.
-            var index;
-            for (index in ltiFormFields) {
-                var field = ltiFormFields[index];
-                var value = null;
-                if ($.type(returnData[field.name]) !== 'undefined') {
-                    value = returnData[field.name];
+            if (returnData) {
+                var index;
+                for (index in ltiFormFields) {
+                    var field = ltiFormFields[index];
+                    var value = null;
+                    if ($.type(returnData[field.name]) !== 'undefined') {
+                        value = returnData[field.name];
+                    }
+                    field.setFieldValue(value);
                 }
-                field.setFieldValue(value);
             }
 
             if (doneCallback) {
-                doneCallback();
+                doneCallback(returnData);
             }
         };
 

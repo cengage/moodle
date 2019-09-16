@@ -118,10 +118,14 @@
                         }
                     }
 
-                    var onSelectionReturn = function() {
+                    var onSelectionReturn = function(returnData) {
                         M.mod_lti.editor.toggleGradeSection();
                         if (self.settings.autolaunch_content_selector) {
-                            Y.one('#id_submitbutton2').simulate('click');
+                            if (returnData) {
+                                Y.one('#id_submitbutton2').simulate('click');
+                            } else {
+                                Y.one('#id_cancel').simulate('click'); 
+                            }
                         } 
                     };
 
