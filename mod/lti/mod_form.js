@@ -85,7 +85,8 @@
                         id: contentItemId,
                         course: self.settings.courseId,
                         title: title,
-                        text: text
+                        text: text,
+                        autocreate: self.settings.autolaunch_content_selector?"true":"false" 
                     };
 
                     var typeSelector = Y.one('#id_typeid');

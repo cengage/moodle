@@ -31,6 +31,7 @@ $id = required_param('id', PARAM_INT);
 $courseid = required_param('course', PARAM_INT);
 $title = optional_param('title', '', PARAM_TEXT);
 $text = optional_param('text', '', PARAM_RAW);
+$autocreate = optional_param('autocreate', 0, PARAM_BOOL);
 
 $config = lti_get_type_type_config($id);
 if ($config->lti_ltiversion === LTI_VERSION_1P3) {
@@ -58,7 +59,7 @@ $returnurlparams = [
 $returnurl = new \moodle_url('/mod/lti/contentitem_return.php', $returnurlparams);
 
 // Prepare the request.
-$request = lti_build_content_item_selection_request($id, $course, $returnurl, $title, $text, [], []);
+$request = lti_build_content_item_selection_request($id, $course, $returnurl, $title, $text, [], [], $autocreate?true:false);
 
 // Get the launch HTML.
 $content = lti_post_launch_html($request->params, $request->url, false);
