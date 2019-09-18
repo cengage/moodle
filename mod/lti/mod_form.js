@@ -95,7 +95,7 @@
                         var dlIframeContainer = Y.Node.create('<div />')
                                         .set('width', '100%')
                                         .set('height', '100%')
-                                        .set('id', 'dl-dialog');
+                                        .set('id', 'contentitem-fakedialog');
             
                         Y.one('#region-main').append(dlIframeContainer);
                             

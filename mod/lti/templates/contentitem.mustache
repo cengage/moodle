@@ -75,7 +75,7 @@
             iframe.removeClass('hidden');
             var containerWidth = $('div.contentitem-container').width();
             
-            if ($('div.dl-dialog').length) {
+            if ($('#contentitem-fakedialog').length) {
                 // iframe is not in modal but in page, allowing for more estate and react to window resize
                 var lastHeight;
                 var resize = function resize() {
@@ -84,6 +84,7 @@
 
                     var height = $('body').height() - 20  - $('div.contentitem-container').offset().top;
                     height = Math.max(height, 500);
+                    console.log("height"+height);
                     if(lastHeight !== height){
                         $('#contentitem-page-iframe').height(height + 'px');
                         lastHeight = height;
