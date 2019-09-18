@@ -189,6 +189,8 @@ if ($mform->is_cancelled()) {
 
     echo $OUTPUT->header();
 
+    $pageheading = $mform->get_pageheading($fullmodulename, $sectionname, $data)?:$pageheading;
+
     if (get_string_manager()->string_exists('modulename_help', $module->name)) {
         echo $OUTPUT->heading_with_help($pageheading, 'modulename', $module->name, 'icon');
     } else {

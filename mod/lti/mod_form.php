@@ -293,4 +293,21 @@ class mod_lti_mod_form extends moodleform_mod {
         $PAGE->requires->js_init_call('M.mod_lti.editor.init', array(json_encode($jsinfo)), true, $module);
     }
 
+    public function get_pageheading($fullmodulename, $sectionname, $data) {
+        $typeid = optional_param('typeid', 0, PARAM_INT);
+        if($typeid) {
+            $type = lti_get_type($typeid);
+            if ($type) {
+                if ($sectionname) {
+                    $heading = new stdClass();
+                    $heading->what = $type->name;
+                    $heading->to   = $sectionname;
+                    return get_string('addinganewlinkto', 'lti', $heading);
+                } else {
+                    return get_string('addinganewlink', 'lti', $type->name);
+                }
+            }
+        }
+    }
+
 }

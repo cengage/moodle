@@ -1087,6 +1087,19 @@ abstract class moodleform_mod extends moodleform {
      */
     public function data_postprocessing($data) {
     }
+   
+    /**
+     * Allows modules to modify the page heading.
+     *
+     * @param string $fullmodulename full module name
+     * @param string $sectionname name of the section where this form is loaded
+     * @param stdClass $data passed by reference
+     * 
+     * @return string or NULL if this form does not override the default page heading
+     */
+    public function get_pageheading($fullmodulename, $sectionname, $data) {
+    }
+
 
     /**
      * Return submitted data if properly submitted or returns NULL if validation fails or
