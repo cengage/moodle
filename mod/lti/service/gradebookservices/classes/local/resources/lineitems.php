@@ -274,7 +274,6 @@ class lineitems extends resource_base {
         $item = new \grade_item(array('id' => 0, 'courseid' => $contextid));
         \grade_item::set_properties($item, $params);
         $item->itemtype = 'manual';
-        $item->idnumber = $resourceid;
         $item->grademax = $max;
         $id = $item->insert('mod/ltiservice_gradebookservices');
         $DB->insert_record('ltiservice_gradebookservices', (object)array(
@@ -284,6 +283,7 @@ class lineitems extends resource_base {
                 'typeid' => $typeid,
                 'baseurl' => $baseurl,
                 'ltilinkid' => $ltilinkid,
+                'resourceid' => $resourceid,
                 'tag' => $tag
         ));
         if (is_null($typeid)) {
