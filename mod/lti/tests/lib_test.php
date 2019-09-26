@@ -26,7 +26,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-
 /**
  * Unit tests for mod_lti lib
  *
@@ -306,7 +305,7 @@ class mod_lti_lib_testcase extends advanced_testcase {
         // Ensure result was null.
         $this->assertNull($actionevent);
     }
-
+    
     /**
      * Creates an action event.
      *

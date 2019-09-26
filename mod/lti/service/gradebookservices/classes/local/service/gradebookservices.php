@@ -158,25 +158,25 @@ class gradebookservices extends service_base {
                 $this->get_typeconfig()['ltiservice_gradesynchronization'] == self::GRADEBOOKSERVICES_FULL) {
                 // Check for used in context is only needed because there is no explicit site tool - course relation.
                 if ($this->is_allowed_in_context($typeid, $courseid)) {
-                    if (is_null($modlti)) {
-                        $id = null;
-                    } else {
+                    $id = null;
+                    if (!is_null($modlti)) {
                         $conditions = array('courseid' => $courseid, 'itemtype' => 'mod',
                                 'itemmodule' => 'lti', 'iteminstance' => $modlti);
 
-                        $lineitems = $DB->get_records('grade_items', $conditions);
+                        $coupled_lineitems = $DB->get_records('grade_items', $conditions);
                         $conditionsgbs = array('courseid' => $courseid, 'ltilinkid' => $modlti);
                         $lineitemsgbs = $DB->get_records('ltiservice_gradebookservices', $conditionsgbs);
-                        if (count($lineitems) + count($lineitemsgbs) == 1) {
-                            if ($lineitems) {
-                                $lineitem = reset($lineitems);
-                                $id = $lineitem->id;
+                        // if a link has more that one attached grade items, per spec we do not populate line item url
+                        if (count($lineitemsgbs) == 1) {
+                            $id = reset($lineitemsgbs)->gradeitemid; 
+                        }
+                        if (count($lineitemsgbs) <2 && count($coupled_lineitems) == 1) {
+                            $coupled_id = reset($coupled_lineitems)->id;
+                            if (!is_null($id) && $id!=$coupled_id) {
+                                $id = null;
                             } else {
-                                $lineitemsgb = reset($lineitemsgbs);
-                                $id = $lineitemsgb->gradeitemid;
+                                $id = $coupled_id;
                             }
-                        } else {
-                            $id = null;
                         }
                     }
                     $launchparameters['gradebookservices_scope'] = implode(',', $this->get_permitted_scopes());
@@ -210,15 +210,9 @@ class gradebookservices extends service_base {
         // Select all lti potential linetiems in site.
         $params = array('courseid' => $courseid);
 
-        $optionalfilters = "";
-        if (isset($resourceid)) {
-            $optionalfilters .= " AND (i.idnumber = :resourceid)";
-            $params['resourceid'] = $resourceid;
-        }
         $sql = "SELECT i.*
                   FROM {grade_items} i
                  WHERE (i.courseid = :courseid)
-                      {$optionalfilters}
                ORDER BY i.id";
         $lineitems = $DB->get_records_sql($sql, $params);
 
@@ -230,7 +224,8 @@ class gradebookservices extends service_base {
             foreach ($lineitems as $lineitem) {
                 $gbs = $this->find_ltiservice_gradebookservice_for_lineitem($lineitem->id);
                 if ($gbs && (!isset($tag) || (isset($tag) && $gbs->tag == $tag))
-                        && (!isset($ltilinkid) || (isset($ltilinkid) && $gbs->ltilinkid == $ltilinkid))) {
+                        && (!isset($ltilinkid) || (isset($ltilinkid) && $gbs->ltilinkid == $ltilinkid))
+                        && (!isset($resourceid) || (isset($resourceid) && $gbs->resourceid == $resourceid))) {
                     if (is_null($typeid)) {
                         if ($this->get_tool_proxy()->id == $gbs->toolproxyid) {
                             array_push($lineitemstoreturn, $lineitem);
@@ -240,8 +235,11 @@ class gradebookservices extends service_base {
                             array_push($lineitemstoreturn, $lineitem);
                         }
                     }
-                } else if (($lineitem->itemtype == 'mod') && ($lineitem->itemmodule == 'lti') && (!isset($tag) &&
-                        (!isset($ltilinkid) || (isset($ltilinkid) && $lineitem->iteminstance == $ltilinkid)))) {
+                } else if ((    $lineitem->itemtype == 'mod'
+                             && $lineitem->itemmodule == 'lti' 
+                             && !isset($resourceid) 
+                             && !isset($tag)
+                             && (!isset($ltilinkid) || (isset($ltilinkid) && $lineitem->iteminstance == $ltilinkid)))) {
                     // We will need to check if the activity related belongs to our tool proxy.
                     $ltiactivity = $DB->get_record('lti', array('id' => $lineitem->iteminstance));
                     if (($ltiactivity) && (isset($ltiactivity->typeid))) {
@@ -323,25 +321,54 @@ class gradebookservices extends service_base {
         return $lineitem;
     }
 
-
     /**
-     * Set a grade item.
+     * Adds a decoupled (standalone) line item.
+     * Decoupled line items are not directly attached to
+     * an lti instance activity. They are recorded in
+     * the gradebook as manual activities and the
+     * gradebookservices is used to associate that manual column
+     * with the tool in addition to storing the LTI related
+     * metadata (resource id, tag).
      *
-     * @param object $gradeitem Grade Item record
-     * @param object $score Result object
-     * @param int $userid User ID
+     * @param string $courseid ID of course
+     * @param string $label label of lineitem
+     * @param float $maximumScore maximum score of lineitem
+     * @param string $baseurl
+     * @param int $ltilinkid id of lti instance this line item is associated with
+     * @param string $resourceid resource id of lineitem
+     * @param string $tag tag of lineitem
+     * @param int $typeid lti type to which this line item is associated with
+     * @param int $toolproxyid lti2 tool proxy to which this lineitem is associated to
      *
-     * @throws \Exception
-     * @deprecated since Moodle 3.7 MDL-62599 - please do not use this function any more.
-     * @see gradebookservices::save_grade_item($gradeitem, $score, $userid)
+     * @return int id of the created gradeitem
      */
-    public static function save_score($gradeitem, $score, $userid) {
-        $service = new gradebookservices();
-        $service->save_grade_item($gradeitem, $score, $userid);
+    public function add_standalone_lineitem($courseid, $label, $maximumScore, $baseurl, $ltilinkid, $resourceid, $tag, $typeid, $toolproxyid) {
+        global $DB;
+        $params = array();
+        $params['itemname'] = $label;
+        $params['gradetype'] = GRADE_TYPE_VALUE;
+        $params['grademax']  = $maximumScore;
+        $params['grademin']  = 0;
+        $item = new \grade_item(array('id' => 0, 'courseid' => $courseid));
+        \grade_item::set_properties($item, $params);
+        $item->itemtype = 'manual';
+        $item->grademax = $maximumScore;
+        $id = $item->insert('mod/ltiservice_gradebookservices');
+        $DB->insert_record('ltiservice_gradebookservices', (object)array(
+                'gradeitemid' => $id,
+                'courseid' => $courseid,
+                'toolproxyid' => $toolproxyid,
+                'typeid' => $typeid,
+                'baseurl' => $baseurl,
+                'ltilinkid' => $ltilinkid,
+                'resourceid' => $resourceid,
+                'tag' => $tag
+        ));
+        return $id;
     }
 
     /**
-     * Set a grade item.
+     * Saves a score received from the LTI tool.
      *
      * @param object $gradeitem Grade Item record
      * @param object $score Result object
@@ -349,7 +376,7 @@ class gradebookservices extends service_base {
      *
      * @throws \Exception
      */
-    public function save_grade_item($gradeitem, $score, $userid) {
+    public function save_score($gradeitem, $score, $userid) {
         global $DB, $CFG;
         $source = 'mod' . $this->get_component_id();
         if ($DB->get_record('user', array('id' => $userid)) === false) {
@@ -433,9 +460,9 @@ class gradebookservices extends service_base {
         $lineitem->id = "{$endpoint}/{$item->id}/lineitem" . $typeidstring;
         $lineitem->label = $item->itemname;
         $lineitem->scoreMaximum = floatval($item->grademax);
-        $lineitem->resourceId = (!empty($item->idnumber)) ? $item->idnumber : '';
         $gbs = self::find_ltiservice_gradebookservice_for_lineitem($item->id);
         if ($gbs) {
+            $lineitem->resourceId = (!empty($gbs->resourceid)) ? $gbs->resourceid : '';
             $lineitem->tag = (!empty($gbs->tag)) ? $gbs->tag : '';
             if (isset($gbs->ltilinkid)) {
                 $lineitem->resourceLinkId = strval($gbs->ltilinkid);
@@ -566,6 +593,33 @@ class gradebookservices extends service_base {
         }
     }
 
+    public static function update_coupled_gradebookservices($ltiinstance, $resourceid, $tag) {
+        global $DB;
+
+        if ($ltiinstance && $ltiinstance->typeid) {
+            $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance'=>$ltiinstance->id));
+            if ($gradeitem) {
+                $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lineitem($gradeitem->id);
+                if ($gbs) {
+                    $gbs->resourceid = $resourceid;
+                    $gbs->tag = $tag;
+                    $DB->update_record('ltiservice_gradebookservices', $gbs);
+                } else {
+                    $baseurl = lti_get_type_type_config($ltiinstance->typeid)->lti_toolurl;
+                    $DB->insert_record('ltiservice_gradebookservices', (object)array(
+                        'gradeitemid' => $gradeitem->id,
+                        'courseid' => $gradeitem->courseid,
+                        'typeid' => $ltiinstance->typeid,
+                        'baseurl' => $baseurl,
+                        'ltilinkid' => $ltiinstance->id,
+                        'resourceid' => $resourceid,
+                        'tag' => $tag
+                    ));
+                }
+            }
+        }
+    }
+
     /**
      * Deletes orphaned rows from the 'ltiservice_gradebookservices' table.
      *
@@ -612,28 +666,33 @@ class gradebookservices extends service_base {
     }
 
     /**
+     * Find the right element in the ltiservice_gradebookservice table for an lti instance
+     *
+     * @param string $instanceid            The LTI module instance id
+     * @return object gradebookservice for this line item
+     */
+    public static function find_ltiservice_gradebookservice_for_lti($instanceid) {
+        global $DB;
+
+        if ($instanceid) {
+            $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance'=>$instanceid));
+            if ($gradeitem) {
+                return gradebookservices::find_ltiservice_gradebookservice_for_lineitem($gradeitem->id);
+            } 
+        }
+    }
+
+    /**
      * Find the right element in the ltiservice_gradebookservice table for a lineitem
      *
      * @param string $lineitemid            The lineitem
-     * @return object|bool gradebookservice id or false if none
+     * @return object gradebookservice if it exists
      */
-    public static function find_ltiservice_gradebookservice_for_lineitem($lineitemid) {
+    public static function find_ltiservice_gradebookservice_for_lineitem($gradeitemid) {
         global $DB;
-
-        if (!$lineitemid) {
-            return false;
-        }
-        $gradeitem = $DB->get_record('grade_items', array('id' => $lineitemid));
-        if ($gradeitem) {
-            $gbs = $DB->get_record('ltiservice_gradebookservices',
-                    array('gradeitemid' => $gradeitem->id, 'courseid' => $gradeitem->courseid));
-            if ($gbs) {
-                return $gbs;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
+        if ($gradeitemid) {
+            return $DB->get_record('ltiservice_gradebookservices',
+                    array('gradeitemid' => $gradeitemid));
         }
     }
 
