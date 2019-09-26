@@ -210,11 +210,6 @@ class gradebookservices extends service_base {
         // Select all lti potential linetiems in site.
         $params = array('courseid' => $courseid);
 
-        $optionalfilters = "";
-        if (isset($resourceid)) {
-            $optionalfilters .= " AND (i.idnumber = :resourceid)";
-            $params['resourceid'] = $resourceid;
-        }
         $sql = "SELECT i.*
                   FROM {grade_items} i
                  WHERE (i.courseid = :courseid)
@@ -230,7 +225,8 @@ class gradebookservices extends service_base {
             foreach ($lineitems as $lineitem) {
                 $gbs = $this->find_ltiservice_gradebookservice_for_lineitem($lineitem->id);
                 if ($gbs && (!isset($tag) || (isset($tag) && $gbs->tag == $tag))
-                        && (!isset($ltilinkid) || (isset($ltilinkid) && $gbs->ltilinkid == $ltilinkid))) {
+                        && (!isset($ltilinkid) || (isset($ltilinkid) && $gbs->ltilinkid == $ltilinkid))
+                        && (!isset($resourceid) || (isset($resourceid) && $gbs->resourceid == $resourceid))) {
                     if (is_null($typeid)) {
                         if ($this->get_tool_proxy()->id == $gbs->toolproxyid) {
                             array_push($lineitemstoreturn, $lineitem);
@@ -433,9 +429,9 @@ class gradebookservices extends service_base {
         $lineitem->id = "{$endpoint}/{$item->id}/lineitem" . $typeidstring;
         $lineitem->label = $item->itemname;
         $lineitem->scoreMaximum = floatval($item->grademax);
-        $lineitem->resourceId = (!empty($item->idnumber)) ? $item->idnumber : '';
         $gbs = self::find_ltiservice_gradebookservice_for_lineitem($item->id);
         if ($gbs) {
+            $lineitem->resourceId = (!empty($gbs->resourceid)) ? $gbs->resourceid : '';
             $lineitem->tag = (!empty($gbs->tag)) ? $gbs->tag : '';
             if (isset($gbs->ltilinkid)) {
                 $lineitem->resourceLinkId = strval($gbs->ltilinkid);
@@ -563,6 +559,33 @@ class gradebookservices extends service_base {
             }
         } else {
             return false;
+        }
+    }
+
+    public static function update_coupled_gradebookservices($ltiinstance, $resourceid, $tag) {
+        global $DB;
+
+        if ($ltiinstance) {
+            $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance'=>$ltiinstance->id));
+            if ($gradeitem) {
+                $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lineitem($gradeitem->id);
+                if ($gbs) {
+                    $gbs->resourceid = $resourceid;
+                    $gbs->tag = $tag;
+                    $DB->update_record('ltiservice_gradebookservices', $gbs);
+                } else {
+                    $baseurl = lti_get_type_type_config($ltiinstance->typeid)->lti_toolurl;
+                    $DB->insert_record('ltiservice_gradebookservices', (object)array(
+                        'gradeitemid' => $gradeitem->id,
+                        'courseid' => $gradeitem->courseid,
+                        'typeid' => $ltiinstance->typeid,
+                        'baseurl' => $baseurl,
+                        'ltilinkid' => $ltiinstance->id,
+                        'resourceid' => $resourceid,
+                        'tag' => $tag
+                    ));
+                }
+            }
         }
     }
 
