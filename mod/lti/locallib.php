@@ -1515,9 +1515,10 @@ function lti_tool_configuration_from_content_item($typeid, $messagetype, $ltiver
                         }
                     }
                     $config->grade_modgrade_point = $maxscore;
-                    if (isset($lineitem->assignedActivity) && isset($lineitem->assignedActivity->activityId)) {
-                        $config->cmidnumber = $lineitem->assignedActivity->activityId;
+                    if (isset($lineitem->assignedActivity)) {
+                        $config->lti_lineitem_resourceid = $lineitem->assignedActivity->activityId?:'';
                     }
+                    $config->lti_lineitem_tag = $lineitem->tag?:'';
                 }
             }
         }
@@ -1612,6 +1613,9 @@ function lti_convert_content_items($param) {
                     if (isset($item->lineItem->resourceId)) {
                         $newitem->lineItem->assignedActivity = new stdClass();
                         $newitem->lineItem->assignedActivity->activityId = $item->lineItem->resourceId;
+                    }
+                    if (isset($item->lineItem->tag)) {
+                        $newitem->lineItem->tag = $item->lineItem->tag;
                     }
                     if (isset($item->lineItem->scoreMaximum)) {
                         $newitem->lineItem->scoreConstraints = new stdClass();

@@ -50,6 +50,7 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
+use ltiservice_gradebookservices\local\service\gradebookservices;
 
 class mod_lti_mod_form extends moodleform_mod {
 
@@ -207,6 +208,9 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'urlmatchedtypeid', '', array( 'id' => 'id_urlmatchedtypeid' ));
         $mform->setType('urlmatchedtypeid', PARAM_INT);
 
+        $mform->addElement('hidden', 'lineitemresourceid');
+        $mform->addElement('hidden', 'lineitemtag');
+
         $launchoptions = array();
         $launchoptions[LTI_LAUNCH_CONTAINER_DEFAULT] = get_string('default', 'lti');
         $launchoptions[LTI_LAUNCH_CONTAINER_EMBED] = get_string('embed', 'lti');
@@ -270,6 +274,7 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform->addHelpButton('instructorchoiceacceptgrades', 'accept_grades', 'lti');
         $mform->disabledIf('instructorchoiceacceptgrades', 'typeid', 'in', $toolproxy);
 
+
         // Add standard course module grading elements.
         $this->standard_grading_coursemodule_elements();
 
@@ -331,4 +336,17 @@ class mod_lti_mod_form extends moodleform_mod {
         $PAGE->requires->js_init_call('M.mod_lti.editor.init', array(json_encode($jsinfo)), true, $module);
     }
 
+    function set_data($default_values) {
+        $default_values->lineitemresourceid='';
+        $default_values->linetiemtag='';
+        if (is_object($default_values) && $default_values->instance) {
+            $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($default_values->instance);
+            if ($gbs) {
+                $default_values->lineitemresourceid=$gbs->resourceid;
+                $default_values->lineitemtage=$gbs->tag;
+            }
+        }
+
+        parent::set_data($default_values);
+    }
 }

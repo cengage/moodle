@@ -607,28 +607,33 @@ class gradebookservices extends service_base {
     }
 
     /**
+     * Find the right element in the ltiservice_gradebookservice table for an lti instance
+     *
+     * @param string $instanceid            The LTI module instance id
+     * @return object gradebookservice for this line item
+     */
+    public static function find_ltiservice_gradebookservice_for_lti($instanceid) {
+        global $DB;
+
+        if ($instanceid) {
+            $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance'=>$instanceid));
+            if ($gradeitem) {
+                return gradebookservices::find_ltiservice_gradebookservice_for_lineitem($gradeitem->id);
+            } 
+        }
+    }
+
+    /**
      * Find the right element in the ltiservice_gradebookservice table for a lineitem
      *
      * @param string $lineitemid            The lineitem
-     * @return object|bool gradebookservice id or false if none
+     * @return object gradebookservice if it exists
      */
-    public static function find_ltiservice_gradebookservice_for_lineitem($lineitemid) {
+    public static function find_ltiservice_gradebookservice_for_lineitem($gradeitemid) {
         global $DB;
-
-        if (!$lineitemid) {
-            return false;
-        }
-        $gradeitem = $DB->get_record('grade_items', array('id' => $lineitemid));
-        if ($gradeitem) {
-            $gbs = $DB->get_record('ltiservice_gradebookservices',
-                    array('gradeitemid' => $gradeitem->id, 'courseid' => $gradeitem->courseid));
-            if ($gbs) {
-                return $gbs;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
+        if ($gradeitemid) {
+            return $DB->get_record('ltiservice_gradebookservices',
+                    array('gradeitemid' => $gradeitemid));
         }
     }
 
