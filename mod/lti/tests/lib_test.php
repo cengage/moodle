@@ -26,6 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use ltiservice_gradebookservices\local\service\gradebookservices;
 
 /**
  * Unit tests for mod_lti lib
@@ -305,6 +306,48 @@ class mod_lti_lib_testcase extends advanced_testcase {
 
         // Ensure result was null.
         $this->assertNull($actionevent);
+    }
+    
+    /**
+     * Test saving gradebookservices
+     */
+    public function test_lti_add_with_gradebookservices() {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a tool type, associated with that proxy.
+
+        $course = $this->getDataGenerator()->create_course();
+        
+        $type = new stdClass();
+        $type->state = LTI_TOOL_STATE_CONFIGURED;
+        $type->name = "Test tool";
+        $type->description = "Example description";
+        $type->clientid = "Test client ID";
+        $type->baseurl = $this->getExternalTestFileUrl('/test.html');
+
+        $config = new stdClass();
+
+        $typeid = lti_add_type($type, $config);
+
+        $lti = array('course' => $course->id,
+                    'typeid' => $typeid,
+                    'instructorchoiceacceptgrades' => LTI_SETTING_ALWAYS,
+                    'grade' => 10,
+                    'lineitemresourceid' => 'test-resource-id',
+                    'lineitemtag' => 'test-tag');
+    
+        $ltiinstance = $this->getDataGenerator()->create_module('lti', $lti, array());
+
+        $this->assertNotNull($ltiinstance);
+
+        $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($ltiinstance->id);
+
+        $this->assertNotNull($gbs);
+        $this->assertEquals($lti['lineitemresourceid'], $gbs->resourceid);
+        $this->assertEquals($lti['lineitemtag'], $gbs->tag);
     }
 
     /**

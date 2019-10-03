@@ -119,7 +119,7 @@ function lti_add_instance($lti, $mform) {
         lti_grade_item_update($lti);
     }
 
-    gradebookservices::update_coupled_gradebookservices($lti, $lti->lineitemresourceid, $lti->lineitemtag);
+    gradebookservices::update_coupled_gradebookservices($lti, $lti->lineitemresourceid??'', $lti->lineitemtag??'');
 
     $completiontimeexpected = !empty($lti->completionexpected) ? $lti->completionexpected : null;
     \core_completion\api::update_completion_date_event($lti->coursemodule, 'lti', $lti->id, $completiontimeexpected);

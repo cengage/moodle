@@ -565,7 +565,7 @@ class gradebookservices extends service_base {
     public static function update_coupled_gradebookservices($ltiinstance, $resourceid, $tag) {
         global $DB;
 
-        if ($ltiinstance) {
+        if ($ltiinstance && $ltiinstance->typeid) {
             $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance'=>$ltiinstance->id));
             if ($gradeitem) {
                 $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lineitem($gradeitem->id);
