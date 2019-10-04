@@ -213,7 +213,6 @@ class gradebookservices extends service_base {
         $sql = "SELECT i.*
                   FROM {grade_items} i
                  WHERE (i.courseid = :courseid)
-                      {$optionalfilters}
                ORDER BY i.id";
         $lineitems = $DB->get_records_sql($sql, $params);
 
