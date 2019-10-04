@@ -44,16 +44,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
         $course = $this->getDataGenerator()->create_course();
         
-        $type = new stdClass();
-        $type->state = LTI_TOOL_STATE_CONFIGURED;
-        $type->name = "Test tool";
-        $type->description = "Example description";
-        $type->clientid = "Test client ID";
-        $type->baseurl = $this->getExternalTestFileUrl('/test.html');
-
-        $config = new stdClass();
-
-        $typeid = lti_add_type($type, $config);
+        $typeid = $this->get_type();
 
         $lti = array('course' => $course->id,
                     'typeid' => $typeid,
@@ -72,8 +63,38 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $this->assertEquals($lti['lineitemresourceid'], $gbs->resourceid);
         $this->assertEquals($lti['lineitemtag'], $gbs->tag);
 
+        $this->assertLineItems($course, $typeid, $ltiinstance->name, $ltiinstance, $lti['lineitemresourceid'], $lti['lineitemtag']);
+    }
+
+    /**
+     * Test saving a standalone LTI lineitem with resource and tag info
+     * that can be retrieved using the gradebook service API.
+     */
+    public function test_lti_add_standalone_lineitem() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $resourceid = "test-resource-standalone";
+        $tag = "test-tag-standalone";
+        $typeid = $this->get_type();
+
         $gbservice = new gradebookservices();
-        //$courseid, $resourceid, $ltilinkid, $tag, $limitfrom, $limitnum, $typeid
+        $gbservice->add_standalone_lineitem($course->id, 
+            "manualtest", 
+            10, 
+            "https://test.phpunit", 
+            null /*ltilinkid*/, 
+            $resourceid, 
+            $tag, 
+            $typeid, 
+            null /*toolproxyid*/);
+        
+        $this->assertLineItems($course, $typeid, "manualtest", null, $resourceid, $tag);
+    }
+
+    private function assertLineItems($course, $typeid, $label, $ltiinstance, $resourceid, $tag) {
+        $gbservice = new gradebookservices();
         $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
 
         // the 1st item in the array is the items count
@@ -81,11 +102,41 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
         $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
         $this->assertEquals(10, $lineitem->scoreMaximum);
-        $this->assertEquals($lti['lineitemresourceid'], $lineitem->resourceId);
-        $this->assertEquals($lti['lineitemtag'], $lineitem->tag);
-        $this->assertEquals($ltiinstance->name, $lineitem->label);
+        $this->assertEquals($resourceid, $lineitem->resourceId);
+        $this->assertEquals($tag, $lineitem->tag);
+        $this->assertEquals($label, $lineitem->label);
+        
+        $gradeitems = $gbservice->get_lineitems($course->id, $resourceid, null, null, null, null, $typeid);
+        $this->assertEquals(1, $gradeitems[0]);
+
+        if (isset($ltiinstance)) {
+            $gradeitems = $gbservice->get_lineitems($course->id, null, $ltiinstance->id, null, null, null, $typeid);
+            $this->assertEquals(1, $gradeitems[0]);
+            $gradeitems = $gbservice->get_lineitems($course->id, null, $ltiinstance->id + 1, null, null, null, $typeid);
+            $this->assertEquals(0, $gradeitems[0]);
+        }
+        
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, $tag, null, null, $typeid);
+        $this->assertEquals(1, $gradeitems[0]);
+        
+        $gradeitems = $gbservice->get_lineitems($course->id, 'an unknown resource id', null, null, null, null, $typeid);
+        $this->assertEquals(0, $gradeitems[0]);
+        
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, 'an unknown tag', null, null, $typeid);
+        $this->assertEquals(0, $gradeitems[0]);
 
     }
 
+    private function get_type() {
+        $type = new stdClass();
+        $type->state = LTI_TOOL_STATE_CONFIGURED;
+        $type->name = "Test tool";
+        $type->description = "Example description";
+        $type->clientid = "Test client ID";
+        $type->baseurl = $this->getExternalTestFileUrl('/test.html');
 
+        $config = new stdClass();
+
+        return lti_add_type($type, $config);
+    }
 }
