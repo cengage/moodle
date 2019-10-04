@@ -26,8 +26,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use ltiservice_gradebookservices\local\service\gradebookservices;
-
 /**
  * Unit tests for mod_lti lib
  *
