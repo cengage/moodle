@@ -203,7 +203,7 @@ class scores extends resource_base {
                 $score->scoreGiven = null;
             }
         }
-        $this->get_service()->save_grade_item($item, $score, $score->userId);
+        $this->get_service()->save_score($item, $score, $score->userId);
     }
 
     /**

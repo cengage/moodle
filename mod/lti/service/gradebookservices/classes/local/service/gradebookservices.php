@@ -235,8 +235,11 @@ class gradebookservices extends service_base {
                             array_push($lineitemstoreturn, $lineitem);
                         }
                     }
-                } else if (($lineitem->itemtype == 'mod') && ($lineitem->itemmodule == 'lti') && (!isset($tag) &&
-                        (!isset($ltilinkid) || (isset($ltilinkid) && $lineitem->iteminstance == $ltilinkid)))) {
+                } else if ((    $lineitem->itemtype == 'mod'
+                             && $lineitem->itemmodule == 'lti' 
+                             && !isset($resourceid) 
+                             && !isset($tag)
+                             && (!isset($ltilinkid) || (isset($ltilinkid) && $lineitem->iteminstance == $ltilinkid)))) {
                     // We will need to check if the activity related belongs to our tool proxy.
                     $ltiactivity = $DB->get_record('lti', array('id' => $lineitem->iteminstance));
                     if (($ltiactivity) && (isset($ltiactivity->typeid))) {
@@ -318,25 +321,54 @@ class gradebookservices extends service_base {
         return $lineitem;
     }
 
-
     /**
-     * Set a grade item.
+     * Adds a decoupled (standalone) line item.
+     * Decoupled line items are not directly attached to
+     * an lti instance activity. They are recorded in
+     * the gradebook as manual activities and the
+     * gradebookservices is used to associate that manual column
+     * with the tool in addition to storing the LTI related
+     * metadata (resource id, tag).
      *
-     * @param object $gradeitem Grade Item record
-     * @param object $score Result object
-     * @param int $userid User ID
+     * @param string $courseid ID of course
+     * @param string $label label of lineitem
+     * @param float $maximumScore maximum score of lineitem
+     * @param string $baseurl
+     * @param int $ltilinkid id of lti instance this line item is associated with
+     * @param string $resourceid resource id of lineitem
+     * @param string $tag tag of lineitem
+     * @param int $typeid lti type to which this line item is associated with
+     * @param int $toolproxyid lti2 tool proxy to which this lineitem is associated to
      *
-     * @throws \Exception
-     * @deprecated since Moodle 3.7 MDL-62599 - please do not use this function any more.
-     * @see gradebookservices::save_grade_item($gradeitem, $score, $userid)
+     * @return int id of the created gradeitem
      */
-    public static function save_score($gradeitem, $score, $userid) {
-        $service = new gradebookservices();
-        $service->save_grade_item($gradeitem, $score, $userid);
+    public function add_standalone_lineitem($courseid, $label, $maximumScore, $baseurl, $ltilinkid, $resourceid, $tag, $typeid, $toolproxyid) {
+        global $DB;
+        $params = array();
+        $params['itemname'] = $label;
+        $params['gradetype'] = GRADE_TYPE_VALUE;
+        $params['grademax']  = $maximumScore;
+        $params['grademin']  = 0;
+        $item = new \grade_item(array('id' => 0, 'courseid' => $courseid));
+        \grade_item::set_properties($item, $params);
+        $item->itemtype = 'manual';
+        $item->grademax = $maximumScore;
+        $id = $item->insert('mod/ltiservice_gradebookservices');
+        $DB->insert_record('ltiservice_gradebookservices', (object)array(
+                'gradeitemid' => $id,
+                'courseid' => $courseid,
+                'toolproxyid' => $toolproxyid,
+                'typeid' => $typeid,
+                'baseurl' => $baseurl,
+                'ltilinkid' => $ltilinkid,
+                'resourceid' => $resourceid,
+                'tag' => $tag
+        ));
+        return $id;
     }
 
     /**
-     * Set a grade item.
+     * Saves a score received from the LTI tool.
      *
      * @param object $gradeitem Grade Item record
      * @param object $score Result object
@@ -344,7 +376,7 @@ class gradebookservices extends service_base {
      *
      * @throws \Exception
      */
-    public function save_grade_item($gradeitem, $score, $userid) {
+    public function save_score($gradeitem, $score, $userid) {
         global $DB, $CFG;
         $source = 'mod' . $this->get_component_id();
         if ($DB->get_record('user', array('id' => $userid)) === false) {
