@@ -158,25 +158,25 @@ class gradebookservices extends service_base {
                 $this->get_typeconfig()['ltiservice_gradesynchronization'] == self::GRADEBOOKSERVICES_FULL) {
                 // Check for used in context is only needed because there is no explicit site tool - course relation.
                 if ($this->is_allowed_in_context($typeid, $courseid)) {
-                    if (is_null($modlti)) {
-                        $id = null;
-                    } else {
+                    $id = null;
+                    if (!is_null($modlti)) {
                         $conditions = array('courseid' => $courseid, 'itemtype' => 'mod',
                                 'itemmodule' => 'lti', 'iteminstance' => $modlti);
 
-                        $lineitems = $DB->get_records('grade_items', $conditions);
+                        $coupled_lineitems = $DB->get_records('grade_items', $conditions);
                         $conditionsgbs = array('courseid' => $courseid, 'ltilinkid' => $modlti);
                         $lineitemsgbs = $DB->get_records('ltiservice_gradebookservices', $conditionsgbs);
-                        if (count($lineitems) + count($lineitemsgbs) == 1) {
-                            if ($lineitems) {
-                                $lineitem = reset($lineitems);
-                                $id = $lineitem->id;
+                        // if a link has more that one attached grade items, per spec we do not populate line item url
+                        if (count($lineitemsgbs) == 1) {
+                            $id = reset($lineitemsgbs)->gradeitemid; 
+                        }
+                        if (count($lineitemsgbs) <2 && count($coupled_lineitems) == 1) {
+                            $coupled_id = reset($coupled_lineitems)->id;
+                            if (!is_null($id) && $id!=$coupled_id) {
+                                $id = null;
                             } else {
-                                $lineitemsgb = reset($lineitemsgbs);
-                                $id = $lineitemsgb->gradeitemid;
+                                $id = $coupled_id;
                             }
-                        } else {
-                            $id = null;
                         }
                     }
                     $launchparameters['gradebookservices_scope'] = implode(',', $this->get_permitted_scopes());
