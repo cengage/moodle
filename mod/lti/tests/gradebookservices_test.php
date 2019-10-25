@@ -73,24 +73,16 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $tag = "test-tag-standalone";
         $typeid = $this->create_type();
 
-        $gbservice = new gradebookservices();
-        $gbservice->add_standalone_lineitem($course->id, 
-            "manualtest", 
-            10, 
-            "https://test.phpunit", 
-            null /*ltilinkid*/, 
-            $resourceid, 
-            $tag, 
-            $typeid, 
-            null /*toolproxyid*/);
+        $this->create_standalone_lineitem($course->id, $typeid, $resourceid, $tag);
         
         $this->assertLineItems($course, $typeid, "manualtest", null, $resourceid, $tag);
     }
     
     /**
-     * Test saving a graded LTI with resource and tag info (as a result of
-     * content item selection) creates a gradebookservices record
-     * that can be retrieved using the gradebook service API.
+     * Test line item URL is populated for coupled line item only
+     * if there is not another line item bound to the lti instance,
+     * since in that case there would be no rule to define which of
+     * the line items should be actually passed.
      */
     public function test_get_launch_parameters_coupled() {
         global $CFG;
@@ -103,20 +95,56 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         
         $typeid = $this->create_type();
         $course = $this->getDataGenerator()->create_course();
-        $resourceid = 'test-resource-id';
-        $tag = 'tag';
 
-        $ltiinstance = $this->create_graded_lti($typeid, $course, $resourceid, $tag);
+        $ltiinstance = $this->create_graded_lti($typeid, $course, 'resource-id', 'tag');
 
         $this->assertNotNull($ltiinstance);
 
-        $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($ltiinstance->id);
-        get_launch_parameters('basic-lti-launch-request', $course->id, 111l, $typeid, $ltiinstance->id); 
-        $this->assertNotNull($gbs);
-        $this->assertEquals($resourceid, $gbs->resourceid);
-        $this->assertEquals($tag, $gbs->tag);
+        $gbservice = new gradebookservices();
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $this->assertEquals('$LineItem.url', $params['lineitem_url']);
+        $this->assertEquals('$LineItem.url', $params['lineitem_url']);
 
-        $this->assertLineItems($course, $typeid, $ltiinstance->name, $ltiinstance, $resourceid, $tag);
+        $this->create_standalone_lineitem($course->id, $typeid, 'resource-id', 'tag', $ltiinstance->id);
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $this->assertEquals('$LineItems.url', $params['lineitems_url']);
+        // 2 line items for a single link, we cannot return a single line item url
+        $this->assertFalse(array_key_exists('$LineItem.url', $params));
+    }
+    
+    /**
+     * Test line item URL is populated for not coupled line item only
+     * if there is a single line item attached to that lti instance.
+     */
+    public function test_get_launch_parameters_decoupled() {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a tool type, associated with that proxy.
+        
+        $typeid = $this->create_type();
+        $course = $this->getDataGenerator()->create_course();
+
+        $ltiinstance = $this->create_notgraded_lti($typeid, $course);
+
+        $this->assertNotNull($ltiinstance);
+
+        $gbservice = new gradebookservices();
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $this->assertEquals('$LineItems.url', $params['lineitems_url']);
+        $this->assertFalse(array_key_exists('$LineItem.url', $params));
+
+        $this->create_standalone_lineitem($course->id, $typeid, 'resource-id', 'tag', $ltiinstance->id);
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $this->assertEquals('$LineItems.url', $params['lineitems_url']);
+        $this->assertEquals('$LineItem.url', $params['lineitem_url']);
+
+        // 2 line items for a single link, we cannot return a single line item url
+        $this->create_standalone_lineitem($course->id, $typeid, 'resource-id', 'tag-2', $ltiinstance->id);
+        $this->assertFalse(array_key_exists('$LineItem.url', $params));
     }
 
     private function assertLineItems($course, $typeid, $label, $ltiinstance, $resourceid, $tag) {
@@ -163,6 +191,28 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
                     'lineitemtag' => $tag);
     
         return $this->getDataGenerator()->create_module('lti', $lti, array());
+    }
+
+    private function create_notgraded_lti($typeid, $course) {
+
+        $lti = array('course' => $course->id,
+                    'typeid' => $typeid,
+                    'instructorchoiceacceptgrades' => LTI_SETTING_NEVER);
+    
+        return $this->getDataGenerator()->create_module('lti', $lti, array());
+    }
+
+    private function create_standalone_lineitem($courseid, $typeid, $resourceid, $tag, $ltiinstanceid = null) {
+        $gbservice = new gradebookservices();
+        $gbservice->add_standalone_lineitem($courseid, 
+            "manualtest", 
+            10, 
+            "https://test.phpunit", 
+            $ltiinstanceid, 
+            $resourceid, 
+            $tag, 
+            $typeid, 
+            null /*toolproxyid*/);
     }
 
     private function create_type() {
