@@ -41,29 +41,23 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         // Create a tool type, associated with that proxy.
-
-        $course = $this->getDataGenerator()->create_course();
         
-        $typeid = $this->get_type();
+        $typeid = $this->create_type();
+        $course = $this->getDataGenerator()->create_course();
+        $resourceid = 'test-resource-id';
+        $tag = 'tag';
 
-        $lti = array('course' => $course->id,
-                    'typeid' => $typeid,
-                    'instructorchoiceacceptgrades' => LTI_SETTING_ALWAYS,
-                    'grade' => 10,
-                    'lineitemresourceid' => 'test-resource-id',
-                    'lineitemtag' => 'test-tag');
-    
-        $ltiinstance = $this->getDataGenerator()->create_module('lti', $lti, array());
+        $ltiinstance = $this->create_graded_lti($typeid, $course, $resourceid, $tag);
 
         $this->assertNotNull($ltiinstance);
 
         $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($ltiinstance->id);
 
         $this->assertNotNull($gbs);
-        $this->assertEquals($lti['lineitemresourceid'], $gbs->resourceid);
-        $this->assertEquals($lti['lineitemtag'], $gbs->tag);
+        $this->assertEquals($resourceid, $gbs->resourceid);
+        $this->assertEquals($tag, $gbs->tag);
 
-        $this->assertLineItems($course, $typeid, $ltiinstance->name, $ltiinstance, $lti['lineitemresourceid'], $lti['lineitemtag']);
+        $this->assertLineItems($course, $typeid, $ltiinstance->name, $ltiinstance, $resourceid, $tag);
     }
 
     /**
@@ -77,7 +71,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $resourceid = "test-resource-standalone";
         $tag = "test-tag-standalone";
-        $typeid = $this->get_type();
+        $typeid = $this->create_type();
 
         $gbservice = new gradebookservices();
         $gbservice->add_standalone_lineitem($course->id, 
@@ -91,6 +85,38 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
             null /*toolproxyid*/);
         
         $this->assertLineItems($course, $typeid, "manualtest", null, $resourceid, $tag);
+    }
+    
+    /**
+     * Test saving a graded LTI with resource and tag info (as a result of
+     * content item selection) creates a gradebookservices record
+     * that can be retrieved using the gradebook service API.
+     */
+    public function test_get_launch_parameters_coupled() {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a tool type, associated with that proxy.
+        
+        $typeid = $this->create_type();
+        $course = $this->getDataGenerator()->create_course();
+        $resourceid = 'test-resource-id';
+        $tag = 'tag';
+
+        $ltiinstance = $this->create_graded_lti($typeid, $course, $resourceid, $tag);
+
+        $this->assertNotNull($ltiinstance);
+
+        $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($ltiinstance->id);
+        get_launch_parameters('basic-lti-launch-request', $course->id, 111l, $typeid, $ltiinstance->id); 
+        $this->assertNotNull($gbs);
+        $this->assertEquals($resourceid, $gbs->resourceid);
+        $this->assertEquals($tag, $gbs->tag);
+
+        $this->assertLineItems($course, $typeid, $ltiinstance->name, $ltiinstance, $resourceid, $tag);
     }
 
     private function assertLineItems($course, $typeid, $label, $ltiinstance, $resourceid, $tag) {
@@ -127,7 +153,19 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
     }
 
-    private function get_type() {
+    private function create_graded_lti($typeid, $course, $resourceid, $tag) {
+
+        $lti = array('course' => $course->id,
+                    'typeid' => $typeid,
+                    'instructorchoiceacceptgrades' => LTI_SETTING_ALWAYS,
+                    'grade' => 10,
+                    'lineitemresourceid' => $resourceid,
+                    'lineitemtag' => $tag);
+    
+        return $this->getDataGenerator()->create_module('lti', $lti, array());
+    }
+
+    private function create_type() {
         $type = new stdClass();
         $type->state = LTI_TOOL_STATE_CONFIGURED;
         $type->name = "Test tool";
@@ -136,7 +174,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $type->baseurl = $this->getExternalTestFileUrl('/test.html');
 
         $config = new stdClass();
-
+        $config->ltiservice_gradesynchronization = 2;
         return lti_add_type($type, $config);
     }
 }
