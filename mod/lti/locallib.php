@@ -1445,10 +1445,14 @@ function lti_tool_configuration_from_content_item($typeid, $messagetype, $ltiver
                         }
                     }
                     $config->grade_modgrade_point = $maxscore;
-                    if (isset($lineitem->assignedActivity)) {
+                    $config->lineitemresourceid = '';
+                    $config->lineitemtag = '';
+                    if (isset($lineitem->assignedActivity) && isset($lineitem->assignedActivity->activityId)) {
                         $config->lineitemresourceid = $lineitem->assignedActivity->activityId?:'';
                     }
-                    $config->lineitemtag = $lineitem->tag?:'';
+                    if (isset($lineitem->tag)) {
+                        $config->lineitemtag = $lineitem->tag?:'';
+                    }
                 }
             }
         }
