@@ -147,6 +147,46 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $this->assertFalse(array_key_exists('$LineItem.url', $params));
     }
 
+    /**
+     * Test a score for a standalone column can be saved and final score is updated
+     */
+    public function test_save_score_standalone() {
+        global $CFG;
+        require_once($CFG->libdir . '/gradelib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $gbservice = new gradebookservices();
+
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, 'student');
+        $typeid = $this->create_type();
+        $gradeitemid = $this->create_standalone_lineitem($course->id, $typeid, 'test-standalone', 'some-tag');
+        $gradeitem = $gbservice->get_lineitem($course->id, $gradeitemid, $typeid);
+        $score = new stdClass();
+        $score->userId = $user->id;
+        $score->timestamp = '2019-11-06T15:45:00Z'; //1573055100
+        $score->comment = 'Some comment';
+        $score->scoreGiven = 2.0;
+        $score->scoreMaximum = 4.0;
+        $score->activityProgress = 'Completed';
+        $score->gradingProgress = 'FullyGraded';
+
+        $gbservice->save_score($gradeitem, $score, $user->id);
+
+        $grade = \grade_grade::fetch(array('itemid' => $gradeitem->id, 'userid' => $user->id));
+        $this->assertNotNull($grade);
+        $this->assertEquals($grade->timemodified, 1573055100);
+        $this->assertEquals($grade->finalgrade, $gradeitem->grademax/2);
+        $this->assertEquals($grade->feedback, $score->comment);
+        $this->assertEquals($grade->feedbackformat, FORMAT_PLAIN);
+
+        $courseitem = \grade_item::fetch(array('courseid' => $course->id, 'itemtype'=>'course'));
+        $coursegrade = \grade_grade::fetch(array('itemid' => $gradeitem->id, 'userid' => $user->id));
+        $this->assertNotNull($coursegrade);
+        $this->assertEquals($coursegrade->finalgrade, $gradeitem->grademax/2);
+    }
+
     private function assertLineItems($course, $typeid, $label, $ltiinstance, $resourceid, $tag) {
         $gbservice = new gradebookservices();
         $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
@@ -204,7 +244,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
     private function create_standalone_lineitem($courseid, $typeid, $resourceid, $tag, $ltiinstanceid = null) {
         $gbservice = new gradebookservices();
-        $gbservice->add_standalone_lineitem($courseid, 
+        return $gbservice->add_standalone_lineitem($courseid, 
             "manualtest", 
             10, 
             "https://test.phpunit", 
