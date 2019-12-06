@@ -51,7 +51,7 @@ function add_moduleinfo($moduleinfo, $course, $mform = null) {
 
     $moduleinfo->course = $course->id;
     $moduleinfo = set_moduleinfo_defaults($moduleinfo);
-
+    
     if (!empty($course->groupmodeforce) or !isset($moduleinfo->groupmode)) {
         $moduleinfo->groupmode = 0; // Do not set groupmode.
     }
