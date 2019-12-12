@@ -64,10 +64,13 @@ class mod_lti_mod_form extends moodleform_mod {
         $this->typeid = 0;
 
         $mform =& $this->_form;
+        // Through Deep-Linking more than one item can be added at a time, this
+        // field hold the JSON for that alternate add flow
+        $mform->addElement('hidden', 'add_multiple', 'add_multiple', array('id' =>'id_add_multiple'));
+
         // Adding the "general" fieldset, where all the common settings are shown.
         $mform->addElement('header', 'general', get_string('general', 'form'));
         // Adding the standard "name" field.
-        $mform->addElement('text', 'add_many_variants', 'add_many_variants', array('size' => '256'));
         $mform->addElement('text', 'name', get_string('basicltiname', 'lti'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', null, 'required', null, 'client');
@@ -170,7 +173,7 @@ class mod_lti_mod_form extends moodleform_mod {
 
         $mform->addElement('hidden', 'urlmatchedtypeid', '', array( 'id' => 'id_urlmatchedtypeid' ));
         $mform->setType('urlmatchedtypeid', PARAM_INT);
-
+        
         $mform->addElement('hidden', 'lineitemresourceid', '', array( 'id' => 'id_lineitemresourceid' ));
         $mform->addElement('hidden', 'lineitemtag', '', array( 'id' => 'id_lineitemtag'));
 

@@ -151,8 +151,8 @@ if ($mform->is_cancelled()) {
     if (!empty($fromform->update)) {
         list($cm, $fromform) = update_moduleinfo($cm, $fromform, $course, $mform);
     } else if (!empty($fromform->add)) {
-        if (!empty($fromform->add_many_variants)) {
-            $variants = json_decode($fromform->add_many_variants);
+        if (!empty($fromform->add_multiple)) {
+            $variants = json_decode($fromform->add_multiple);
             foreach( $variants as &$variant) {
                 $formVariant = clone $fromform;
                 foreach ($variant as $key=>$value) {

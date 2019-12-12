@@ -1060,7 +1060,7 @@ function lti_build_custom_parameters($toolproxy, $tool, $instance, $params, $cus
  * @throws coding_exception For invalid media type and presentation target parameters.
  */
 function lti_build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '', $mediatypes = [],
-                                                  $presentationtargets = [], $autocreate = false, $multiple = false,
+                                                  $presentationtargets = [], $autocreate = false, $multiple = true,
                                                   $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '') {
     global $USER;
 
@@ -1346,53 +1346,7 @@ function lti_verify_jwt_signature($typeid, $consumerkey, $jwtparam) {
     return $tool;
 }
 
-/**
- * Processes the tool provider's response to the ContentItemSelectionRequest and builds the configuration data from the
- * selected content item. This configuration data can be then used when adding a tool into the course.
- *
- * @param int $typeid The tool type ID.
- * @param string $messagetype The value for the lti_message_type parameter.
- * @param string $ltiversion The value for the lti_version parameter.
- * @param string $consumerkey The consumer key.
- * @param string $contentitemsjson The JSON string for the content_items parameter.
- * @return stdClass The array of module information objects.
- * @throws moodle_exception
- * @throws lti\OAuthException
- */
-function lti_tool_configuration_from_content_item($typeid, $messagetype, $ltiversion, $consumerkey, $contentitemsjson) {
-    $tool = lti_get_type($typeid);
-    // Validate parameters.
-    if (!$tool) {
-        throw new moodle_exception('errortooltypenotfound', 'mod_lti');
-    }
-    // Check lti_message_type. Show debugging if it's not set to ContentItemSelection.
-    // No need to throw exceptions for now since lti_message_type does not seem to be used in this processing at the moment.
-    if ($messagetype !== 'ContentItemSelection') {
-        debugging("lti_message_type is invalid: {$messagetype}. It should be set to 'ContentItemSelection'.",
-            DEBUG_DEVELOPER);
-    }
-
-    // Check LTI versions from our side and the response's side. Show debugging if they don't match.
-    // No need to throw exceptions for now since LTI version does not seem to be used in this processing at the moment.
-    $expectedversion = $tool->ltiversion;
-    $islti2 = ($expectedversion === LTI_VERSION_2);
-    if ($ltiversion !== $expectedversion) {
-        debugging("lti_version from response does not match the tool's configuration. Tool: {$expectedversion}," .
-            " Response: {$ltiversion}", DEBUG_DEVELOPER);
-    }
-
-    $items = json_decode($contentitemsjson);
-    if (empty($items)) {
-        throw new moodle_exception('errorinvaliddata', 'mod_lti', '', $contentitemsjson);
-    }
-    if (!isset($items->{'@graph'}) || !is_array($items->{'@graph'}) || (count($items->{'@graph'}) > 1)) {
-        throw new moodle_exception('errorinvalidresponseformat', 'mod_lti');
-    }
-
-    $config = null;
-    if (!empty($items->{'@graph'})) {
-        $item = $items->{'@graph'}[0];
-        $typeconfig = lti_get_type_type_config($tool->id);
+function contentItemToConfig($tool, $typeconfig, $item) {
 
         $config = new stdClass();
         $config->name = '';
@@ -1476,6 +1430,221 @@ function lti_tool_configuration_from_content_item($typeid, $messagetype, $ltiver
             $config->instructorcustomparameters = implode("\n", $customparameters);
         }
         $config->contentitemjson = json_encode($item);
+    }
+
+}
+/**
+ * Processes the tool provider's response to the ContentItemSelectionRequest and builds the configuration data from the
+ * selected content item. This configuration data can be then used when adding a tool into the course.
+ *
+ * @param int $typeid The tool type ID.
+ * @param string $messagetype The value for the lti_message_type parameter.
+ * @param string $ltiversion The value for the lti_version parameter.
+ * @param string $consumerkey The consumer key.
+ * @param string $contentitemsjson The JSON string for the content_items parameter.
+ * @return stdClass The array of module information objects.
+ * @throws moodle_exception
+ * @throws lti\OAuthException
+ */
+function lti_tool_configuration_from_content_item($typeid, $messagetype, $ltiversion, $consumerkey, $contentitemsjson) {
+    $tool = lti_get_type($typeid);
+    // Validate parameters.
+    if (!$tool) {
+        throw new moodle_exception('errortooltypenotfound', 'mod_lti');
+    }
+    // Check lti_message_type. Show debugging if it's not set to ContentItemSelection.
+    // No need to throw exceptions for now since lti_message_type does not seem to be used in this processing at the moment.
+    if ($messagetype !== 'ContentItemSelection') {
+        debugging("lti_message_type is invalid: {$messagetype}. It should be set to 'ContentItemSelection'.",
+            DEBUG_DEVELOPER);
+    }
+
+    // Check LTI versions from our side and the response's side. Show debugging if they don't match.
+    // No need to throw exceptions for now since LTI version does not seem to be used in this processing at the moment.
+    $expectedversion = $tool->ltiversion;
+    $islti2 = ($expectedversion === LTI_VERSION_2);
+    if ($ltiversion !== $expectedversion) {
+        debugging("lti_version from response does not match the tool's configuration. Tool: {$expectedversion}," .
+            " Response: {$ltiversion}", DEBUG_DEVELOPER);
+    }
+
+    $items = json_decode($contentitemsjson);
+    if (empty($items)) {
+        throw new moodle_exception('errorinvaliddata', 'mod_lti', '', $contentitemsjson);
+    }
+    if (!isset($items->{'@graph'}) || !is_array($items->{'@graph'}) || (count($items->{'@graph'}) > 1)) {
+        throw new moodle_exception('errorinvalidresponseformat', 'mod_lti');
+    }
+
+    $config = null;
+    $items = $items->{'@graph'};
+    if (!empty($items->)) {
+        $typeconfig = lti_get_type_type_config($tool->id);
+        if (count($items) == 1) {
+            $item = $items[0];
+
+            $config = new stdClass();
+            $config->name = '';
+            if (isset($item->title)) {
+                $config->name = $item->title;
+            }
+            if (empty($config->name)) {
+                $config->name = $tool->name;
+            }
+            if (isset($item->text)) {
+                $config->introeditor = [
+                    'text' => $item->text,
+                    'format' => FORMAT_PLAIN
+                ];
+            }
+            if (isset($item->icon->{'@id'})) {
+                $iconurl = new moodle_url($item->icon->{'@id'});
+                // Assign item's icon URL to secureicon or icon depending on its scheme.
+                if (strtolower($iconurl->get_scheme()) === 'https') {
+                    $config->secureicon = $iconurl->out(false);
+                } else {
+                    $config->icon = $iconurl->out(false);
+                }
+            }
+            if (isset($item->url)) {
+                $url = new moodle_url($item->url);
+                $config->toolurl = $url->out(false);
+                $config->typeid = 0;
+            } else {
+                $config->typeid = $tool->id;
+            }
+            $config->instructorchoiceacceptgrades = LTI_SETTING_NEVER;
+            if (!$islti2 && isset($typeconfig->lti_acceptgrades)) {
+                $acceptgrades = $typeconfig->lti_acceptgrades;
+                if ($acceptgrades == LTI_SETTING_ALWAYS) {
+                    // We create a line item regardless if the definition contains one or not.
+                    $config->instructorchoiceacceptgrades = LTI_SETTING_ALWAYS;
+                }
+                if ($acceptgrades == LTI_SETTING_DELEGATE || $acceptgrades == LTI_SETTING_ALWAYS) {
+                    if (isset($item->lineItem)) {
+                        $lineitem = $item->lineItem;
+                        $config->instructorchoiceacceptgrades = LTI_SETTING_ALWAYS;
+                        $maxscore = 100;
+                        if (isset($lineitem->scoreConstraints)) {
+                            $sc = $lineitem->scoreConstraints;
+                            if (isset($sc->totalMaximum)) {
+                                $maxscore = $sc->totalMaximum;
+                            } else if (isset($sc->normalMaximum)) {
+                                $maxscore = $sc->normalMaximum;
+                            }
+                        }
+                        $config->grade_modgrade_point = $maxscore;
+                        if (isset($lineitem->assignedActivity) && isset($lineitem->assignedActivity->activityId)) {
+                            $config->cmidnumber = $lineitem->assignedActivity->activityId;
+                        }
+                    }
+                }
+            }
+            $config->instructorchoicesendname = LTI_SETTING_NEVER;
+            $config->instructorchoicesendemailaddr = LTI_SETTING_NEVER;
+            $config->launchcontainer = LTI_LAUNCH_CONTAINER_DEFAULT;
+            if (isset($item->placementAdvice->presentationDocumentTarget)) {
+                if ($item->placementAdvice->presentationDocumentTarget === 'window') {
+                    $config->launchcontainer = LTI_LAUNCH_CONTAINER_WINDOW;
+                } else if ($item->placementAdvice->presentationDocumentTarget === 'frame') {
+                    $config->launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
+                } else if ($item->placementAdvice->presentationDocumentTarget === 'iframe') {
+                    $config->launchcontainer = LTI_LAUNCH_CONTAINER_EMBED;
+                }
+            }
+            if (isset($item->custom)) {
+                $customparameters = [];
+                foreach ($item->custom as $key => $value) {
+                    $customparameters[] = "{$key}={$value}";
+                }
+                $config->instructorcustomparameters = implode("\n", $customparameters);
+            }
+            $config->contentitemjson = json_encode($item);
+        } else {
+            $item = $items[0];
+            $variant = new stdClass();
+            $typeconfig = lti_get_type_type_config($tool->id);
+
+            $config = new stdClass();
+            $config->name = '';
+            if (isset($item->title)) {
+                $config->name = $item->title;
+            }
+            if (empty($config->name)) {
+                $config->name = $tool->name;
+            }
+            if (isset($item->text)) {
+                $config->introeditor = [
+                    'text' => $item->text,
+                    'format' => FORMAT_PLAIN
+                ];
+            }
+            if (isset($item->icon->{'@id'})) {
+                $iconurl = new moodle_url($item->icon->{'@id'});
+                // Assign item's icon URL to secureicon or icon depending on its scheme.
+                if (strtolower($iconurl->get_scheme()) === 'https') {
+                    $config->secureicon = $iconurl->out(false);
+                } else {
+                    $config->icon = $iconurl->out(false);
+                }
+            }
+            if (isset($item->url)) {
+                $url = new moodle_url($item->url);
+                $config->toolurl = $url->out(false);
+                $config->typeid = 0;
+            } else {
+                $config->typeid = $tool->id;
+            }
+            $config->instructorchoiceacceptgrades = LTI_SETTING_NEVER;
+            if (!$islti2 && isset($typeconfig->lti_acceptgrades)) {
+                $acceptgrades = $typeconfig->lti_acceptgrades;
+                if ($acceptgrades == LTI_SETTING_ALWAYS) {
+                    // We create a line item regardless if the definition contains one or not.
+                    $config->instructorchoiceacceptgrades = LTI_SETTING_ALWAYS;
+                }
+                if ($acceptgrades == LTI_SETTING_DELEGATE || $acceptgrades == LTI_SETTING_ALWAYS) {
+                    if (isset($item->lineItem)) {
+                        $lineitem = $item->lineItem;
+                        $config->instructorchoiceacceptgrades = LTI_SETTING_ALWAYS;
+                        $maxscore = 100;
+                        if (isset($lineitem->scoreConstraints)) {
+                            $sc = $lineitem->scoreConstraints;
+                            if (isset($sc->totalMaximum)) {
+                                $maxscore = $sc->totalMaximum;
+                            } else if (isset($sc->normalMaximum)) {
+                                $maxscore = $sc->normalMaximum;
+                            }
+                        }
+                        $config->grade_modgrade_point = $maxscore;
+                        if (isset($lineitem->assignedActivity) && isset($lineitem->assignedActivity->activityId)) {
+                            $config->cmidnumber = $lineitem->assignedActivity->activityId;
+                        }
+                    }
+                }
+            }
+            $config->instructorchoicesendname = LTI_SETTING_NEVER;
+            $config->instructorchoicesendemailaddr = LTI_SETTING_NEVER;
+            $config->launchcontainer = LTI_LAUNCH_CONTAINER_DEFAULT;
+            if (isset($item->placementAdvice->presentationDocumentTarget)) {
+                if ($item->placementAdvice->presentationDocumentTarget === 'window') {
+                    $config->launchcontainer = LTI_LAUNCH_CONTAINER_WINDOW;
+                } else if ($item->placementAdvice->presentationDocumentTarget === 'frame') {
+                    $config->launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
+                } else if ($item->placementAdvice->presentationDocumentTarget === 'iframe') {
+                    $config->launchcontainer = LTI_LAUNCH_CONTAINER_EMBED;
+                }
+            }
+            if (isset($item->custom)) {
+                $customparameters = [];
+                foreach ($item->custom as $key => $value) {
+                    $customparameters[] = "{$key}={$value}";
+                }
+                $config->instructorcustomparameters = implode("\n", $customparameters);
+            }
+            $config->contentitemjson = json_encode($item);
+        }
+
+        }
     }
     return $config;
 }

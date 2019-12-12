@@ -109,6 +109,36 @@ define(
             new FormField('lineitemtag', FormField.TYPES.TEXT, true, '')
         ];
 
+        var showMultipleSummary = function(items) {
+           jquery("#region-main h2").after("<div id='add_summary'><p></p><ul></ul></div>");
+           jquery("div#add_summary p").text('The following items will be added to your course:');
+           items.forEach(function(item) {
+               var li = jquery('<li><strong></strong><span></span></li>');
+               li.find('strong').text(config.name);
+               if (config.instructorchoiceacceptgrades === 1) {
+                   li.find('span').text( ' Graded ($points points)'.replace('$points', item['grade_modgrade_point']));
+               }
+               jquery("#div#add_summary ul").append(li);
+           });
+        }
+
+        var configToVariant = function(config) {
+            var variant = {};
+            ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon'].forEach(
+                function(name) {
+                    variant[name] = config['name']||''; 
+                }
+            );
+            if (config.instructorchoiceacceptgrades === 1) {
+                variant['instructorchoiceacceptgrades'] = 1;
+                variant['grade[modgrade_type]'] = 'point';
+                variant['grade[modgrade_point]'] =  config['grade_modgrade_point'] || 100;
+            } else {
+                variant['instructorchoiceacceptgrades'] = 0;
+            }
+            return variant;
+        }
+
         /**
          * Window function that can be called from mod_lti/contentitem_return to close the dialogue and process the return data.
          *
@@ -118,14 +148,25 @@ define(
             if (dialogue) {
                 dialogue.hide();
             }
-
-            // Populate LTI configuration fields from return data.
-            var index;
-            for (index in ltiFormFields) {
-                var field = ltiFormFields[index];
-                var value = null;
-                if (typeof returnData[field.name] !== 'undefined') {
-                    value = returnData[field.name];
+            if (returnData['multiple']) {
+                var index;
+                for (index in ltiFormFields) {
+                    ltiFormFields[index].setFieldValue(null);
+                } 
+                var variants = [];
+                returnData['multiple'].forEach(function(v) {
+                    variants.push(configToVariant(v));
+                });
+            } else {
+                // Populate LTI configuration fields from return data.
+                var index;
+                for (index in ltiFormFields) {
+                    var field = ltiFormFields[index];
+                    var value = null;
+                    if (typeof returnData[field.name] !== 'undefined') {
+                        value = returnData[field.name];
+                    }
+                    field.setFieldValue(value);
                 }
                 field.setFieldValue(value);
             }
