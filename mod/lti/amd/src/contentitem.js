@@ -109,7 +109,15 @@ define(
             new FormField('lineitemtag', FormField.TYPES.TEXT, true, '')
         ];
 
-        var showMultipleSummary = function(items) {
+        /**
+         * When more than one item needs to be added, the UI is simplified
+         * to just list the items to be added. Form is hidden and the only
+         * options is (save and return to course) or cancel.
+         * This function injects the summary to the form page, and hides
+         * the unneeded elements.
+         * @param {*} items
+         */
+        var showMultipleSummaryAndHideForm = function(items) {
            $("#region-main h2").after("<div id='add_summary'><p></p><ul></ul></div>");
            $("div#add_summary p").text('The following items will be added to your course:');
            items.forEach(function(item) {
@@ -120,6 +128,9 @@ define(
                }
                $("div#add_summary ul").append(li);
            });
+           $('#region-main-box form.mform').children().hide();
+           $('#fgroup_id_buttonar').show();
+           $('#id_submitbutton').hide();
         };
 
         var configToVariant = function(config) {
@@ -141,6 +152,9 @@ define(
 
         /**
          * Window function that can be called from mod_lti/contentitem_return to close the dialogue and process the return data.
+         * If the return data contains more than one item, the form will not be populated with item data
+         * but rather hidden, and the item data will be added to a single input field used to create multiple
+         * instances in one request.
          *
          * @param {object} returnData The fetched configuration data from the Content-Item selection dialogue.
          */
@@ -151,14 +165,16 @@ define(
             if (returnData['multiple']) {
                 var index;
                 for (index in ltiFormFields) {
-                    ltiFormFields[index].setFieldValue(null);
+                    // name is required, so putting a placeholder as it will not be used
+                    // in multi-items add
+                    ltiFormFields[index].setFieldValue(ltiFormFields[index].name==='name'?'item':null);
                 }
                 var variants = [];
                 returnData['multiple'].forEach(function(v) {
                     variants.push(configToVariant(v));
                 });
                 $('#id_add_multiple').val(JSON.stringify(variants));
-                showMultipleSummary(returnData['multiple']);
+                showMultipleSummaryAndHideForm(returnData['multiple']);
             } else {
                 // Populate LTI configuration fields from return data.
                 var index;
