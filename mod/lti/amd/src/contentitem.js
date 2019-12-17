@@ -137,7 +137,7 @@ define(
             var variant = {};
             ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon'].forEach(
                 function(name) {
-                    variant[name] = config['name']||'';
+                    variant[name] = config[name]||'';
                 }
             );
             if (config.instructorchoiceacceptgrades === 1) {
@@ -190,7 +190,7 @@ define(
             }
 
             if (doneCallback) {
-                doneCallback();
+                doneCallback(returnData);
             }
         };
 
