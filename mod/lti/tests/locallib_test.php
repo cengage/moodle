@@ -386,6 +386,7 @@ class mod_lti_locallib_testcase extends advanced_testcase {
         $this->assertFalse(isset($params['resource_link_description']));
         $this->assertFalse(isset($params['launch_presentation_return_url']));
         $this->assertFalse(isset($params['lis_result_sourcedid']));
+        $this->assertEquals($params['tool_consumer_instance_guid'], 'www.example.com');
 
         // Custom parameters.
         $title = 'My custom title';
@@ -1382,5 +1383,85 @@ MwIDAQAB
         $this->assertEquals(json_encode(array_values($scopes)), $token->scope);
         $this->assertEquals($token->timecreated + LTI_ACCESS_TOKEN_LIFE, $token->validuntil);
         $this->assertNull($token->lastaccess);
+    }
+
+    function test_lti_get_launch_data_default_organizationid_unset_usehost() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type($config);
+        $link = $this->create_instance($type, $course);
+        $launchdata = lti_get_launch_data($link);
+        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], 'www.example.com');
+    }
+
+    function test_lti_get_launch_data_default_organizationid_set_usehost() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $config->lti_organizationid_default = LTI_DEFAULT_ORGID_SITEHOST;
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type($config);
+        $link = $this->create_instance($type, $course);
+        $launchdata = lti_get_launch_data($link);
+        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], 'www.example.com');
+    }
+
+    function test_lti_get_launch_data_default_organizationid_set_usesiteid() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $config->lti_organizationid_default = LTI_DEFAULT_ORGID_SITEID;
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type($config);
+        $link = $this->create_instance($type, $course);
+        $launchdata = lti_get_launch_data($link);
+        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], md5(get_site_identifier()));
+    }
+
+    function test_lti_get_launch_data_default_organizationid_orgid_override() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $config = new stdClass();
+        $config->lti_organizationid = 'overridden!';
+        $config->lti_organizationid_default = LTI_DEFAULT_ORGID_SITEID;
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type($config);
+        $link = $this->create_instance($type, $course);
+        $launchdata = lti_get_launch_data($link);
+        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], 'overridden!');
+    }
+
+    private function create_type($config) {
+        $type = new stdClass();
+        $type->state = LTI_TOOL_STATE_CONFIGURED;
+        $type->name = "Test tool";
+        $type->description = "Example description";
+        $type->clientid = "Test client ID";
+        $type->baseurl = $this->getExternalTestFileUrl('/test.html');
+
+        $configbase = new stdClass();
+        $configbase->lti_acceptgrades = LTI_SETTING_NEVER;
+        $configbase->lti_sendname = LTI_SETTING_NEVER;
+        $configbase->lti_sendemailaddr = LTI_SETTING_NEVER;
+        $mergedconfig = (object) array_merge( (array) $configbase, (array) $config);
+        $typeid = lti_add_type($type, $mergedconfig);
+        return lti_get_type($typeid);
+    }
+
+    private function create_instance($type, $course) {
+         return $this->getDataGenerator()->create_module('lti',
+            array('course' => $course->id,
+                  'toolurl' => $type->baseurl,
+                  'typeid' => $type->id
+                  ), array());
     }
 }
