@@ -328,10 +328,14 @@ $string['oauthsecurity'] = 'LTI 1.0/1.1';
 $string['optionalsettings'] = 'Optional settings';
 $string['organization'] = 'Organization details';
 $string['organizationdescr'] = 'Organization description';
+$string['organizationid_default'] = 'Default Organization ID';
+$string['siteid'] = 'Site ID';
+$string['sitehost'] = 'Site Hostname';
+$string['organizationid_default_help'] = 'Default value to use for Organization ID. Site ID identifies this installation of moodle.';
 $string['organizationid'] = 'Organization ID';
-$string['organizationid_help'] = 'A unique identifier for this Moodle instance. Typically, the DNS name of the organization is used.
+$string['organizationid_help'] = 'A unique identifier for this Moodle instance passed to the tool as the Platform Instance GUID.
 
-If this field is left blank, the host name of this Moodle site will be used as the default value.';
+If this field is left blank, the default value will be used.';
 $string['organizationurl'] = 'Organization URL';
 $string['organizationurl_help'] = 'The base URL of this Moodle instance.
 
