@@ -151,7 +151,18 @@ if ($mform->is_cancelled()) {
     if (!empty($fromform->update)) {
         list($cm, $fromform) = update_moduleinfo($cm, $fromform, $course, $mform);
     } else if (!empty($fromform->add)) {
-        $fromform = add_moduleinfo($fromform, $course, $mform);
+        if (!empty($fromform->add_multiple)) {
+            $variants = json_decode($fromform->add_multiple);
+            foreach( $variants as &$variant) {
+                $formVariant = clone $fromform;
+                foreach ($variant as $key=>$value) {
+                    $formVariant->$key = $value;
+                }
+                add_moduleinfo($formVariant, $course, $mform);
+            }
+        } else {
+            $fromform = add_moduleinfo($fromform, $course, $mform);
+        }
     } else {
         print_error('invaliddata');
     }
