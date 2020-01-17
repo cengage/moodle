@@ -66,7 +66,7 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform =& $this->_form;
         // Through Deep-Linking more than one item can be added at a time, this
         // field hold the JSON for that alternate add flow
-        $mform->addElement('hidden', 'add_multiple', 'add_multiple', array('id' =>'id_add_multiple'));
+        $mform->addElement('hidden', 'add_multiple', '', array('id' =>'id_add_multiple'));
 
         // Adding the "general" fieldset, where all the common settings are shown.
         $mform->addElement('header', 'general', get_string('general', 'form'));
