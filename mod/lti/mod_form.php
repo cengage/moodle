@@ -338,12 +338,12 @@ class mod_lti_mod_form extends moodleform_mod {
 
     function set_data($default_values) {
         $default_values->lineitemresourceid='';
-        $default_values->linetiemtag='';
+        $default_values->lineitemtag='';
         if (is_object($default_values) && $default_values->instance) {
             $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($default_values->instance);
             if ($gbs) {
                 $default_values->lineitemresourceid=$gbs->resourceid;
-                $default_values->lineitemtage=$gbs->tag;
+                $default_values->lineitemtag=$gbs->tag;
             }
         }
 
