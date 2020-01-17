@@ -177,9 +177,6 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'lineitemresourceid', '', array( 'id' => 'id_lineitemresourceid' ));
         $mform->addElement('hidden', 'lineitemtag', '', array( 'id' => 'id_lineitemtag'));
 
-        $mform->addElement('hidden', 'lineitemresourceid', '', array( 'id' => 'id_lineitemresourceid' ));
-        $mform->addElement('hidden', 'lineitemtag', '', array( 'id' => 'id_lineitemtag'));
-
         $launchoptions = array();
         $launchoptions[LTI_LAUNCH_CONTAINER_DEFAULT] = get_string('default', 'lti');
         $launchoptions[LTI_LAUNCH_CONTAINER_EMBED] = get_string('embed', 'lti');
