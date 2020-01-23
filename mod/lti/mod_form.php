@@ -209,7 +209,10 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform->setType('urlmatchedtypeid', PARAM_INT);
 
         $mform->addElement('hidden', 'lineitemresourceid', '', array( 'id' => 'id_lineitemresourceid' ));
+        $mform->setType('lineitemresourceid', PARAM_TEXT);
+
         $mform->addElement('hidden', 'lineitemtag', '', array( 'id' => 'id_lineitemtag'));
+        $mform->setType('lineitemtag', PARAM_TEXT);
 
         $launchoptions = array();
         $launchoptions[LTI_LAUNCH_CONTAINER_DEFAULT] = get_string('default', 'lti');
