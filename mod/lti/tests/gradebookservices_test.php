@@ -18,9 +18,8 @@
  * Unit tests for mod_lti gradebookservices
  * @package    mod_lti
  * @category   external
- * @copyright  2019 Claude Vervoort <claude.vervoort@cengage.com>
+ * @copyright  2020 Claude Vervoort <claude.vervoort@cengage.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @since      Moodle 3.8
  */
 
 defined('MOODLE_INTERNAL') || die();
