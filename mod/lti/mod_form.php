@@ -274,7 +274,6 @@ class mod_lti_mod_form extends moodleform_mod {
         $mform->addHelpButton('instructorchoiceacceptgrades', 'accept_grades', 'lti');
         $mform->disabledIf('instructorchoiceacceptgrades', 'typeid', 'in', $toolproxy);
 
-
         // Add standard course module grading elements.
         $this->standard_grading_coursemodule_elements();
 
@@ -336,17 +335,20 @@ class mod_lti_mod_form extends moodleform_mod {
         $PAGE->requires->js_init_call('M.mod_lti.editor.init', array(json_encode($jsinfo)), true, $module);
     }
 
-    function set_data($default_values) {
-        $default_values->lineitemresourceid='';
-        $default_values->lineitemtag='';
-        if (is_object($default_values) && $default_values->instance) {
-            $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($default_values->instance);
+    /**
+     * Sets the current values for resource and tag in case of update.
+     */
+    public function set_data($defaultvalues) {
+        $defaultvalues->lineitemresourceid = '';
+        $defaultvalues->lineitemtag = '';
+        if (is_object($defaultvalues) && $defaultvalues->instance) {
+            $gbs = gradebookservices::find_ltiservice_gradebookservice_for_lti($defaultvalues->instance);
             if ($gbs) {
-                $default_values->lineitemresourceid=$gbs->resourceid;
-                $default_values->lineitemtag=$gbs->tag;
+                $defaultvalues->lineitemresourceid = $gbs->resourceid;
+                $defaultvalues->lineitemtag = $gbs->tag;
             }
         }
 
-        parent::set_data($default_values);
+        parent::set_data($defaultvalues);
     }
 }

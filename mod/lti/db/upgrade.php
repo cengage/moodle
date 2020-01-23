@@ -159,13 +159,13 @@ function xmldb_lti_upgrade($oldversion) {
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2019031302, 'lti');
     }
-    
+
     // Automatically generated Moodle v3.7.0 release upgrade line.
     // Put any upgrade step following this.
 
     // Automatically generated Moodle v3.8.0 release upgrade line.
     // Put any upgrade step following this.
-    
+
     if ($oldversion < 2019092001) {
         // Define field typeid to be added to lti_tool_settings.
         $table = new xmldb_table('ltiservice_gradebookservices');
@@ -180,42 +180,37 @@ function xmldb_lti_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2019092001, 'lti');
     }
     if ($oldversion < 2019092002) {
-        // Now that we have added the new column let's migrate it
-        // Prior implementation was storing the resourceid under the grade item idnumber
-        // here migrating the resourceid to new lti_gradebookservices if none existed before
-        // We only care for mod/lti grade items as manual columns would already have a matching gradebookservcies record
+        // Now that we have added the new column let's migrate it.
+        // Prior implementation was storing the resourceid under the grade item idnumber, so moving it to lti_gradebookservices.
+        // We only care for mod/lti grade items as manual columns would already have a matching gradebookservices record.
 
         $DB->execute("INSERT INTO {ltiservice_gradebookservices} (gradeitemid, courseid, typeid, resourceid, baseurl)
-         SELECT gi.id, courseid, lti.typeid, gi.idnumber, t.baseurl 
-           FROM {grade_items} gi  
+         SELECT gi.id, courseid, lti.typeid, gi.idnumber, t.baseurl
+           FROM {grade_items} gi
            JOIN {lti} lti ON lti.id=gi.iteminstance AND gi.itemtype='mod' AND gi.itemmodule='lti'
            JOIN {lti_types} t ON t.id = lti.typeid
-          WHERE gi.id NOT IN ( SELECT gradeitemid 
-                                 FROM {ltiservice_gradebookservices} ) 
-             AND gi.idnumber IS NOT NULL 
+          WHERE gi.id NOT IN ( SELECT gradeitemid
+                                 FROM {ltiservice_gradebookservices} )
+             AND gi.idnumber IS NOT NULL
              AND gi.idnumber <> ''");
-    
+
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2019092002, 'lti');
     }
 
     if ($oldversion < 2019092003) {
-        // Now that we have added the new column let's migrate it
-        // Prior implementation was storing the resourceid under the grade item idnumber
-        // here updating the resourceid of pre-existing lti_gradebookservices
-        // manual gradeitems are used as the standalone gradebook columns (not bound to an lti activity)
-   
-        $DB->execute("UPDATE {ltiservice_gradebookservices} s 
+        // Here updating the resourceid of pre-existing lti_gradebookservices.
+        $DB->execute("UPDATE {ltiservice_gradebookservices} s
                          SET resourceid = (SELECT idnumber FROM {grade_items} WHERE id=gradeitemid)
-                       WHERE gradeitemid in (SELECT id FROM {grade_items} 
+                       WHERE gradeitemid in (SELECT id FROM {grade_items}
                                              WHERE ((itemtype='mod' AND itemmodule='lti') OR itemtype='manual')
-                                               AND idnumber IS NOT NULL 
+                                               AND idnumber IS NOT NULL
                                                AND idnumber <> '')
                          AND (s.resourceid is null OR s.resourceid = '')");
-    
+
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2019092003, 'lti');
     }
-
+    
     return true;
 }

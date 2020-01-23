@@ -267,23 +267,22 @@ class lineitems extends resource_base {
             $baseurl = lti_get_type_type_config($typeid)->lti_toolurl;
         }
         $gradebookservices = new gradebookservices();
-        $id = $gradebookservices->add_standalone_lineitem($contextid, 
-                                                         $json->label, 
-                                                         $max, 
-                                                         $baseurl, 
-                                                         $ltilinkid, 
-                                                         $resourceid, 
-                                                         $tag, 
-                                                         $typeid, 
+        $id = $gradebookservices->add_standalone_lineitem($contextid,
+                                                         $json->label,
+                                                         $max,
+                                                         $baseurl,
+                                                         $ltilinkid,
+                                                         $resourceid,
+                                                         $tag,
+                                                         $typeid,
                                                          $toolproxyid);
-        
+
         if (is_null($typeid)) {
             $json->id = parent::get_endpoint() . "/{$id}/lineitem";
         } else {
             $json->id = parent::get_endpoint() . "/{$id}/lineitem?type_id={$typeid}";
         }
         return json_encode($json, JSON_UNESCAPED_SLASHES);
-
     }
 
     /**
