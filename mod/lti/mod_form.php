@@ -340,6 +340,8 @@ class mod_lti_mod_form extends moodleform_mod {
 
     /**
      * Sets the current values for resource and tag in case of update.
+     *
+     * @param object $defaultvalues default values to populate the form with.
      */
     public function set_data($defaultvalues) {
         $defaultvalues->lineitemresourceid = '';
