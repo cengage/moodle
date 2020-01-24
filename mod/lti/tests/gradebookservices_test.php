@@ -128,7 +128,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
         // Create a tool type, associated with that proxy.
 
-        $typeid = $this->create_type();:w
+        $typeid = $this->create_type();
 
         $course = $this->getDataGenerator()->create_course();
 
