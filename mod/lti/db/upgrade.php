@@ -211,6 +211,6 @@ function xmldb_lti_upgrade($oldversion) {
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2019092003, 'lti');
     }
-    
+
     return true;
 }

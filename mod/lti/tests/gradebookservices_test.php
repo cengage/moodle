@@ -104,7 +104,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $this->assertNotNull($ltiinstance);
 
         $gbservice = new gradebookservices();
-        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id);
         $this->assertEquals('$LineItem.url', $params['lineitem_url']);
         $this->assertEquals('$LineItem.url', $params['lineitem_url']);
 
@@ -114,7 +114,7 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         // 2 line items for a single link, we cannot return a single line item url.
         $this->assertFalse(array_key_exists('$LineItem.url', $params));
     }
-    
+
     /**
      * Test line item URL is populated for not coupled line item only
      * if there is a single line item attached to that lti instance.
@@ -127,8 +127,9 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         // Create a tool type, associated with that proxy.
-        
-        $typeid = $this->create_type();
+
+        $typeid = $this->create_type();:w
+
         $course = $this->getDataGenerator()->create_course();
 
         $ltiinstance = $this->create_notgraded_lti($typeid, $course);
@@ -136,24 +137,36 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
         $this->assertNotNull($ltiinstance);
 
         $gbservice = new gradebookservices();
-        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id);
         $this->assertEquals('$LineItems.url', $params['lineitems_url']);
         $this->assertFalse(array_key_exists('$LineItem.url', $params));
 
         $this->create_standalone_lineitem($course->id, $typeid, 'resource-id', 'tag', $ltiinstance->id);
-        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id); 
+        $params = $gbservice->get_launch_parameters('basic-lti-launch-request', $course->id, 111, $typeid, $ltiinstance->id);
         $this->assertEquals('$LineItems.url', $params['lineitems_url']);
         $this->assertEquals('$LineItem.url', $params['lineitem_url']);
 
-        // 2 line items for a single link, we cannot return a single line item url
+        // 2 line items for a single link, we cannot return a single line item url.
         $this->create_standalone_lineitem($course->id, $typeid, 'resource-id', 'tag-2', $ltiinstance->id);
         $this->assertFalse(array_key_exists('$LineItem.url', $params));
     }
 
     /**
      * Asserts a matching gradebookservices record exist with the matching tag and resourceid.
+     *
+     * @param object $course current course
+     * @param int $typeid Type id of the tool
+     * @param string $label Label of the line item
+     * @param object $ltiinstance lti instance related to that line item
+     * @param string $resourceid resourceid the line item should have
+     * @param string $tag tag the line item should have
      */
-    private function assert_lineitems($course, $typeid, $label, $ltiinstance, $resourceid, $tag) {
+    private function assert_lineitems(object $course,
+                                      int $typeid,
+                                      string $label,
+                                      object $ltiinstance = null,
+                                      string $resourceid = null,
+                                      string $tag = null) : void {
         $gbservice = new gradebookservices();
         $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
 
@@ -188,8 +201,15 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
     /**
      * Inserts a graded lti instance, which should create a grade_item and gradebookservices record.
+     *
+     * @param int $typeid Type ID of the LTI Tool.
+     * @param object $course course where to add the lti instance.
+     * @param string $resourceid resource id
+     * @param string $tag tag
+     *
+     * @return object lti instance created
      */
-    private function create_graded_lti($typeid, $course, $resourceid, $tag) {
+    private function create_graded_lti(int $typeid, object $course, string $resourceid = null, string $tag = null) : object {
 
         $lti = array('course' => $course->id,
                     'typeid' => $typeid,
@@ -203,8 +223,13 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
      /**
       * Inserts an lti instance that is not graded.
+      *
+      * @param int $typeid Type Id of the LTI Tool.
+      * @param object $course course where to add the lti instance.
+      *
+      * @return object lti instance created
       */
-    private function create_notgraded_lti($typeid, $course) {
+    private function create_notgraded_lti(int $typeid, object $course) : object {
 
         $lti = array('course' => $course->id,
                     'typeid' => $typeid,
@@ -215,8 +240,19 @@ class mod_lti_gradebookservices_testcase extends advanced_testcase {
 
     /**
      * Inserts a standalone lineitem (gradeitem, gradebookservices entries).
+     *
+     * @param int $courseid Id of the course where the standalone line item will be added.
+     * @param int $typeid of the LTI Tool
+     * @param string $resourceid resource id
+     * @param string $tag tag
+     * @param int $ltiinstanceid Id of the LTI instance the standalone line item will be related to.
+     *
      */
-    private function create_standalone_lineitem($courseid, $typeid, $resourceid, $tag, $ltiinstanceid = null) {
+    private function create_standalone_lineitem(int $courseid,
+                                                int $typeid,
+                                                string $resourceid = null,
+                                                string $tag,
+                                                int $ltiinstanceid = null) : void {
         $gbservice = new gradebookservices();
         $gbservice->add_standalone_lineitem($courseid,
             "manualtest",
