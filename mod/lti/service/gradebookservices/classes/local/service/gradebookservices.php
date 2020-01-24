@@ -343,8 +343,15 @@ class gradebookservices extends service_base {
      *
      * @return int id of the created gradeitem
      */
-    public function add_standalone_lineitem($courseid, $label, $maximumscore, $baseurl, 
-                                            $ltilinkid, $resourceid, $tag, $typeid, $toolproxyid) {
+    public function add_standalone_lineitem(string $courseid,
+                                            string $label,
+                                            float $maximumscore,
+                                            string $baseurl,
+                                            int $ltilinkid = null,
+                                            string $resourceid = null,
+                                            string $tag = null,
+                                            int $typeid,
+                                            int $toolproxyid = null) : int {
         global $DB;
         $params = array();
         $params['itemname'] = $label;
@@ -370,6 +377,22 @@ class gradebookservices extends service_base {
     }
 
     /**
+     * Set a grade item.
+     *
+     * @param object $gradeitem Grade Item record
+     * @param object $score Result object
+     * @param int $userid User ID
+     *
+     * @throws \Exception
+     * @deprecated since Moodle 3.7 MDL-62599 - please do not use this function any more.
+     * @see gradebookservices::save_grade_item($gradeitem, $score, $userid)
+     */
+    public static function save_score($gradeitem, $score, $userid) {
+        $service = new gradebookservices();
+        $service->save_grade_item($gradeitem, $score, $userid);
+    }
+
+    /**
      * Saves a score received from the LTI tool.
      *
      * @param object $gradeitem Grade Item record
@@ -378,7 +401,7 @@ class gradebookservices extends service_base {
      *
      * @throws \Exception
      */
-    public function save_score($gradeitem, $score, $userid) {
+    public function save_grade_item($gradeitem, $score, $userid) {
         global $DB, $CFG;
         $source = 'mod' . $this->get_component_id();
         if ($DB->get_record('user', array('id' => $userid)) === false) {
@@ -593,15 +616,15 @@ class gradebookservices extends service_base {
     /**
      * Updates the tag and resourceid values for a grade item coupled to an lti link instance.
      *
-     * @param string $ltiinstance The lti instance to which the grade item is coupled to
+     * @param object $ltiinstance The lti instance to which the grade item is coupled to
      * @param string $resourceid The resourceid to apply to the lineitem. Might be an empty string.
      * @param string $tag The tag to apply to the lineitem. Might be an empty string.
      *
-     * @return boolean
      */
-    public static function update_coupled_gradebookservices($ltiinstance, $resourceid, $tag) {
+    public static function update_coupled_gradebookservices(object $ltiinstance,
+                                                            string $resourceid = null,
+                                                            string $tag = null) : void {
         global $DB;
-
         if ($ltiinstance && $ltiinstance->typeid) {
             $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance' => $ltiinstance->id));
             if ($gradeitem) {
