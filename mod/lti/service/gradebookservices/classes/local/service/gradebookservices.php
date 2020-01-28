@@ -335,11 +335,11 @@ class gradebookservices extends service_base {
      * @param string $label label of lineitem
      * @param float $maximumscore maximum score of lineitem
      * @param string $baseurl
-     * @param int $ltilinkid id of lti instance this line item is associated with
-     * @param string $resourceid resource id of lineitem
-     * @param string $tag tag of lineitem
+     * @param int|null $ltilinkid id of lti instance this line item is associated with
+     * @param string|null $resourceid resource id of lineitem
+     * @param string|null $tag tag of lineitem
      * @param int $typeid lti type to which this line item is associated with
-     * @param int $toolproxyid lti2 tool proxy to which this lineitem is associated to
+     * @param int|null $toolproxyid lti2 tool proxy to which this lineitem is associated to
      *
      * @return int id of the created gradeitem
      */
@@ -347,9 +347,9 @@ class gradebookservices extends service_base {
                                             string $label,
                                             float $maximumscore,
                                             string $baseurl,
-                                            int $ltilinkid = null,
-                                            string $resourceid = null,
-                                            string $tag = null,
+                                            ?int $ltilinkid,
+                                            ?string $resourceid,
+                                            ?string $tag,
                                             int $typeid,
                                             int $toolproxyid = null) : int {
         global $DB;
@@ -617,13 +617,13 @@ class gradebookservices extends service_base {
      * Updates the tag and resourceid values for a grade item coupled to an lti link instance.
      *
      * @param object $ltiinstance The lti instance to which the grade item is coupled to
-     * @param string $resourceid The resourceid to apply to the lineitem. Might be an empty string.
-     * @param string $tag The tag to apply to the lineitem. Might be an empty string.
+     * @param string|null $resourceid The resourceid to apply to the lineitem. Might be an empty string.
+     * @param string|null $tag The tag to apply to the lineitem. Might be an empty string.
      *
      */
     public static function update_coupled_gradebookservices(object $ltiinstance,
-                                                            string $resourceid = null,
-                                                            string $tag = null) : void {
+                                                            ?string $resourceid,
+                                                            ?string $tag) : void {
         global $DB;
         if ($ltiinstance && $ltiinstance->typeid) {
             $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance' => $ltiinstance->id));
