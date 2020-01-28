@@ -714,14 +714,14 @@ class gradebookservices extends service_base {
     /**
      * Find the right element in the ltiservice_gradebookservice table for a lineitem
      *
-     * @param string $gradeitemid The gradeitem id
+     * @param string $lineitemid The lineitem (gradeitem) id
      * @return object gradebookservice if it exists
      */
-    public static function find_ltiservice_gradebookservice_for_lineitem($gradeitemid) {
+    public static function find_ltiservice_gradebookservice_for_lineitem($lineitemid) {
         global $DB;
-        if ($gradeitemid) {
+        if ($lineitemid) {
             return $DB->get_record('ltiservice_gradebookservices',
-                    array('gradeitemid' => $gradeitemid));
+                    array('gradeitemid' => $lineitemid));
         }
     }
 
