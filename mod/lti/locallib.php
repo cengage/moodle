@@ -1518,10 +1518,10 @@ function lti_tool_configuration_from_content_item($typeid, $messagetype, $ltiver
                     $config->lineitemresourceid = '';
                     $config->lineitemtag = '';
                     if (isset($lineitem->assignedActivity) && isset($lineitem->assignedActivity->activityId)) {
-                        $config->lineitemresourceid = $lineitem->assignedActivity->activityId?:'';
+                        $config->lineitemresourceid = $lineitem->assignedActivity->activityId ? : '';
                     }
                     if (isset($lineitem->tag)) {
-                        $config->lineitemtag = $lineitem->tag? : '';
+                        $config->lineitemtag = $lineitem->tag ? : '';
                     }
                 }
             }
