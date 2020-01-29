@@ -201,13 +201,13 @@ function xmldb_lti_upgrade($oldversion) {
 
     if ($oldversion < 2020012803) {
         // Here updating the resourceid of pre-existing lti_gradebookservices.
-        $DB->execute("UPDATE {ltiservice_gradebookservices} s
+        $DB->execute("UPDATE {ltiservice_gradebookservices}
                          SET resourceid = (SELECT idnumber FROM {grade_items} WHERE id=gradeitemid)
                        WHERE gradeitemid in (SELECT id FROM {grade_items}
                                              WHERE ((itemtype='mod' AND itemmodule='lti') OR itemtype='manual')
                                                AND idnumber IS NOT NULL
                                                AND idnumber <> '')
-                         AND (s.resourceid is null OR s.resourceid = '')");
+                         AND (resourceid is null OR resourceid = '')");
 
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2020012803, 'lti');
