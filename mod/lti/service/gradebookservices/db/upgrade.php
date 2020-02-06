@@ -54,14 +54,12 @@
  *
  * @return boolean
  */
-
 function xmldb_ltiservice_gradebookservices_upgrade($oldversion) {
     global $CFG, $DB, $OUTPUT;
 
     $dbman = $DB->get_manager();
 
-
-    if ($oldversion < 2020012801) {
+    if ($oldversion < 2020020601) {
         // Define field typeid to be added to lti_tool_settings.
         $table = new xmldb_table('ltiservice_gradebookservices');
         $field = new xmldb_field('resourceid', XMLDB_TYPE_CHAR, "512", null, null, null, null);
@@ -75,7 +73,7 @@ function xmldb_ltiservice_gradebookservices_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020020601, 'ltiservice', 'gradebookservices');
     }
 
-    if ($oldversion < 2020012802) {
+    if ($oldversion < 2020020602) {
         // Now that we have added the new column let's migrate it'
         // Prior implementation was storing the resourceid under the grade item idnumber, so moving it to lti_gradebookservices.
         // We only care for mod/lti grade items as manual columns would already have a matching gradebookservices record.
@@ -94,7 +92,7 @@ function xmldb_ltiservice_gradebookservices_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020020602, 'ltiservice', 'gradebookservices');
     }
 
-    if ($oldversion < 2020012803) {
+    if ($oldversion < 2020020603) {
         // Here updating the resourceid of pre-existing lti_gradebookservices.
         $DB->execute("UPDATE {ltiservice_gradebookservices}
                          SET resourceid = (SELECT idnumber FROM {grade_items} WHERE id=gradeitemid)

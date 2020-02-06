@@ -16,7 +16,7 @@
 
 /**
  * Unit tests for mod_lti gradebookservices
- * @package    mod_lti
+ * @package    ltiservice_gradebookservices
  * @category   external
  * @copyright  2020 Claude Vervoort <claude.vervoort@cengage.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
