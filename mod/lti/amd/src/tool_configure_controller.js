@@ -34,9 +34,11 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         EXTERNAL_REGISTRATION_PAGE_CONTAINER: '#external-registration-page-container',
         CARTRIDGE_REGISTRATION_CONTAINER: '#cartridge-registration-container',
         CARTRIDGE_REGISTRATION_FORM: '#cartridge-registration-form',
+        LTIADV_REGISTRATION_CONTAINER: '#ltiadv-registration-container',
         ADD_TOOL_FORM: '#add-tool-form',
         TOOL_LIST_CONTAINER: '#tool-list-container',
         TOOL_CREATE_BUTTON: '#tool-create-button',
+        TOOL_CREATE_LTI2_BUTTON: '#tool-createlti2-button',
         REGISTRATION_CHOICE_CONTAINER: '#registration-choice-container',
         TOOL_URL: '#tool-url'
     };
@@ -94,6 +96,63 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      */
     var getRegistrationChoiceContainer = function() {
         return $(SELECTORS.REGISTRATION_CHOICE_CONTAINER);
+    };
+
+    /**
+     * Return the container that holds all elements for the external registration, including
+     * the cancel button and the iframe.
+     *
+     * @method getExternalRegistrationContainer
+     * @private
+     * @return {JQuery} jQuery object
+     */
+    var getLTIAdvRegistrationContainer = function() {
+        return $(SELECTORS.LTIADV_REGISTRATION_CONTAINER);
+    };
+
+
+    /**
+     * Stops displaying the external registration content.
+     *
+     * @method hideExternalRegistrationContent
+     * @private
+    var hideLTIAdvRegistrationContainer = function() {
+        getLTIAdvRegistrationContainer().addClass('hidden');
+    };
+*/
+    /**
+     * Displays the external registration content.
+     *
+     * @method showExternalRegistrationContent
+     * @private
+     */
+    var showLTIAdvRegistrationContainer = function() {
+        hideCartridgeRegistration();
+        hideRegistrationChoices();
+        getLTIAdvRegistrationContainer().removeClass('hidden');
+        //screenReaderAnnounce(getExternalRegistrationContainer());
+    };
+
+    /**
+     * Load the external registration template and render it in the DOM and display it.
+     *
+     * @method renderExternalRegistrationWindow
+     * @private
+     * @param {Object} registrationRequest
+     * @return {Promise} jQuery Deferred object
+     */
+    var initiateRegistration = function(url) {
+
+        // Show the external registration page in an iframe.
+        var container = getLTIAdvRegistrationContainer();
+        var iframe = container.append("<iframe src='/mod/lti/startltiadvregistration.php?url="
+                         + encodeURIComponent( url ) + "'></iframe>");
+        showLTIAdvRegistrationContainer();
+        window.addEventListener("message", (e=>{
+            if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
+                iframe.remove();
+            }
+        }), false);
     };
 
     /**
@@ -291,17 +350,61 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      * Trigger appropriate registration process process for the user input
      * URL. It can either be a cartridge or a registration url.
      *
-     * @method addTool
+     * @method addLTIAdvTool
      * @private
      * @return {Promise} jQuery Deferred object
      */
-    var addTool = function() {
+    var addLTIAdvTool = function() {
+        var url = $.trim(getToolURL());
+
+        if (url !== "") {
+            var toolButton = getToolCreateButton();
+            startLoading(toolButton);
+
+            $(document).trigger(ltiEvents.START_LTIADV_REGISTRATION, {url: url});
+        }
+
+    };
+
+    /**
+     * Trigger appropriate registration process process for the user input
+     * URL. It can either be a cartridge or a registration url.
+     *
+     * @method addLTI2Tool
+                        <button id="tool-create-button" type="submit" class="btn btn-success">
+                        <button id="tool-create-button" type="submit" class="btn btn-success">
+                        <button id="tool-create-button" type="submit" class="btn btn-success">
+                        <button id="tool-create-button" type="submit" class="btn btn-success">
+                            <span class="btn-text">{{#str}} add {{/str}}</span>
+                            <div class="btn-loader">
+                                {{> mod_lti/loader }}
+                            </div>
+                        </button>
+                            <span class="btn-text">{{#str}} add {{/str}}</span>
+                            <div class="btn-loader">
+                                {{> mod_lti/loader }}
+                            </div>
+                        </button>
+                            <span class="btn-text">{{#str}} add {{/str}}</span>
+                            <div class="btn-loader">
+                                {{> mod_lti/loader }}
+                            </div>
+                        </button>
+                            <span class="btn-text">{{#str}} add {{/str}}</span>
+                            <div class="btn-loader">
+                                {{> mod_lti/loader }}
+                            </div>
+                        </button>
+     * @private
+     * @return {Promise} jQuery Deferred object
+     */
+    var addLTI2Tool = function() {
         var url = $.trim(getToolURL());
 
         if (url === "") {
             return $.Deferred().resolve();
         }
-
+        var toolButton = $(SELECTORS.TOOL_CREATE_LTI2_BUTTON);
         var toolButton = getToolCreateButton();
         startLoading(toolButton);
 
@@ -368,14 +471,31 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
             showRegistrationChoices();
         });
 
+        $(document).on(ltiEvents.START_LTIADV_REGISTRATION, function(event, data) {
+                if (!data) {
+                    return;
+                }
+                if (data.url) {
+                    $(SELECTORS.TOOL_URL).val('');
+                    hideToolList();
+                    initiateRegistration(data.url);
+                }
+        });
+
         $(document).on(ltiEvents.REGISTRATION_FEEDBACK, function(event, data) {
             showRegistrationFeedback(data);
+        });
+
+        var form = $(SELECTORS.TOOL_CREATE_LTI2_BUTTON);
+        form.submit(function(e) {
+            e.preventDefault();
+            addLTI2Tool();
         });
 
         var form = $(SELECTORS.ADD_TOOL_FORM);
         form.submit(function(e) {
             e.preventDefault();
-            addTool();
+            addLTIAdvTool();
         });
 
     };
