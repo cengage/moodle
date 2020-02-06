@@ -51,6 +51,12 @@
                                 {{> mod_lti/loader }}
                             </div>
                         </button>
+                        <button id="tool-createlti2-button" type="button" class="btn btn-warning">
+                            <span class="btn-text">{{#str}} add_lti2, mod_lti {{/str}}</span>
+                            <div class="btn-loader">
+                                {{> mod_lti/loader }}
+                            </div>
+                        </button>
                     </div>
                 </form>
                 <p>{{#str}} manuallyaddtype, mod_lti, {{{configuremanualurl}}} {{/str}}</p>
@@ -62,6 +68,8 @@
         </div>
         <div id="external-registration-container" aria-live="polite" class="hidden">
             {{> mod_lti/external_registration }}
+        </div>
+        <div id="ltiadv-registration-container" aria-live="polite" class="hidden">
         </div>
     </div>
 
