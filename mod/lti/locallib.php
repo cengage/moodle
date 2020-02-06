@@ -4455,3 +4455,16 @@ function lti_new_access_token($typeid, $scopes) {
     return $newtoken;
 
 }
+
+function registration_token() {
+    $now = time();
+    $token = [
+        "sub" => random_string(15),
+        "scope" => "reg",
+        "iat" => $now,
+        "exp" => $now + 3600 
+    ];
+    $privatekey = get_config('mod_lti', 'privatekey');
+    $kid = get_config('mod_lti', 'kid');
+    return JWT::encode($token, $privatekey, 'RS256', $kid); 
+}
