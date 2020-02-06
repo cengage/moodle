@@ -21,10 +21,9 @@
  * @copyright  2020 Claude Vervoort <claude.vervoort@cengage.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+use ltiservice_gradebookservices\local\service\gradebookservices;
 
 defined('MOODLE_INTERNAL') || die();
-
-use ltiservice_gradebookservices\local\service\gradebookservices;
 
 /**
  * Unit tests for lti gradebookservices.

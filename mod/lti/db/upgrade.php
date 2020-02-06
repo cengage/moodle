@@ -166,52 +166,5 @@ function xmldb_lti_upgrade($oldversion) {
     // Automatically generated Moodle v3.8.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2020012801) {
-        // Define field typeid to be added to lti_tool_settings.
-        $table = new xmldb_table('ltiservice_gradebookservices');
-        $field = new xmldb_field('resourceid', XMLDB_TYPE_TEXT, "small", null, null, null, null);
-
-        // Conditionally launch add field typeid.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2020012801, 'lti');
-    }
-
-    if ($oldversion < 2020012802) {
-        // Now that we have added the new column let's migrate it.
-        // Prior implementation was storing the resourceid under the grade item idnumber, so moving it to lti_gradebookservices.
-        // We only care for mod/lti grade items as manual columns would already have a matching gradebookservices record.
-
-        $DB->execute("INSERT INTO {ltiservice_gradebookservices} (gradeitemid, courseid, typeid, resourceid, baseurl)
-         SELECT gi.id, courseid, lti.typeid, gi.idnumber, t.baseurl
-           FROM {grade_items} gi
-           JOIN {lti} lti ON lti.id=gi.iteminstance AND gi.itemtype='mod' AND gi.itemmodule='lti'
-           JOIN {lti_types} t ON t.id = lti.typeid
-          WHERE gi.id NOT IN ( SELECT gradeitemid
-                                 FROM {ltiservice_gradebookservices} )
-             AND gi.idnumber IS NOT NULL
-             AND gi.idnumber <> ''");
-
-        // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2020012802, 'lti');
-    }
-
-    if ($oldversion < 2020012803) {
-        // Here updating the resourceid of pre-existing lti_gradebookservices.
-        $DB->execute("UPDATE {ltiservice_gradebookservices}
-                         SET resourceid = (SELECT idnumber FROM {grade_items} WHERE id=gradeitemid)
-                       WHERE gradeitemid in (SELECT id FROM {grade_items}
-                                             WHERE ((itemtype='mod' AND itemmodule='lti') OR itemtype='manual')
-                                               AND idnumber IS NOT NULL
-                                               AND idnumber <> '')
-                         AND (resourceid is null OR resourceid = '')");
-
-        // Lti savepoint reached.
-        upgrade_mod_savepoint(true, 2020012803, 'lti');
-    }
-
     return true;
 }
