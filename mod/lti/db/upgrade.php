@@ -170,8 +170,16 @@ function xmldb_lti_upgrade($oldversion) {
 
         // Changing type of field instructorcustomparameters on table lti to text.
         $table = new xmldb_table('lti');
-        $field = new xmldb_field('instructorcustomparameters', XMLDB_TYPE_TEXT, null, null, null, null, null,
-                'instructorchoiceallowsetting');
+        $field = new xmldb_field(
+            'instructorcustomparameters',
+            XMLDB_TYPE_TEXT,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'instructorchoiceallowsetting'
+        );
 
         // Launch change of type for field value.
         $dbman->change_field_type($table, $field);
@@ -203,6 +211,27 @@ function xmldb_lti_upgrade($oldversion) {
 
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2022032900, 'lti');
+    
+    if ($oldversion < 2022050400) {
+        $table = new xmldb_table('lti_types');
+
+        $placementstablename = 'lti_course_menu_placements';
+        $table = new xmldb_table($placementstablename);
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, 11, true, true, XMLDB_SEQUENCE, null);
+        $table->add_field('course', XMLDB_TYPE_INTEGER, 11, true, true, false, null, 'id');
+        $table->add_field('typeid', XMLDB_TYPE_INTEGER, 11, true, true, false, null, 'course');
+
+        // Adding keys to table lti_course_menu_placements.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('course', XMLDB_KEY_FOREIGN, array('course'), 'course', array('id'));
+        $table->add_key('typeid',XMLDB_KEY_FOREIGN, array('typeid'), 'lti_types', array('id'));
+        
+        if (!$dbman->table_exists($placementstablename)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_mod_savepoint(true, 2022050400, 'lti');
     }
 
     // Automatically generated Moodle v4.0.0 release upgrade line.
