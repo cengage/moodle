@@ -170,14 +170,106 @@ function xmldb_lti_upgrade($oldversion) {
 
         // Changing type of field instructorcustomparameters on table lti to text.
         $table = new xmldb_table('lti');
-        $field = new xmldb_field('instructorcustomparameters', XMLDB_TYPE_TEXT, null, null, null, null, null,
-                'instructorchoiceallowsetting');
+        $field = new xmldb_field(
+            'instructorcustomparameters',
+            XMLDB_TYPE_TEXT,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'instructorchoiceallowsetting'
+        );
 
         // Launch change of type for field value.
         $dbman->change_field_type($table, $field);
 
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2021052501, 'lti');
+    }
+
+    if ($oldversion < 2021052502) {
+        $table = new xmldb_table('lti_types');
+
+        $placementstablename = 'lti_course_menu_placements';
+        $table = new xmldb_table($placementstablename);
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, 11, true, true, XMLDB_SEQUENCE, null);
+        $table->add_field('course', XMLDB_TYPE_INTEGER, 11, true, true, false, null, 'id');
+        $table->add_field('typeid', XMLDB_TYPE_INTEGER, 11, true, true, false, null, 'course');
+
+        // Adding keys to table lti_course_menu_placements.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('course', XMLDB_KEY_FOREIGN, array('course'), 'course', array('id'));
+        $table->add_key('typeid',XMLDB_KEY_FOREIGN, array('typeid'), 'lti_types', array('id'));
+
+        if (!$dbman->table_exists($placementstablename)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_mod_savepoint(true, 2021052502, 'lti');
+    }
+
+    if ($oldversion < 2020061502) {
+
+        // Create lti_menu_links table.
+        $ltimenutablename = 'lti_menu_links';
+        $table = new xmldb_table($ltimenutablename);
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, 11, true, true, XMLDB_SEQUENCE, null);
+        $table->add_field('typeid', XMLDB_TYPE_INTEGER, 11, true, true, false, null, 'id');
+        $table->add_field('label', XMLDB_TYPE_TEXT, 255, null, false, null, null, 'typeid');
+        $table->add_field('url', XMLDB_TYPE_TEXT, 255, null, false, null, null, 'label');
+
+        // Adding keys to table lti_menu_links.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('typeid',XMLDB_KEY_FOREIGN, array('typeid'), 'lti_types', array('id'));
+
+        if (!$dbman->table_exists($ltimenutablename)) {
+            $dbman->create_table($table);
+        }
+
+        // Check if menulinkurl column exists.
+        if ($dbman->field_exists('lti_types', 'menulinkurl')) {
+
+            // Migrate menulinkurl from lti_course_menu_placements to lti_menu_links.
+            $rs = $DB->get_recordset_select('lti_types', null, null, null, 'id, name, menulinkurl');
+            if ($rs->valid()) {
+                foreach ($rs as $menuurldata) {
+
+                    if (empty($menuurldata->menulinkurl) || is_null($menuurldata->menulinkurl)) {
+                        continue;
+                    }
+
+                    $record                 = new stdclass();
+                    $record->typeid         = $menuurldata->id;
+                    $record->menulinklabel  = $menuurldata->name;
+                    $record->menulinkurl    = $menuurldata->menulinkurl;
+                    $DB->insert_record('lti_menu_links', $record);
+                }
+            }
+            $rs->close();
+
+            // Delete menulinkurl from lti_types.
+            $table = new xmldb_table('lti_types');
+            $field = new xmldb_field('menulinkurl');
+            $dbman->drop_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2020061502, 'lti');
+    }
+
+    if ($oldversion < 2020061503) {
+
+        $placementstablename = 'lti_course_menu_placements';
+        $table = new xmldb_table($placementstablename);
+
+        $field = new xmldb_field('menulinkid', XMLDB_TYPE_INTEGER, 11, true, false, null, null, 'typeid');
+        $key = new xmldb_key('menulinkid', XMLDB_KEY_FOREIGN, array('menulinkid'), 'lti_menu_links', array('id'));
+        $dbman->add_field($table, $field);
+        $dbman->add_key($table, $key);
+
+        upgrade_mod_savepoint(true, 2020061503, 'lti');
     }
 
     return true;
