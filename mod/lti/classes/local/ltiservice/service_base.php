@@ -256,7 +256,7 @@ abstract class service_base {
     /**
      * Set the form data when displaying the LTI Instance form.
      *
-     * @param array $defaultvalues Default form values.
+     * @param object $defaultvalues Default form values.
      */
     public function set_instance_form_values(object $defaultvalues): void {
 
