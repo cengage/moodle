@@ -507,6 +507,4 @@ abstract class service_base {
         return $ok;
 
     }
-
-
 }
