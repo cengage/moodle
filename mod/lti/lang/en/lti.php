@@ -115,6 +115,7 @@ $string['contentitem_deeplinking_help'] = 'If ticked, the option \'Select conten
 $string['contentitem_multiple_description'] = 'The following items will be added to your course:';
 $string['contentitem_multiple_graded'] = 'Graded activity (Maximum grade: {$a})';
 $string['course_tool_types'] = 'Course tools';
+$string['courseapps'] = 'Course apps';
 $string['courseactivitiesorresources'] = 'Course activities or resources';
 $string['courseid'] = 'Course ID number';
 $string['courseinformation'] = 'Course information';
