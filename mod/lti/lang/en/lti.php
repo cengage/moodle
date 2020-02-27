@@ -233,7 +233,8 @@ $string['jwtsecurity'] = 'LTI 1.3';
 $string['launch_in_moodle'] = 'Launch tool in Moodle';
 $string['launch_in_popup'] = 'Launch tool in a pop-up';
 $string['launch_url'] = 'Tool URL';
-$string['add_lti2'] = 'Add LTI 2 Tool (deprecated)';
+$string['add_lti13'] = 'Add LTI 1.3';
+$string['add_lti11'] = 'Add LTI 1.1 (2.0)';
 $string['launch_url_help'] = 'The tool URL indicates the web address of the External Tool, and may contain additional information, such as the resource to show.
 If you are unsure what to enter for the tool URL, please check with the tool provider for more information.
 
