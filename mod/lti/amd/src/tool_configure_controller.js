@@ -38,7 +38,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         ADD_TOOL_FORM: '#add-tool-form',
         TOOL_LIST_CONTAINER: '#tool-list-container',
         TOOL_CREATE_BUTTON: '#tool-create-button',
-        TOOL_CREATE_LTI2_BUTTON: '#tool-createlti2-button',
+        TOOL_CREATE_LTILEGACY_BUTTON: '#tool-createltilegacy-button',
         REGISTRATION_CHOICE_CONTAINER: '#registration-choice-container',
         TOOL_URL: '#tool-url'
     };
@@ -116,10 +116,11 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      *
      * @method hideExternalRegistrationContent
      * @private
+     */
     var hideLTIAdvRegistrationContainer = function() {
         getLTIAdvRegistrationContainer().addClass('hidden');
     };
-*/
+
     /**
      * Displays the external registration content.
      *
@@ -151,6 +152,11 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         window.addEventListener("message", (e=>{
             if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
                 iframe.remove();
+                hideLTIAdvRegistrationContainer();
+                showCartridgeRegistration();
+                showRegistrationChoices();
+                showToolList();
+                showRegistrationChoices();
             }
         }), false);
     };
@@ -347,21 +353,18 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
     };
 
     /**
-     * Trigger appropriate registration process process for the user input
-     * URL. It can either be a cartridge or a registration url.
+     * Start the LTI Advantage registration.
      *
      * @method addLTIAdvTool
      * @private
-     * @return {Promise} jQuery Deferred object
      */
     var addLTIAdvTool = function() {
         var url = $.trim(getToolURL());
 
-        if (url !== "") {
-            var toolButton = getToolCreateButton();
-            startLoading(toolButton);
-
-            $(document).trigger(ltiEvents.START_LTIADV_REGISTRATION, {url: url});
+        if (url) {
+            $(SELECTORS.TOOL_URL).val('');
+            hideToolList();
+            initiateRegistration(url);
         }
 
     };
@@ -370,7 +373,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      * Trigger appropriate registration process process for the user input
      * URL. It can either be a cartridge or a registration url.
      *
-     * @method addLTI2Tool
+     * @method addLTILegacyTool
                         <button id="tool-create-button" type="submit" class="btn btn-success">
                         <button id="tool-create-button" type="submit" class="btn btn-success">
                         <button id="tool-create-button" type="submit" class="btn btn-success">
@@ -398,7 +401,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      * @private
      * @return {Promise} jQuery Deferred object
      */
-    var addLTI2Tool = function() {
+    var addLTILegacyTool = function() {
         var url = $.trim(getToolURL());
 
         if (url === "") {
@@ -471,29 +474,18 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
             showRegistrationChoices();
         });
 
-        $(document).on(ltiEvents.START_LTIADV_REGISTRATION, function(event, data) {
-                if (!data) {
-                    return;
-                }
-                if (data.url) {
-                    $(SELECTORS.TOOL_URL).val('');
-                    hideToolList();
-                    initiateRegistration(data.url);
-                }
-        });
-
         $(document).on(ltiEvents.REGISTRATION_FEEDBACK, function(event, data) {
             showRegistrationFeedback(data);
         });
 
-        var form = $(SELECTORS.TOOL_CREATE_LTI2_BUTTON);
-        form.submit(function(e) {
+        var addLegacyButton = $(SELECTORS.TOOL_CREATE_LTILEGACY_BUTTON);
+        addLegacyButton.click(function(e) {
             e.preventDefault();
-            addLTI2Tool();
+            addLTILegacyTool();
         });
 
-        var form = $(SELECTORS.ADD_TOOL_FORM);
-        form.submit(function(e) {
+        var addLTIButton = $(SELECTORS.TOOL_CREATE_BUTTON);
+        addLTIButton.click(function(e) {
             e.preventDefault();
             addLTIAdvTool();
         });

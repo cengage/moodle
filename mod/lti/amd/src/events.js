@@ -29,8 +29,6 @@ define([], function() {
         NEW_TOOL_TYPE: 'lti.tool.type.new',
         START_EXTERNAL_REGISTRATION: 'lti.registration.external.start',
         STOP_EXTERNAL_REGISTRATION: 'lti.registration.external.stop',
-        START_LTIADV_REGISTRATION: 'lti.registration.ltiadv.start',
-        STOP_LTIADV_REGISTRATION: 'lti.registration.ltiadv.stop',
         START_CARTRIDGE_REGISTRATION: 'lti.registration.cartridge.start',
         STOP_CARTRIDGE_REGISTRATION: 'lti.registration.cartridge.stop',
         REGISTRATION_FEEDBACK: 'lti.registration.feedback',
