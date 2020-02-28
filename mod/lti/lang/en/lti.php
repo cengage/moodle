@@ -115,8 +115,10 @@ $string['contentitem_deeplinking_help'] = 'If ticked, the option \'Select conten
 $string['contentitem_multiple_description'] = 'The following items will be added to your course:';
 $string['contentitem_multiple_graded'] = 'Graded activity (Maximum grade: {$a})';
 $string['course_tool_types'] = 'Course tools';
-$string['courseapps'] = 'Course apps';
 $string['courseactivitiesorresources'] = 'Course activities or resources';
+$string['courseapps'] = 'Course apps';
+$string['courseappselectionmessage'] = 'Select app(s) to launch from side navigation bar';
+$string['courseappselectionmissingmessage'] = 'No apps are currently available. Contact your site administrator for more information.';
 $string['courseid'] = 'Course ID number';
 $string['courseinformation'] = 'Course information';
 $string['courselink'] = 'Go to course';
@@ -463,6 +465,7 @@ tool providers. It may be an automated process, or it may require a dialogue wit
 
 Tools which do not require secure communication from Moodle and do not provide additional services (such as grade reporting)
 may not require a resource key.';
+$string['changessaved'] = 'Course apps selections have been saved.';
 $string['resourceurl'] = 'Resource URL';
 $string['return_to_course'] = 'Click <a href="{$a->link}" target="_top">here</a> to return to the course.';
 $string['saveallfeedback'] = 'Save all my feedback';
@@ -474,6 +477,7 @@ $string['secure_launch_url_help'] = 'Similar to the tool URL, but used instead o
 
 The tool URL may also be set to an https address to force launching through SSL, and this field may be left blank.';
 $string['selectcontent'] = 'Select content';
+$string['selectcourseapptitle'] = 'Select course apps';
 $string['send'] = 'Send';
 $string['services'] = 'Services';
 $string['services_help'] = 'Select those services which you wish to offer to the tool provider.  More than one service can be selected.';
