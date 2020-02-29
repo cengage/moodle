@@ -56,17 +56,32 @@ $l  = optional_param('l', 0, PARAM_INT);  // lti ID.
 $action = optional_param('action', '', PARAM_TEXT);
 $foruserid = optional_param('user', 0, PARAM_INT);
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
+$ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
+$courseid = optional_param('course', 0, PARAM_INT);
 
-if ($l) {  // Two ways to specify the module.
-    $lti = $DB->get_record('lti', array('id' => $l), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
-
+$cm = null;
+$pageparams = array();
+if ($ltitypeid && $courseid) {
+    $lti = $DB->get_record('lti_types', ['id' => $ltitypeid]);
+    $lti->typeid = $ltitypeid;
+    $lti->showtitlelaunch = false;
+    $lti->showdescriptionlaunch = false;
+    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+    $context = context_course::instance($courseid);
+    $pageparams = array('ltitypeid' => $ltitypeid, 'courseid' => $courseid);
+    $launchparam = 'ltitypeid=' . $ltitypeid . '&courseid=' . $courseid;
 } else {
-    $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-    $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-}
+    if ($l) {  // Two ways to specify the module.
+        $lti = $DB->get_record('lti', array('id' => $l), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+    } else {
+        $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
+        $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+    }
+    $pageparams = array('id' => $cm->id);
+    $launchparam = 'id=' . $cm->id;
+}
 
 $typeid = $lti->typeid;
 if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
@@ -80,9 +95,12 @@ if ($typeid) {
     $toolurl = $lti->toolurl;
 }
 
-$PAGE->set_cm($cm, $course); // Set's up global $COURSE.
-$context = context_module::instance($cm->id);
-$PAGE->set_context($context);
+if ($cm) {
+    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+    $PAGE->set_cm($cm, $course); // Set's up global $COURSE.
+    $context = context_module::instance($cm->id);
+    $PAGE->set_context($context);
+}
 
 require_login($course, true, $cm);
 require_capability('mod/lti:view', $context);
@@ -91,7 +109,7 @@ if (!empty($foruserid) && (int)$foruserid !== (int)$USER->id) {
     require_capability('gradereport/grader:view', $context);
 }
 
-$url = new moodle_url('/mod/lti/view.php', array('id' => $cm->id));
+$url = new moodle_url('/mod/lti/view.php', $pageparams);
 $PAGE->set_url($url);
 
 $launchcontainer = lti_get_launch_container($lti, $toolconfig);
@@ -101,14 +119,16 @@ if ($launchcontainer == LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS) {
     $PAGE->blocks->show_only_fake_blocks(); // Disable blocks for layouts which do include pre-post blocks.
 } else if ($launchcontainer == LTI_LAUNCH_CONTAINER_REPLACE_MOODLE_WINDOW) {
     if (!$forceview) {
-        $url = new moodle_url('/mod/lti/launch.php', array('id' => $cm->id));
+        $url = new moodle_url('/mod/lti/launch.php', $pageparams);
         redirect($url);
     }
 } else { // Handles LTI_LAUNCH_CONTAINER_DEFAULT, LTI_LAUNCH_CONTAINER_EMBED, LTI_LAUNCH_CONTAINER_WINDOW.
     $PAGE->set_pagelayout('incourse');
 }
 
-lti_view($lti, $course, $cm, $context);
+if ($cm) {
+    lti_view($lti, $course, $cm, $context);
+}
 
 $pagetitle = strip_tags($course->shortname.': '.format_string($lti->name));
 $PAGE->set_title($pagetitle);
@@ -132,6 +152,7 @@ if ($typeid) {
     $config = new stdClass();
     $config->lti_ltiversion = LTI_VERSION_1;
 }
+<<<<<<< HEAD
 $launchurl = new moodle_url('/mod/lti/launch.php', ['id' => $cm->id, 'triggerview' => 0]);
 if ($action) {
     $launchurl->param('action', $action);;
@@ -144,10 +165,30 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     if (!$forceview) {
         echo "<script language=\"javascript\">//<![CDATA[\n";
         echo "window.open('{$launchurl->out(true)}','lti-$cm->id');";
+=======
+
+if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
+    (($config->lti_ltiversion !== LTI_VERSION_1P3) || isset($SESSION->lti_initiatelogin_status))) {
+    unset($SESSION->lti_initiatelogin_status);
+
+    if ($cm) {
+        $windowtitle = 'lti-' . $cm->id;
+    } else {
+        $windowtitle = 'lti-type-' . $lti->typeid;
+    }
+
+    if (!$forceview) {
+        echo "<script language=\"javascript\">//<![CDATA[\n";
+        echo "window.open('launch.php?" . $launchparam . "&triggerview=0','" . $windowtitle . "');";
+>>>>>>> 1af5243d9f3 (CCLE-9108 - launch lti tools from nav menu)
         echo "//]]\n";
         echo "</script>\n";
         echo "<p>".get_string("basiclti_in_new_window", "lti")."</p>\n";
     }
+<<<<<<< HEAD
+=======
+    $url = new moodle_url('/mod/lti/launch.php', $pageparams);
+>>>>>>> 1af5243d9f3 (CCLE-9108 - launch lti tools from nav menu)
     echo html_writer::start_tag('p');
     echo html_writer::link($launchurl->out(false), get_string("basiclti_in_new_window_open", "lti"), array('target' => '_blank'));
     echo html_writer::end_tag('p');
@@ -171,7 +212,11 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
+<<<<<<< HEAD
     $attributes['src'] = $launchurl;
+=======
+    $attributes['src'] = 'launch.php?id=' . $launchparam . '&triggerview=0';
+>>>>>>> 1af5243d9f3 (CCLE-9108 - launch lti tools from nav menu)
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .
@@ -181,7 +226,6 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     $attributes['allowfullscreen'] = 1;
     $iframehtml = html_writer::tag('iframe', $content, $attributes);
     echo $iframehtml;
-
 
     // Output script to make the iframe tag be as large as possible.
     $resize = '

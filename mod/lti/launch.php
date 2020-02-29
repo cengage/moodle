@@ -50,13 +50,31 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-$cmid = required_param('id', PARAM_INT); // Course Module ID.
+$cmid = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
+$courseid = optional_param('courseid', 0, PARAM_INT);
+$ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_TEXT);
 $foruserid = optional_param('user', 0, PARAM_INT);
+$cm = null;
 
-$cm = get_coursemodule_from_id('lti', $cmid, 0, false, MUST_EXIST);
-$lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+if ($cmid) {
+    $cm = get_coursemodule_from_id('lti', $cmid, 0, false, MUST_EXIST);
+    $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+    $context = context_module::instance($cm->id);
+    $pageparams = array('id' => $id);
+} else {
+    //$id is 0 when LTI is launched via menu link.
+    $lti = $DB->get_record('lti_types', ['id' => $ltitypeid]);
+    $lti->typeid = $ltitypeid;
+    $lti->instructorcustomparameters = null;
+    $lti->debuglaunch = false;
+    $lti->course = $courseid;
+    $course = get_course($courseid);
+    $context = context_course::instance($courseid);
+    $pageparams = array('ltitypeid' => $ltitypeid, 'courseid' => $courseid,);
+}
 
 $typeid = $lti->typeid;
 if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
@@ -78,16 +96,15 @@ if ($typeid) {
     }
 }
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-$context = context_module::instance($cm->id);
-
 require_login($course, true, $cm);
 require_capability('mod/lti:view', $context);
 
 // Completion and trigger events.
-if ($triggerview) {
-    lti_view($lti, $course, $cm, $context);
+if ($cm) {
+    if ($triggerview) {
+        lti_view($lti, $course, $cm, $context);
+    }
+    $lti->cmid = $cm->id;
 }
 
 $lti->cmid = $cm->id;
