@@ -206,6 +206,10 @@ class restore_ltiservice_gradebookservices_subplugin extends restore_subplugin {
             $newgradeitemid = $this->get_mappingid('grade_item', $oldgradeitemid, 0);
             if ($newgradeitemid > 0) {
                 $gbs->gradeitemid = $newgradeitemid;
+                if ( !isset( $gbs->resourceid ) ) {
+                    // Before 3.9 resourceid was stored in grade_item->idnumber.
+                    $gbs->resourceid = $DB->get_field_select('grade_item', 'idnumber', "id=:id", ['id' => $newgradeitemid]);
+                }
                 $DB->update_record('ltiservice_gradebookservices', $gbs);
             }
         }
