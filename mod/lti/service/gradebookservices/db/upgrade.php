@@ -78,8 +78,9 @@ function xmldb_ltiservice_gradebookservices_upgrade($oldversion) {
         // Prior implementation was storing the resourceid under the grade item idnumber, so moving it to lti_gradebookservices.
         // We only care for mod/lti grade items as manual columns would already have a matching gradebookservices record.
 
-        $DB->execute("INSERT INTO {ltiservice_gradebookservices} (gradeitemid, courseid, typeid, resourceid, baseurl)
-         SELECT gi.id, courseid, lti.typeid, gi.idnumber, t.baseurl
+        $DB->execute("INSERT INTO {ltiservice_gradebookservices}
+                (gradeitemid, courseid, typeid, ltilinkid, resourceid, baseurl, toolproxyid)
+         SELECT gi.id, courseid, lti.typeid, lti.id, gi.idnumber, t.baseurl, t.toolproxyid
            FROM {grade_items} gi
            JOIN {lti} lti ON lti.id=gi.iteminstance AND gi.itemtype='mod' AND gi.itemmodule='lti'
            JOIN {lti_types} t ON t.id = lti.typeid
