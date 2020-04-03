@@ -191,18 +191,16 @@ class mod_lti_mod_form extends moodleform_mod {
             $mform->disabledIf('selectcontent', 'typeid', 'in', $allnoncontentitemtypes);
         }
 
-        if ($showoptions) {
-            $mform->addElement('text', 'toolurl', get_string('launch_url', 'lti'), array('size' => '64'));
-            $mform->setType('toolurl', PARAM_URL);
-            $mform->addHelpButton('toolurl', 'launch_url', 'lti');
-            $mform->hideIf('toolurl', 'typeid', 'in', $noncontentitemtypes);
+        $mform->addElement('text', 'toolurl', get_string('launch_url', 'lti'), array('size' => '64'));
+        $mform->setType('toolurl', PARAM_URL);
+        $mform->addHelpButton('toolurl', 'launch_url', 'lti');
+        $mform->hideIf('toolurl', 'typeid', 'in', $noncontentitemtypes);
 
-            $mform->addElement('text', 'securetoolurl', get_string('secure_launch_url', 'lti'), array('size' => '64'));
-            $mform->setType('securetoolurl', PARAM_URL);
-            $mform->setAdvanced('securetoolurl');
-            $mform->addHelpButton('securetoolurl', 'secure_launch_url', 'lti');
-            $mform->hideIf('securetoolurl', 'typeid', 'in', $noncontentitemtypes);
-        }
+        $mform->addElement('text', 'securetoolurl', get_string('secure_launch_url', 'lti'), array('size' => '64'));
+        $mform->setType('securetoolurl', PARAM_URL);
+        $mform->setAdvanced('securetoolurl');
+        $mform->addHelpButton('securetoolurl', 'secure_launch_url', 'lti');
+        $mform->hideIf('securetoolurl', 'typeid', 'in', $noncontentitemtypes);
 
         $mform->addElement('hidden', 'urlmatchedtypeid', '', array( 'id' => 'id_urlmatchedtypeid' ));
         $mform->setType('urlmatchedtypeid', PARAM_INT);
@@ -232,25 +230,25 @@ class mod_lti_mod_form extends moodleform_mod {
             $mform->setAdvanced('password');
             $mform->addHelpButton('password', 'password', 'lti');
             $mform->hideIf('password', 'typeid', 'in', $noncontentitemtypes);
-
-            $mform->addElement('textarea', 'instructorcustomparameters', get_string('custom', 'lti'), array('rows' => 4, 'cols' => 60));
-            $mform->setType('instructorcustomparameters', PARAM_TEXT);
-            $mform->setAdvanced('instructorcustomparameters');
-            $mform->addHelpButton('instructorcustomparameters', 'custom', 'lti');
-            $mform->setForceLtr('instructorcustomparameters');
-
-            $mform->addElement('text', 'icon', get_string('icon_url', 'lti'), array('size' => '64'));
-            $mform->setType('icon', PARAM_URL);
-            $mform->setAdvanced('icon');
-            $mform->addHelpButton('icon', 'icon_url', 'lti');
-            $mform->hideIf('icon', 'typeid', 'in', $noncontentitemtypes);
-
-            $mform->addElement('text', 'secureicon', get_string('secure_icon_url', 'lti'), array('size' => '64'));
-            $mform->setType('secureicon', PARAM_URL);
-            $mform->setAdvanced('secureicon');
-            $mform->addHelpButton('secureicon', 'secure_icon_url', 'lti');
-            $mform->hideIf('secureicon', 'typeid', 'in', $noncontentitemtypes);
         }
+
+        $mform->addElement('textarea', 'instructorcustomparameters', get_string('custom', 'lti'), array('rows' => 4, 'cols' => 60));
+        $mform->setType('instructorcustomparameters', PARAM_TEXT);
+        $mform->setAdvanced('instructorcustomparameters');
+        $mform->addHelpButton('instructorcustomparameters', 'custom', 'lti');
+        $mform->setForceLtr('instructorcustomparameters');
+
+        $mform->addElement('text', 'icon', get_string('icon_url', 'lti'), array('size' => '64'));
+        $mform->setType('icon', PARAM_URL);
+        $mform->setAdvanced('icon');
+        $mform->addHelpButton('icon', 'icon_url', 'lti');
+        $mform->hideIf('icon', 'typeid', 'in', $noncontentitemtypes);
+
+        $mform->addElement('text', 'secureicon', get_string('secure_icon_url', 'lti'), array('size' => '64'));
+        $mform->setType('secureicon', PARAM_URL);
+        $mform->setAdvanced('secureicon');
+        $mform->addHelpButton('secureicon', 'secure_icon_url', 'lti');
+        $mform->hideIf('secureicon', 'typeid', 'in', $noncontentitemtypes);
 
         // Add privacy preferences fieldset where users choose whether to send their data.
         $mform->addElement('header', 'privacy', get_string('privacy', 'lti'));
