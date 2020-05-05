@@ -111,7 +111,6 @@ function lti_add_instance($lti, $mform) {
     }
 
     $lti->id = $DB->insert_record('lti', $lti);
-
     if (isset($lti->instructorchoiceacceptgrades) && $lti->instructorchoiceacceptgrades == LTI_SETTING_ALWAYS) {
         if (!isset($lti->cmidnumber)) {
             $lti->cmidnumber = '';
@@ -125,8 +124,10 @@ function lti_add_instance($lti, $mform) {
         $service->instance_added( $lti );
     }
 
-    $completiontimeexpected = !empty($lti->completionexpected) ? $lti->completionexpected : null;
-    \core_completion\api::update_completion_date_event($lti->coursemodule, 'lti', $lti->id, $completiontimeexpected);
+    if (isset($lti->coursemodule)) {
+        $completiontimeexpected = !empty($lti->completionexpected) ? $lti->completionexpected : null;
+        \core_completion\api::update_completion_date_event($lti->coursemodule, 'lti', $lti->id, $completiontimeexpected);
+    }
 
     return $lti->id;
 }
@@ -560,6 +561,10 @@ function lti_grade_item_update($basiclti, $grades = null) {
     global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->dirroot.'/mod/lti/servicelib.php');
+ 
+    if (!isset($basiclti->coursemodule)) {
+        return 0;
+    }
 
     if (!lti_accepts_grades($basiclti)) {
         return 0;
@@ -764,4 +769,13 @@ function mod_lti_core_calendar_provide_event_action(calendar_event $event,
         1,
         true
     );
+}
+
+/**
+ * Inject in page the current course so that embedded LTI launch in Atto Rich Text
+ * can know the current context.
+ */
+function mod_lti_before_standard_html_head() {
+    global $COURSE;
+    return '<script type="text/javascript">window.lti={course:'.$COURSE->id.'}</script>';
 }

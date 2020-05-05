@@ -107,9 +107,37 @@ function xmldb_lti_upgrade($oldversion) {
 
     // Automatically generated Moodle v4.0.0 release upgrade line.
     // Put any upgrade step following this.
-
+    
     // Automatically generated Moodle v4.1.0 release upgrade line.
     // Put any upgrade step following this.
+    
+    if ($oldversion < 2023011600) {
+        $table = new xmldb_table('lti_types');
+
+        $fields = [];
+        $fields[] = new xmldb_field('asrichtexteditorplugin', XMLDB_TYPE_INTEGER, 1, null, null, null, 0, 'asmenulink');
+        $fields[] = new xmldb_field('richtexteditorurl', XMLDB_TYPE_TEXT, 'small',
+            null, false, null, null, 'asrichtexteditorplugin');
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        $table = new xmldb_table('lti');
+        $fields = [];
+
+        $fields[] = new xmldb_field('permid', XMLDB_TYPE_CHAR, 64, null, false, null, null, 'secureicon');
+        $fields[] = new xmldb_field('placement', XMLDB_TYPE_CHAR, 64, null, false, null, null, 'permid');
+        $fields[] = new xmldb_field('lastaccess', XMLDB_TYPE_INTEGER, 10, null, false, null, null, 'placement');
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2023011600, 'lti');
+    }
 
     return true;
 }

@@ -191,6 +191,7 @@ $string['errorinvalidmediatype'] = 'Invalid media type: {$a}';
 $string['errorinvalidresponseformat'] = 'Invalid Content-Item response format.';
 $string['errormisconfig'] = 'Misconfigured tool. Please ask your Moodle administrator to fix the configuration of the tool.';
 $string['errortooltypenotfound'] = 'LTI tool type not found.';
+$string['errortoolnosupportforrichtext'] = 'LTI Tool does not allow launches from text editor.';
 $string['existing_window'] = 'Existing window';
 $string['extensions'] = 'LTI extension services';
 $string['external_tool_type'] = 'Preconfigured tool';
@@ -382,6 +383,8 @@ along with the consumer key from the tool provider.
 Tools which do not require secure communication from Moodle and do not provide additional services (such as grade reporting)
 may not require a shared secret.';
 $string['pending'] = 'Pending';
+$string['placementasrichtexteditorplugin'] = 'As rich text editor plugin';
+$string['placementrichtexteditorurl'] = 'Rich text editor URL';
 $string['pluginadministration'] = 'External tool administration';
 $string['pluginname'] = 'External tool';
 $string['preferheight'] = 'Preferred height';

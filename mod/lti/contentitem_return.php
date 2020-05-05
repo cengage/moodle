@@ -26,7 +26,7 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
-$id = required_param('id', PARAM_INT);
+$typeid = required_param('id', PARAM_INT);
 $courseid = required_param('course', PARAM_INT);
 
 $jwt = optional_param('JWT', '', PARAM_RAW);
@@ -54,7 +54,7 @@ if (!empty($_POST["repost"])) {
 }
 
 if (!empty($jwt)) {
-    $params = lti_convert_from_jwt($id, $jwt);
+    $params = lti_convert_from_jwt($typeid, $jwt);
     $consumerkey = $params['oauth_consumer_key'] ?? '';
     $messagetype = $params['lti_message_type'] ?? '';
     $version = $params['lti_version'] ?? '';
@@ -68,7 +68,7 @@ if (!empty($jwt)) {
     $items = optional_param('content_items', '', PARAM_RAW);
     $errormsg = optional_param('lti_errormsg', '', PARAM_TEXT);
     $msg = optional_param('lti_msg', '', PARAM_TEXT);
-    lti_verify_oauth_signature($id, $consumerkey);
+    lti_verify_oauth_signature($typeid, $consumerkey);
 }
 
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
@@ -78,10 +78,15 @@ require_capability('moodle/course:manageactivities', $context);
 require_capability('mod/lti:addcoursetool', $context);
 
 $redirecturl = null;
-$returndata = null;
+$returndata = $items;
+$callback = optional_param('callback', '', PARAM_TEXT);
 if (empty($errormsg) && !empty($items)) {
     try {
-        $returndata = lti_tool_configuration_from_content_item($id, $messagetype, $version, $consumerkey, $items);
+        if ($callback) {
+            $returndata = lti_add_links_from_content_item($typeid, $courseid, $items, 'atto');
+        } else {
+            $returndata = lti_tool_configuration_from_content_item($typeid, $messagetype, $version, $consumerkey, $items);
+        }
     } catch (moodle_exception $e) {
         $errormsg = $e->getMessage();
     }
@@ -90,7 +95,7 @@ if (empty($errormsg) && !empty($items)) {
 echo $OUTPUT->header();
 
 // Call JS module to redirect the user to the course page or close the dialogue on error/cancel.
-$PAGE->requires->js_call_amd('mod_lti/contentitem_return', 'init', [$returndata]);
+$PAGE->requires->js_call_amd('mod_lti/contentitem_return', 'init', [$returndata, $callback]);
 
 echo $OUTPUT->footer();
 

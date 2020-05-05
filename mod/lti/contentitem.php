@@ -31,11 +31,14 @@ $id = required_param('id', PARAM_INT);
 $courseid = required_param('course', PARAM_INT);
 $title = optional_param('title', '', PARAM_TEXT);
 $text = optional_param('text', '', PARAM_RAW);
+$callback = optional_param('callback', '', PARAM_TEXT);
+$placement = optional_param('placement', '', PARAM_TEXT);
 
 $config = lti_get_type_type_config($id);
 if ($config->lti_ltiversion === LTI_VERSION_1P3) {
     if (!isset($SESSION->lti_initiatelogin_status)) {
-        echo lti_initiate_login($courseid, 0, null, $config, 'ContentItemSelectionRequest', $title, $text);
+        echo lti_initiate_login($courseid, null, null, $config, 'ContentItemSelectionRequest',
+            $title, $text, ['callback' => $callback, 'placement' => $placement]);
         exit;
     } else {
         unset($SESSION->lti_initiatelogin_status);
@@ -55,6 +58,9 @@ $returnurlparams = [
     'id' => $id,
     'sesskey' => sesskey()
 ];
+if ($callback) {
+    $returnurlparams['callback'] = $callback;
+}
 $returnurl = new \moodle_url('/mod/lti/contentitem_return.php', $returnurlparams);
 
 // Prepare the request.

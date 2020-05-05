@@ -101,6 +101,8 @@ define('LTI_JWK_KEYSET', 'JWK_KEYSET');
 define('LTI_DEFAULT_ORGID_SITEID', 'SITEID');
 define('LTI_DEFAULT_ORGID_SITEHOST', 'SITEHOST');
 
+define('LTI_PLACEMENT_RICHTEXTEDITOR', 'richtexteditor');
+
 define('LTI_ACCESS_TOKEN_LIFE', 3600);
 
 // Standard prefix for JWT claims.
@@ -168,6 +170,13 @@ function lti_get_jwt_claim_mapping() {
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
             'claim' => 'accept_unsigned',
+            'isarray' => false,
+            'type' => 'boolean'
+        ],
+        'accept_lineitem' => [
+            'suffix' => 'dl',
+            'group' => 'deep_linking_settings',
+            'claim' => 'accept_lineitem',
             'isarray' => false,
             'type' => 'boolean'
         ],
@@ -531,6 +540,13 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = 'basic-lti-l
     $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $typeconfig['toolurl'];
     $endpoint = trim($endpoint);
 
+    if ($placement) {
+        $desiredplacement = $placement . 'url';
+        if (!empty($instance->$desiredplacement)) {
+            $endpoint = $instance->$desiredplacement;
+        }
+    }
+
     // If the current request is using SSL and a secure tool URL is specified, use it.
     if (lti_request_is_using_ssl() && !empty($instance->securetoolurl)) {
         $endpoint = trim($instance->securetoolurl);
@@ -575,7 +591,7 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = 'basic-lti-l
     $launchcontainer = lti_get_launch_container($instance, $typeconfig);
     $returnurlparams = array('course' => $course->id,
         'launch_container' => $launchcontainer,
-        'instanceid' => $instance->id,
+        'instanceid' => isset($instance->id) ? $instance->id : '',
         'sesskey' => sesskey());
 
     // Add the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns.
@@ -610,7 +626,7 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = 'basic-lti-l
         $services = lti_get_services();
         foreach ($services as $service) {
             $serviceparameters = $service->get_launch_parameters('basic-lti-launch-request',
-                    $course->id, $USER->id , $typeid, $instance->id);
+                    $course->id, $USER->id , $typeid, $instance->id ?? null);
             foreach ($serviceparameters as $paramkey => $paramvalue) {
                 $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $requestparams, $paramvalue,
                     $islti2);
@@ -882,6 +898,12 @@ function lti_build_request($instance, $typeconfig, $course, $typeid = null, $isl
         $requestparams['lis_person_contact_email_primary'] = $USER->email;
     }
 
+    if (property_exists($instance, 'custom')) {
+        foreach ($instance->custom as $key => $value) {
+            $requestparams['custom_' . $key] = $value;
+        }
+    }
+
     return $requestparams;
 }
 
@@ -951,10 +973,7 @@ function lti_build_standard_message($instance, $orgid, $ltiversion, $messagetype
     $requestparams = array();
 
     if ($instance) {
-        $requestparams['resource_link_id'] = $instance->id;
-        if (property_exists($instance, 'resource_link_id') and !empty($instance->resource_link_id)) {
-            $requestparams['resource_link_id'] = $instance->resource_link_id;
-        }
+        $requestparams['resource_link_id'] = isset($instance->resource_link_id) ? $instance->resource_link_id : $instance->id;
     }
 
     $requestparams['launch_presentation_locale'] = current_language();
@@ -1055,7 +1074,8 @@ function lti_build_custom_parameters($toolproxy, $tool, $instance, $params, $cus
  */
 function lti_build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '', $mediatypes = [],
                                                   $presentationtargets = [], $autocreate = false, $multiple = true,
-                                                  $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '') {
+                                                  $unsigned = false, $canconfirm = false, $copyadvice = false,
+                                                  $nonce = '', $placement = '') {
     global $USER;
 
     $tool = lti_get_type($id);
@@ -1069,7 +1089,9 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     if (!is_array($presentationtargets)) {
         throw new coding_exception('The list of accepted presentation targets should be in an array');
     }
-
+    if (!in_array($placement, ['', 'menulink', LTI_PLACEMENT_RICHTEXTEDITOR])) {
+        throw new moodle_exception("Invalid placement type: $placement");
+    }
     // Check title. If empty, use the tool's name.
     if (empty($title)) {
         $title = $tool->name;
@@ -1108,10 +1130,19 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     }
 
     // Set the tool URL.
+    $placementurlkey = $placement . 'url';
     if (!empty($typeconfig['toolurl_ContentItemSelectionRequest'])) {
-        $toolurl = new moodle_url($typeconfig['toolurl_ContentItemSelectionRequest']);
+        if (!empty($typeconfig[$placementurlkey])) {
+            $toolurl = new moodle_url($typeconfig[$placement.'url']);
+        } else {
+            $toolurl = new moodle_url($typeconfig['toolurl_ContentItemSelectionRequest']);
+        }
     } else {
-        $toolurl = new moodle_url($typeconfig['toolurl']);
+        if (!empty($typeconfig[$placementurlkey])) {
+            $toolurl = new moodle_url($typeconfig[$placement.'url']);
+        } else {
+            $toolurl = new moodle_url($typeconfig['toolurl']);
+        }
     }
 
     // Check if SSL is forced.
@@ -1183,7 +1214,6 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
         }
         $requestparams['accept_media_types'] = implode(',', $mediatypes);
     } else {
-        // Only LTI links are currently supported.
         $requestparams['accept_types'] = 'ltiResourceLink';
     }
 
@@ -1193,6 +1223,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
             'frame',
             'iframe',
             'window',
+            'embed'
         ];
     }
     $requestparams['accept_presentation_document_targets'] = implode(',', $presentationtargets);
@@ -1201,6 +1232,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     $requestparams['accept_copy_advice'] = $copyadvice === true ? 'true' : 'false';
     $requestparams['accept_multiple'] = $multiple === true ? 'true' : 'false';
     $requestparams['accept_unsigned'] = $unsigned === true ? 'true' : 'false';
+    $requestparams['accept_lineitem'] = LTI_PLACEMENT_RICHTEXTEDITOR === $placement ? 'false' : 'true';
     $requestparams['auto_create'] = $autocreate === true ? 'true' : 'false';
     $requestparams['can_confirm'] = $canconfirm === true ? 'true' : 'false';
     $requestparams['content_item_return_url'] = $returnurl->out(false);
@@ -1523,6 +1555,58 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
 }
 
 /**
+ * Processes the tool's response to the Deep Linking request and adds the LTI Links, returning information about the items
+ * with the link created when the item is an LTI link.
+ *
+ * @param int $typeid The tool type ID.
+ * @param int $courseid The course ID.
+ * @param string $contentitemsjson The JSON string for the content_items parameter.
+ * @return stdClass The array of module information objects.
+ * @throws moodle_exception
+ * @throws lti\OAuthException
+ */
+function lti_add_links_from_content_item(int $typeid, int $courseid, string $contentitemsjson, string $placement) {
+    global $CFG;
+    require_once($CFG->dirroot.'/mod/lti/lib.php');
+    $tool = lti_get_type($typeid);
+    // Validate parameters.
+    if (!$tool) {
+        throw new moodle_exception('errortooltypenotfound', 'mod_lti');
+    }
+    $typeconfig = lti_get_type_type_config($tool->id);
+
+    $items = json_decode($contentitemsjson);
+    if (empty($items)) {
+        throw new moodle_exception('errorinvaliddata', 'mod_lti', '', $contentitemsjson);
+    }
+    if (!isset($items->{'@graph'}) || !is_array($items->{'@graph'})) {
+        throw new moodle_exception('errorinvalidresponseformat', 'mod_lti');
+    }
+
+    $config = new stdClass();
+    $config->items = [];
+    $items = $items->{'@graph'};
+    $prefix = $typeid.'-'.$courseid.'-'.round(microtime(true) * 1000).'-';
+    $index = 0;
+    foreach ($items as $item) {
+        if ($item->{'@type'} == 'LtiLinkItem') {
+            // TODO: XSS
+            $ltilink = content_item_to_form($tool, $typeconfig, $item);
+            $ltilink->typeid = $typeid;
+            $ltilink->permid = $prefix.$index;
+            $ltilink->placement = $placement;
+            $ltilink->course = $courseid;
+            $ltilink->id = lti_add_instance($ltilink, null);
+            $item->ltiurl = "/mod/lti/launchlti.php?permid={$ltilink->permid}";
+            $index++;
+        }
+        $config->items[] = $item;
+    }
+    return $config;
+}
+
+
+/**
  * Processes the tool provider's response to the ContentItemSelectionRequest and builds the configuration data from the
  * selected content item. This configuration data can be then used when adding a tool into the course.
  *
@@ -1599,7 +1683,7 @@ function lti_convert_content_items($param) {
                 switch ($item->type) {
                     case 'ltiResourceLink':
                         $newitem->{'@type'} = 'LtiLinkItem';
-                        $newitem->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+                        $newitem->mediaType = 'application/vnd.ims.lti.v1.ltilink';
                         break;
                     case 'link':
                     case 'rich':
@@ -1608,6 +1692,10 @@ function lti_convert_content_items($param) {
                         break;
                     case 'file':
                         $newitem->{'@type'} = 'FileItem';
+                        break;
+                    case 'image':
+                        $newitem->{'@type'} = 'FileItem';
+                        $newitem->mediaType = 'image/*';
                         break;
                 }
                 unset($newitem->type);
@@ -2395,6 +2483,12 @@ function lti_get_configured_types($courseid, $sectionreturn = 0) {
     return $types;
 }
 
+/**
+ * Get the domain from the URL.
+ *
+ * @param string $url the url to extract the domain from
+ * @return string the domain
+ */
 function lti_get_domain_from_url($url) {
     $matches = array();
 
@@ -2403,10 +2497,19 @@ function lti_get_domain_from_url($url) {
     }
 }
 
-function lti_get_tool_by_url_match($url, $courseid = null, $state = LTI_TOOL_STATE_CONFIGURED) {
+/**
+ * Get the best tool that matches the URL. If a typeid is provided,
+ * a tool matching that typeid will be considered first.
+ *
+ * @param string $url the url to extract the domain from
+ * @param number $courseid current course
+ * @param string $state the state the tool must be in to be considered
+ * @param number $typeid tool to use if it matches the domain
+ * @return stdClass the tool that best matches the URL
+ */
+function lti_get_tool_by_url_match($url, $courseid = null, $state = LTI_TOOL_STATE_CONFIGURED, $typeid = null) {
     $possibletools = lti_get_tools_by_url($url, $state, $courseid);
-
-    return lti_get_best_tool_by_url($url, $possibletools, $courseid);
+    return lti_get_best_tool_by_url($url, $possibletools, $courseid, $typeid = null);
 }
 
 function lti_get_url_thumbprint($url) {
@@ -2440,9 +2543,26 @@ function lti_get_url_thumbprint($url) {
     return $urllower;
 }
 
-function lti_get_best_tool_by_url($url, $tools, $courseid = null) {
+/**
+ * Get the best tool that matches the URL. If a typeid is provided,
+ * a tool matching that typeid will be considered first.
+ *
+ * @param string $url the url to extract the domain from
+ * @param array $tools possible tools to check the conditions against
+ * @param number $courseid current course
+ * @param number $typeid tool to use if it matches the domain
+ * @return stdClass the tool that best matches the URL
+ */
+function lti_get_best_tool_by_url($url, $tools, $courseid = null, $typeid = null) {
     if (count($tools) === 0) {
         return null;
+    }
+    if ($typeid) {
+        foreach ($tools as $tool) {
+            if ($tool->id === $typeid) {
+                return $tool;
+            }
+        }
     }
 
     $urllower = lti_get_url_thumbprint($url);
@@ -2639,6 +2759,10 @@ function lti_get_type_type_config($id) {
 
     $type->lti_secureicon = $basicltitype->secureicon;
 
+    $type->lti_asrichtexteditorplugin = $basicltitype->asrichtexteditorplugin;
+
+    $type->lti_richtexteditorurl = $basicltitype->richtexteditorurl;
+
     if (isset($config['resourcekey'])) {
         $type->lti_resourcekey = $config['resourcekey'];
     }
@@ -2794,6 +2918,11 @@ function lti_prepare_type_for_save($type, $config) {
         }
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
+    $type->asrichtexteditorplugin = false;
+    if (isset($config->lti_asrichtexteditorplugin)) {
+        $type->asrichtexteditorplugin = $config->lti_asrichtexteditorplugin;
+    }
+    $type->richtexteditorurl = isset($config->lti_richtexteditorurl) ? $config->lti_richtexteditorurl : '';
 
     $type->timemodified = time();
 
@@ -2865,6 +2994,24 @@ function lti_update_type($type, $config) {
             }
         }
     }
+}
+
+/**
+ * Get all types that can be placed in a specific placement.
+ *
+ * @param string $placementname Either 'menulink' or
+ * 'richtexteditorplugin'
+ *
+ * @return array array of tools
+ */
+function lti_load_type_by_placement (string $placementname) {
+    global $DB;
+
+    $queryfield = [
+        'richtexteditorplugin' => 'asrichtexteditorplugin',
+    ][$placementname];
+
+    return $DB->get_records('lti_types', [$queryfield => 1], 'name');
 }
 
 function lti_add_type($type, $config) {
@@ -3636,7 +3783,9 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
     } else if (!strstr($endpoint, '://')) {
         $endpoint = 'http://' . $endpoint;
     }
-
+    if (!empty($hint)) {
+        $ltihint = array_merge($ltihint, $hint);
+    }
     $params = array();
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;

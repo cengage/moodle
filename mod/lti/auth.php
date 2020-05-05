@@ -24,7 +24,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
-global $_POST, $_SERVER;
+global $_POST, $_SERVER, $SESSION;
 
 if (!isloggedin() && empty($_POST['repost'])) {
     header_remove("Set-Cookie");
@@ -116,13 +116,18 @@ if ($ok && !empty($prompt) && ($prompt !== 'none')) {
 if ($ok) {
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     if ($id) {
-        $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        require_login($course, true, $cm);
-        require_capability('mod/lti:view', $context);
-        $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-        $lti->cmid = $cm->id;
-        list($endpoint, $params) = lti_get_launch_data($lti, $nonce, $messagetype, $foruserid);
+        $lti = $DB->get_record('lti', array('id' => $id), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('lti', $id);
+        if ($cm) {
+            $lti->cmid = $cm->id;
+            $context = context_module::instance($cm->id);
+            require_login($course, true, $cm);
+            require_capability('mod/lti:view', $context);
+        } else {
+            $context = context_course::instance($course->id);
+            require_login($course);
+        }
+        list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
     } else {
         require_login($course);
         $context = context_course::instance($courseid);
@@ -134,12 +139,16 @@ if ($ok) {
             'id' => $typeid,
             'sesskey' => sesskey()
         ];
+        if (isset($ltimessagehint->callback)) {
+            $returnurlparams['callback'] = $ltimessagehint->callback;
+        }
         $returnurl = new \moodle_url('/mod/lti/contentitem_return.php', $returnurlparams);
         // Prepare the request.
         $title = base64_decode($titleb64);
         $text = base64_decode($textb64);
         $request = lti_build_content_item_selection_request($typeid, $course, $returnurl, $title, $text,
-                                                            [], [], false, true, false, false, false, $nonce);
+                                                            [], [], false, true, false, false, false,
+                                                            $nonce, $ltimessagehint->placement ?? '');
         $endpoint = $request->url;
         $params = $request->params;
     }
@@ -152,7 +161,6 @@ if ($ok) {
 if (isset($state)) {
     $params['state'] = $state;
 }
-unset($SESSION->lti_message_hint);
 $r = '<form action="' . $redirecturi . "\" name=\"ltiAuthForm\" id=\"ltiAuthForm\" " .
      "method=\"post\" enctype=\"application/x-www-form-urlencoded\">\n";
 if (!empty($params)) {

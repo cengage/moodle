@@ -27,13 +27,18 @@ define(['jquery'], function($) {
          * Init function.
          *
          * @param {string} returnData The returned data.
+         * @param {string} callback The function name to callback on.
          */
-        init: function(returnData) {
+        init: function(returnData, callback) {
             // Make sure the window has loaded before we perform processing.
             $(window).ready(function() {
                 if (window != top) {
                     // Send return data to be processed by the parent window.
-                    parent.processContentItemReturnData(returnData);
+                    if (callback) {
+                        parent.document.CALLBACKS[callback](returnData);
+                    } else {
+                        parent.processContentItemReturnData(returnData);
+                    }
                 } else {
                     window.processContentItemReturnData(returnData);
                 }

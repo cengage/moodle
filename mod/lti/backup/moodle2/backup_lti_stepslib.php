@@ -59,7 +59,6 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
      */
     protected function define_structure() {
         global $DB;
-
         // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
 
@@ -85,6 +84,7 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             'debuglaunch',
             'showtitlelaunch',
             'showdescriptionlaunch',
+            'permid',
             'icon',
             'secureicon',
             new encrypted_final_element('resourcekey'),
@@ -159,7 +159,12 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
 
         // Define sources.
         $ltirecord = $DB->get_record('lti', ['id' => $this->task->get_activityid()]);
-        $lti->set_source_array([$ltirecord]);
+        if ($this->is_first_backup_step()) {
+            $attoltis = $DB->get_records('lti', ['placement'=>'atto', 'course'=>$this->task->get_courseid()]);
+            $lti->set_source_array(array_merge([$ltirecord], $attoltis));
+        } else {
+            $lti->set_source_array([$ltirecord]);
+        }
 
         $ltitypedata = $this->retrieve_lti_type($ltirecord);
         $ltitype->set_source_array($ltitypedata ? [$ltitypedata] : []);
@@ -237,5 +242,20 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         }
 
         return $record;
+    }
+
+    /**
+     * Is this the 1st time this step is called for this backup?
+     *
+     * @return bool
+     */
+    private function is_first_backup_step() {
+        static $PREV_BACKUPS = [];
+        if (!in_array($this->get_backupid(), $PREV_BACKUPS)) {
+            // trim array here
+            $PREV_BACKUPS[] = $this->get_backupid();
+            return true;
+        }
+        return false;
     }
 }

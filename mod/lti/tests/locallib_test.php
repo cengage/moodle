@@ -392,7 +392,7 @@ class locallib_test extends mod_lti_testcase {
         $this->assertEquals('ContentItemSelectionRequest', $params['lti_message_type']);
         $this->assertEquals(LTI_VERSION_1, $params['lti_version']);
         $this->assertEquals('application/vnd.ims.lti.v1.ltilink', $params['accept_media_types']);
-        $this->assertEquals('frame,iframe,window', $params['accept_presentation_document_targets']);
+        $this->assertEquals('frame,iframe,window,embed', $params['accept_presentation_document_targets']);
         $this->assertEquals($returnurl->out(false), $params['content_item_return_url']);
         $this->assertEquals('false', $params['accept_unsigned']);
         $this->assertEquals('true', $params['accept_multiple']);
@@ -486,6 +486,9 @@ class locallib_test extends mod_lti_testcase {
     }
 
     /**
+     * Test
+     */
+    /**
      * Test for lti_build_content_item_selection_request() with invalid presentation targets parameter.
      */
     public function test_lti_build_content_item_selection_request_invalid_presentationtargets() {
@@ -512,6 +515,72 @@ class locallib_test extends mod_lti_testcase {
         lti_build_content_item_selection_request($typeid, $course, $returnurl, '', '', [], $targets);
     }
 
+    public function test_lti_add_links_from_content_item() {
+        global $DB;
+        $contentitemstr = '{"@graph" : [
+            { "@type" : "ContentItem",
+              "@id" : ":item1",
+              "url" : "http://www.imsglobal.org",
+              "title" : "The IMS Global website",
+              "mediaType" : "text/html"
+            },
+            { "@type" : "LtiLinkItem",
+              "@id" : ":item2",
+              "icon" : {
+                "@id" : "http://tool.provider.com/icons/small.png",
+                "width" : 50,
+                "height" : 50
+              },
+              "thumbnail" : {
+                "@id" : "http://tool.provider.com/images/thumb.jpg",
+                "width" : 100,
+                "height" : 150
+              },
+              "title" : "Link1",
+              "text" : "link1 description",
+              "mediaType" : "application/vnd.ims.lti.v1.ltilink",
+              "custom" : {
+                "level" : "novice",
+                "mode" : "interactive"
+              },
+              "lineItem": {
+                "scoreMaximum": 87,
+                "label": "Chapter 12 quiz",
+                "resourceId": "xyzpdq1234",
+                "tag": "originality"
+              },
+              "url": "https://test/link1",
+              "placementAdvice" : {
+                "presentationDocumentTarget" : "iframe"
+              }
+            }, { "@type" : "LtiLinkItem",
+              "@id" : ":item3",
+              "title" : "Link2",
+              "mediaType" : "application/vnd.ims.lti.v1.ltilink",
+              "placementAdvice" : {
+                "presentationDocumentTarget" : "window"
+              }
+            }]}';
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type(new stdClass());
+        $response = lti_add_links_from_content_item($type->id, $course->id, $contentitemstr, "testlinks");
+        $this->assertEquals(count($response->items), 3);
+        $lti1 = $response->items[1];
+        $this->assertEquals($lti1->title, 'Link1');
+        $this->assertEquals($lti1->url, 'https://test/link1');
+        $this->assertEquals(0, strpos($lti1->ltiurl, '/mod/lti/launchlti.php?permid='.$type->id.'-'.$course->id.'-'));
+        $lti1 = $DB->get_record('lti', array('permid' => substr($lti1->ltiurl, strlen('/mod/lti/launchlti.php?permid=')), 'course' => $course->id), '*', MUST_EXIST);
+        $this->assertEquals($lti1->name, 'Link1');
+        $this->assertEquals($lti1->toolurl, 'https://test/link1');
+        $lines = explode("\n", $lti1->instructorcustomparameters);
+        $this->assertTrue(in_array('level=novice', $lines));
+        $this->assertTrue(in_array('mode=interactive', $lines));
+        $lti2 = $response->items[2];
+        $this->assertEquals($lti2->title, 'Link2');
+    }
+
     /**
      * Provider for test_lti_get_best_tool_by_url.
      *
@@ -524,46 +593,65 @@ class locallib_test extends mod_lti_testcase {
                 'baseurl' => 'https://example.com/i/am/?where=here',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 1,
             ],
             (object) [
                 'name' => 'There',
                 'baseurl' => 'https://example.com/i/am/?where=there',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 2,
             ],
             (object) [
                 'name' => 'Not here',
                 'baseurl' => 'https://example.com/i/am/?where=not/here',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 3,
             ],
             (object) [
                 'name' => 'Here',
                 'baseurl' => 'https://example.com/i/am/',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 4,
             ],
             (object) [
                 'name' => 'Here',
                 'baseurl' => 'https://example.com/i/was',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 5,
             ],
             (object) [
                 'name' => 'Here',
                 'baseurl' => 'https://badexample.com/i/am/?where=here',
                 'tooldomain' => 'badexample.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 6,
+            ],
+            (object) [
+                'name' => 'Type wins!',
+                'baseurl' => 'https://example.com/type/wins',
+                'tooldomain' => 'example.com',
+                'state' => LTI_TOOL_STATE_CONFIGURED,
+                'course' => SITEID,
+                'id' => 7,
             ],
         ];
 
         $data = [
+            [
+                'url' => $tools[0]->baseurl,
+                'expected' => $tools[6],
+                'typeid' => $tools[6]->id,
+            ],
             [
                 'url' => $tools[0]->baseurl,
                 'expected' => $tools[0],
@@ -606,7 +694,7 @@ class locallib_test extends mod_lti_testcase {
         // of the array contains the URL to test, the expected tool, and
         // the complete list of tools.
         return array_map(function($data) use ($tools) {
-            return [$data['url'], $data['expected'], $tools];
+            return [$data['url'], $data['expected'], $tools, isset($data['typeid']) ? $data['typeid'] : null];
         }, $data);
     }
 
@@ -618,8 +706,8 @@ class locallib_test extends mod_lti_testcase {
      * @param object $expected The expected tool matching the URL.
      * @param array $tools The pool of tools to match the URL with.
      */
-    public function test_lti_get_best_tool_by_url($url, $expected, $tools) {
-        $actual = lti_get_best_tool_by_url($url, $tools, null);
+    public function test_lti_get_best_tool_by_url($url, $expected, $tools, $typeid) {
+        $actual = lti_get_best_tool_by_url($url, $tools, null, $typeid);
         $this->assertSame($expected, $actual);
     }
 
@@ -659,6 +747,13 @@ class locallib_test extends mod_lti_testcase {
                 'suffix' => 'dl',
                 'group' => 'deep_linking_settings',
                 'claim' => 'accept_multiple',
+                'isarray' => false,
+                'type' => 'boolean'
+            ],
+            'accept_lineitem' => [
+                'suffix' => 'dl',
+                'group' => 'deep_linking_settings',
+                'claim' => 'accept_lineitem',
                 'isarray' => false,
                 'type' => 'boolean'
             ],
@@ -1284,7 +1379,7 @@ MwIDAQAB
         $objgraph->placementAdvice = new \stdClass();
         $objgraph->placementAdvice->presentationDocumentTarget = 'iframe';
         $objgraph->{$strtype} = 'LtiLinkItem';
-        $objgraph->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+        $objgraph->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
         $objgraph2 = new \stdClass();
         $objgraph2->url = 'http://example.com/messages/launch2';
@@ -1295,7 +1390,7 @@ MwIDAQAB
         $objgraph2->placementAdvice->displayHeight = 200;
         $objgraph2->placementAdvice->displayWidth = 300;
         $objgraph2->{$strtype} = 'LtiLinkItem';
-        $objgraph2->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+        $objgraph2->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
         $objgraph3 = new \stdClass();
         $objgraph3->url = 'http://example.com/messages/launch3';
@@ -1306,7 +1401,7 @@ MwIDAQAB
         $objgraph3->placementAdvice->displayHeight = 400;
         $objgraph3->placementAdvice->windowTarget = 'test-win';
         $objgraph3->{$strtype} = 'LtiLinkItem';
-        $objgraph3->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+        $objgraph3->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
         $expected = new \stdClass();
         $expected->{$strcontext} = 'http://purl.imsglobal.org/ctx/lti/v1/ContentItem';
@@ -1776,6 +1871,7 @@ MwIDAQAB
         $this->assertTrue(strpos($request['lti_message_hint'],  "\"launchid\":\"ltilaunch{$instance->id}_") > 0);
         $this->assertEquals('some-client-id', $request['client_id']);
         $this->assertEquals('some-type-id', $request['lti_deployment_id']);
+        // Load from db the link to see that it exists
     }
 
     /**
@@ -2116,7 +2212,7 @@ MwIDAQAB
         $configbase->lti_acceptgrades = LTI_SETTING_NEVER;
         $configbase->lti_sendname = LTI_SETTING_NEVER;
         $configbase->lti_sendemailaddr = LTI_SETTING_NEVER;
-        $mergedconfig = (object) array_merge( (array) $configbase, (array) $config);
+        $mergedconfig = (object) array_merge((array) $configbase, (array) $config);
         $typeid = lti_add_type($type, $mergedconfig);
         return lti_get_type($typeid);
     }
@@ -2160,3 +2256,4 @@ MwIDAQAB
         return ['proxies' => $proxies, 'types' => $types];
     }
 }
+

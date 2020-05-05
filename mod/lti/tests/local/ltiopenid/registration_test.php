@@ -82,6 +82,13 @@ class registration_test extends \advanced_testcase {
                     "target_link_uri": "https://client.example.org/lti/dl",
                     "label": "Add a virtual garden",
                     "label#ja": "バーチャルガーデンを追加する"
+                },
+                {
+                    "type": "LtiDeepLinkingRequest",
+                    "target_link_uri": "https://client.example.org/lti/dlrt",
+                    "label": "Add a virtual garden in my rich text editor",
+                    "label#ja": "バーチャルガーデンを追加する",
+                    "placements": ["RichTextEditor"]
                 }
             ]
         }
@@ -136,6 +143,33 @@ EOD;
 EOD;
 
     /**
+     * @var string A minimalist with deep linking client registration for both ContentArea and RichText.
+     */
+    private $registrationminimaldlrtjson = <<<EOD
+    {
+        "application_type": "web",
+        "response_types": ["id_token"],
+        "grant_types": ["implict", "client_credentials"],
+        "initiate_login_uri": "https://client.example.org/lti/init",
+        "redirect_uris":
+        ["https://client.example.org/callback"],
+        "client_name": "Virtual Garden",
+        "jwks_uri": "https://client.example.org/.well-known/jwks.json",
+        "token_endpoint_auth_method": "private_key_jwt",
+        "https://purl.imsglobal.org/spec/lti-tool-configuration": {
+            "domain": "client.example.org",
+            "target_link_uri": "https://client.example.org/lti",
+            "messages": [
+                {
+                    "type": "LtiDeepLinkingRequest",
+                    "placements": ["ContentArea", "RichTextEditor"]
+                }
+            ]
+        }
+    }
+EOD;
+
+    /**
      * Test the mapping from Registration JSON to LTI Config for a has-it-all tool registration.
      */
     public function test_to_config_full() {
@@ -163,6 +197,8 @@ EOD;
         $this->assertEquals(LTI_SETTING_ALWAYS, $config->lti_sendemailaddr);
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEquals('https://client.example.org/lti/dl', $config->lti_toolurl_ContentItemSelectionRequest);
+        $this->assertEquals(1, $config->lti_asrichtexteditorplugin);
+        $this->assertEquals("https://client.example.org/lti/dlrt", $config->lti_richtexteditorurl);
     }
 
     /**
@@ -190,6 +226,7 @@ EOD;
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendname);
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendemailaddr);
         $this->assertEquals(0, $config->lti_contentitem);
+        $this->assertEquals(0, $config->lti_asrichtexteditorplugin);
     }
 
     /**
@@ -201,6 +238,7 @@ EOD;
         $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
+        $this->assertEquals(0, $config->lti_asrichtexteditorplugin);
     }
 
     /**
@@ -311,12 +349,31 @@ EOD;
         $dlmsg = $lti['messages'][0];
         $this->assertEquals($dlmsgorig['type'], $dlmsg['type']);
         $this->assertEquals($dlmsgorig['target_link_uri'], $dlmsg['target_link_uri']);
+        $this->assertEquals(['ContentArea'], $dlmsg['placements']);
+        $dlrtmsgorig = $ltiorig['messages'][1];
+        $dlrtmsg = $lti['messages'][1];
+        $this->assertEquals($dlrtmsgorig['type'], $dlrtmsg['type']);
+        $this->assertEquals($dlrtmsgorig['target_link_uri'], $dlrtmsg['target_link_uri']);
+        $this->assertEquals($dlrtmsgorig['placements'], $dlrtmsg['placements']);
         $this->assertTrue(in_array('iss', $lti['claims']));
         $this->assertTrue(in_array('sub', $lti['claims']));
         $this->assertTrue(in_array('email', $lti['claims']));
         $this->assertTrue(in_array('family_name', $lti['claims']));
         $this->assertTrue(in_array('given_name', $lti['claims']));
         $this->assertTrue(in_array('name', $lti['claims']));
+    }
+
+    /**
+     * Test the transformation from lti config to OpenId LTI Client Registration response
+     * respects the deep linking placements.
+     */
+    public function test_config_to_registration_minimal_dlplacements() {
+        $orig = json_decode($this->registrationminimaldlrtjson, true);
+        $reghelper = registration_helper::get();
+        $reg = $reghelper->config_to_registration($reghelper->registration_to_config($orig, 'clid'), 12);
+        $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $this->assertEquals(['ContentArea'], $lti['messages'][0]['placements']);
+        $this->assertEquals(['RichTextEditor'], $lti['messages'][1]['placements']);
     }
 
     /**

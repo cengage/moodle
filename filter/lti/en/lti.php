@@ -33,7 +33,7 @@
 // Contact info: Marc Alier Forment granludo @ gmail.com or marc.alier @ upc.edu.
 
 /**
- * This file defines the version of lti
+ * This file contains en_utf8 translation of the Basic LTI module
  *
  * @package mod_lti
  * @copyright  2009 Marc Alier, Jordi Piguillem, Nikolas Galanis
@@ -48,7 +48,4 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2023011600;    // The current module version (Date: YYYYMMDDXX).
-$plugin->requires  = 2022111800;    // Requires this Moodle version.
-$plugin->component = 'mod_lti';     // Full name of the plugin (used for diagnostics).
-$plugin->cron      = 0;
+$string['filtername'] = 'External Tools';
