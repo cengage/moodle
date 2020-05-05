@@ -531,7 +531,7 @@ function lti_get_instance_type(object $instance) : ?object {
  * @return array the endpoint URL and parameters (including the signature)
  * @since  Moodle 3.0
  */
-function lti_get_launch_data($instance, $nonce = '') {
+function lti_get_launch_data($instance, $nonce = '', $placement = '') {
     global $PAGE, $CFG, $USER;
 
     $tool = lti_get_instance_type($instance);
@@ -584,6 +584,13 @@ function lti_get_launch_data($instance, $nonce = '') {
     $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $typeconfig['toolurl'];
     $endpoint = trim($endpoint);
 
+    if ($placement) {
+        $desiredplacement = $placement . 'url';
+        if (!empty($instance->$desiredplacement)) {
+            $endpoint = $instance->$desiredplacement;
+        }
+    }
+
     // If the current request is using SSL and a secure tool URL is specified, use it.
     if (lti_request_is_using_ssl() && !empty($instance->securetoolurl)) {
         $endpoint = trim($instance->securetoolurl);
@@ -606,6 +613,9 @@ function lti_get_launch_data($instance, $nonce = '') {
 
     $course = $PAGE->course;
     $islti2 = isset($tool->toolproxyid);
+    if (!property_exists($instance, 'course')) {
+        $instance->course = $course->id;
+    }
     $allparams = lti_build_request($instance, $typeconfig, $course, $typeid, $islti2);
     if ($islti2) {
         $requestparams = lti_build_request_lti2($tool, $allparams);
@@ -709,11 +719,12 @@ function lti_get_launch_data($instance, $nonce = '') {
  * Launch an external tool activity.
  *
  * @param  stdClass $instance the external tool activity settings
+ * @param string $placement is either 'menulink', or 'richtexteditor'.
  * @return string The HTML code containing the javascript code for the launch
  */
-function lti_launch_tool($instance) {
+function lti_launch_tool($instance, $placement = '') {
 
-    list($endpoint, $parms) = lti_get_launch_data($instance);
+    list($endpoint, $parms) = lti_get_launch_data($instance, '', $placement);
     $debuglaunch = ( $instance->debuglaunch == 1 );
 
     $content = lti_post_launch_html($parms, $endpoint, $debuglaunch);
@@ -920,6 +931,12 @@ function lti_build_request($instance, $typeconfig, $course, $typeid = null, $isl
         $requestparams['lis_person_contact_email_primary'] = $USER->email;
     }
 
+    if (property_exists($instance, 'custom')) {
+        foreach ($instance->custom as $key => $value) {
+            $requestparams['custom_' . $key] = $value;
+        }
+    }
+
     return $requestparams;
 }
 
@@ -1092,8 +1109,8 @@ function lti_build_custom_parameters($toolproxy, $tool, $instance, $params, $cus
  * @throws coding_exception For invalid media type and presentation target parameters.
  */
 function lti_build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '', $mediatypes = [],
-                                                  $presentationtargets = [], $autocreate = false, $multiple = true,
-                                                  $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '') {
+                                                  $presentationtargets = [], $autocreate = false, $multiple = false,
+                                                  $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '', $placement = '') {
     global $USER;
 
     $tool = lti_get_type($id);
@@ -1107,7 +1124,9 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     if (!is_array($presentationtargets)) {
         throw new coding_exception('The list of accepted presentation targets should be in an array');
     }
-
+    if (!in_array($placement, ['', 'menulink', 'richtexteditor'])) {
+        throw new Moodle_Exception("Invalid placement type: $placement");
+    }
     // Check title. If empty, use the tool's name.
     if (empty($title)) {
         $title = $tool->name;
@@ -1146,10 +1165,19 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     }
 
     // Set the tool URL.
+    $placementurlkey = $placement . 'url';
     if (!empty($typeconfig['toolurl_ContentItemSelectionRequest'])) {
-        $toolurl = new moodle_url($typeconfig['toolurl_ContentItemSelectionRequest']);
+        if (!empty($typeconfig[$placementurlkey])) {
+            $toolurl = new moodle_url($typeconfig[$placement.'url']);
+        } else {
+            $toolurl = new moodle_url($typeconfig['toolurl_ContentItemSelectionRequest']);
+        }
     } else {
-        $toolurl = new moodle_url($typeconfig['toolurl']);
+        if (!empty($typeconfig[$placementurlkey])) {
+            $toolurl = new moodle_url($typeconfig[$placement.'url']);
+        } else {
+            $toolurl = new moodle_url($typeconfig['toolurl']);
+        }
     }
 
     // Check if SSL is forced.
@@ -1178,7 +1206,11 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
 
     // Get standard request parameters and merge to the request parameters.
     $orgid = lti_get_organizationid($typeconfig);
-    $standardparams = lti_build_standard_message(null, $orgid, $tool->ltiversion, 'ContentItemSelectionRequest');
+    $requesttype = 'ContentItemSelectionRequest';
+    if (!$typeconfig['contentitem']) {
+        $requesttype = 'basic-lti-launch-request';
+    }
+    $standardparams = lti_build_standard_message(null, $orgid, $tool->ltiversion, $requesttype);
     $requestparams = array_merge($requestparams, $standardparams);
 
     // Get custom request parameters and merge to the request parameters.
@@ -1231,6 +1263,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
             'frame',
             'iframe',
             'window',
+            'embed'
         ];
     }
     $requestparams['accept_presentation_document_targets'] = implode(',', $presentationtargets);
@@ -2631,6 +2664,10 @@ function lti_get_type_type_config($id) {
 
     $type->lti_secureicon = $basicltitype->secureicon;
 
+    $type->lti_asrichtexteditorplugin = $basicltitype->asrichtexteditorplugin;
+
+    $type->lti_richtexteditorurl = $basicltitype->richtexteditorurl;
+
     if (isset($config['resourcekey'])) {
         $type->lti_resourcekey = $config['resourcekey'];
     }
@@ -2787,6 +2824,38 @@ function lti_prepare_type_for_save($type, $config) {
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
 
+<<<<<<< HEAD
+=======
+    $type->asmenulink = false;
+    $type->asrichtexteditorplugin = false;
+
+    if (isset($config->lti_asmenulink)) {
+        $type->asmenulink = $config->lti_asmenulink;
+    }
+
+    if (isset($config->lti_asrichtexteditorplugin)) {
+        $type->asrichtexteditorplugin = $config->lti_asrichtexteditorplugin;
+    }
+
+    $menulinkscount = isset($config->lti_menulinklabel) ? count($config->lti_menulinklabel) : 0;
+    for ($i = 0; $i < $menulinkscount; $i++) {
+
+        $menulinklabel = $config->lti_menulinklabel[$i];
+        $menulinkurl = $config->lti_menulinkurl[$i];
+
+        if (empty($menulinklabel) && empty($menulinkurl)) {
+            continue;
+        }
+
+        $type->menulinks[] = array (
+            "label" => $menulinklabel,
+            "url" => $menulinkurl
+        );
+    }
+
+    $type->richtexteditorurl = isset($config->lti_richtexteditorurl) ? $config->lti_richtexteditorurl : '';
+
+>>>>>>> 226e8b1321d... LTI Integration Point for HTML Editor
     $type->timemodified = time();
 
     unset ($config->lti_typename);
@@ -2859,6 +2928,152 @@ function lti_update_type($type, $config) {
     }
 }
 
+<<<<<<< HEAD
+=======
+/**
+ * Get all types that can be placed in a specific placement.
+ *
+ * @param string $placementname Either 'menulink' or
+ * 'richtexteditorplugin'
+ *
+ * @return array array of tools
+ */
+function lti_load_type_by_placement (string $placementname) {
+    global $DB;
+
+    $queryfield = [
+        'menulink' => 'asmenulink',
+        'richtexteditorplugin' => 'asrichtexteditorplugin',
+    ][$placementname];
+
+    return $DB->get_records('lti_types', [$queryfield => 1], 'name');
+}
+
+/**
+ * Returns LTI tools that can be placed in the course menu.
+ *
+ * @param int $courseid
+ * @param boolean $activeonly
+ * @return array
+ */
+function lti_load_course_menu_links(int $courseid, $activeonly=false) {
+    global $DB;
+
+    $join = '';
+    if (!$activeonly) {
+        $join = ' LEFT ';
+    }
+    $records = $DB->get_recordset_sql(
+        "SELECT l.id,
+                l.name,
+                l.description,
+                lc.course,
+                lc.menulinkid
+           FROM {lti_types} AS l
+     $join JOIN {lti_course_menu_placements} AS lc ON (lc.typeid=l.id AND lc.course=?)
+          WHERE l.asmenulink=1
+       ORDER BY l.name", [$courseid]
+    );
+
+    $types = [];
+    foreach ($records as $record) {
+        if (!array_key_exists($record->id, $types)) {
+            $type = new stdClass();
+            $type->id = $record->id;
+            $type->name = $record->name;
+            $type->description = trim($record->description);
+            $type->selected = $record->course != null;
+
+            $type->menulinks = [];
+            $linkrecords = $DB->get_recordset_sql(
+                "SELECT id,
+                        typeid,
+                        label
+                   FROM {lti_menu_links}
+                  WHERE typeid=?
+               ORDER BY id", [$type->id]
+            );
+            foreach ($linkrecords as $linkrecord) {
+                $menulink = new stdClass();
+                $menulink->id = $linkrecord->id;
+                $menulink->typeid = $linkrecord->typeid;
+                $menulink->label = $linkrecord->label;
+                $menulink->selected = false;
+
+                $type->menulinks[$menulink->id] = $menulink;
+            }
+
+            $types[$type->id] = $type;
+        }
+
+        if ($record->menulinkid) {
+            $types[$record->id]->menulinks[$record->menulinkid]->selected = true;
+        }
+    }
+
+    return $types;
+}
+
+/**
+ * For given course, set course menu links.
+ *
+ * @param int $courseid
+ * @param array $menulinks
+ */
+function lti_set_course_menu_links(int $courseid, array $menulinks) {
+    global $DB;
+    $transaction = $DB->start_delegated_transaction();
+    try {
+        $DB->delete_records('lti_course_menu_placements', ['course' => $courseid]);
+
+        $ltitools = lti_organize_menuplacement_form_data($menulinks);
+        foreach ($ltitools as $key => $ltitool) {
+            if ($ltitool->menulinks) {
+                foreach ($ltitool->menulinks as $menulinkid) {
+                    $DB->insert_record('lti_course_menu_placements', (object)[
+                        'typeid' => $ltitool->id,
+                        'course' => $courseid,
+                        'menulinkid' => $menulinkid
+                    ]);
+                }
+            } else {
+                $DB->insert_record('lti_course_menu_placements', (object)[
+                    'typeid' => $ltitool->id,
+                    'course' => $courseid,
+                    'menulinkid' => null
+                ]);
+            }
+        }
+
+        $transaction->allow_commit();
+    } catch (Exception $e) {
+        $transaction->rollback($e);
+    }
+}
+
+/**
+ * Organize the output data from menuplacement form.
+ *
+ * @param array $menuitems
+ */
+function lti_organize_menuplacement_form_data(array $menuitems) {
+    $ltitools = [];
+    foreach ($menuitems as $keyset => $menuitemid) {
+        $key = explode('-', $keyset);
+        if ($key[0] === 'ltitool' && $menuitemid) {
+            $ltitool = new stdClass();
+            $ltitool->id = $menuitemid;
+            $ltitool->menulinks = [];
+            $ltitools [$ltitool->id] = $ltitool;
+        } else if ($key[0] === 'menulink' && $menuitemid) {
+            $ltitools[$key[1]]->menulinks [] = $key[2];
+        }
+    }
+
+    return $ltitools;
+}
+
+>>>>>>> 226e8b1321d... LTI Integration Point for HTML Editor
 function lti_add_type($type, $config) {
     global $USER, $SITE, $DB;
 

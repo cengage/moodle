@@ -48,7 +48,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2022041900;    // The current module version (Date: YYYYMMDDXX).
+$plugin->version   = 2022042200;    // The current module version (Date: YYYYMMDDXX).
 $plugin->requires  = 2022041200;    // Requires this Moodle version.
+>>>>>>> 70a3bccf6dc (MDL-67560 mod_lti: LTI Integration Point for HTML Editor)
 $plugin->component = 'mod_lti';     // Full name of the plugin (used for diagnostics).
 $plugin->cron      = 0;

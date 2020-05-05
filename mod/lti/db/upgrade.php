@@ -207,6 +207,21 @@ function xmldb_lti_upgrade($oldversion) {
 
     // Automatically generated Moodle v4.0.0 release upgrade line.
     // Put any upgrade step following this.
+    
+    if ($oldversion < 2022042200) {
+        $table = new xmldb_table('lti_types');
+
+        $fields = [];
+        $fields[] = new xmldb_field('asrichtexteditorplugin', XMLDB_TYPE_INTEGER, 1, null, null, null, 0, 'asmenulink');
+        $fields[] = new xmldb_field('richtexteditorurl', XMLDB_TYPE_TEXT, 'small', null, false, null, null, 'asrichtexteditorplugin');
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2022042200, 'lti');
+    }
 
     return true;
 }
