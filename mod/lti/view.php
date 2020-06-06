@@ -84,7 +84,7 @@ if ($ltitypeid && $courseid) {
         $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
         $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
     }
-    $pageparams = array('id' => $cm->id);
+    $pageparams = array('id' => $cm->id, 'triggerview' => 0);
     $launchparam = 'id=' . $cm->id;
 }
 
@@ -157,8 +157,7 @@ if ($typeid) {
     $config = new stdClass();
     $config->lti_ltiversion = LTI_VERSION_1;
 }
-<<<<<<< HEAD
-$launchurl = new moodle_url('/mod/lti/launch.php', ['id' => $cm->id, 'triggerview' => 0]);
+$launchurl = new moodle_url('/mod/lti/launch.php', $pageparams);
 if ($action) {
     $launchurl->param('action', $action);;
 }
@@ -170,30 +169,10 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     if (!$forceview) {
         echo "<script language=\"javascript\">//<![CDATA[\n";
         echo "window.open('{$launchurl->out(true)}','lti-$cm->id');";
-=======
-
-if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
-    (($config->lti_ltiversion !== LTI_VERSION_1P3) || isset($SESSION->lti_initiatelogin_status))) {
-    unset($SESSION->lti_initiatelogin_status);
-
-    if ($cm) {
-        $windowtitle = 'lti-' . $cm->id;
-    } else {
-        $windowtitle = 'lti-type-' . $lti->typeid;
-    }
-
-    if (!$forceview) {
-        echo "<script language=\"javascript\">//<![CDATA[\n";
-        echo "window.open('launch.php?" . $launchparam . "&triggerview=0','" . $windowtitle . "');";
->>>>>>> 1af5243d9f3 (CCLE-9108 - launch lti tools from nav menu)
         echo "//]]\n";
         echo "</script>\n";
         echo "<p>".get_string("basiclti_in_new_window", "lti")."</p>\n";
     }
-<<<<<<< HEAD
-=======
-    $url = new moodle_url('/mod/lti/launch.php', $pageparams);
->>>>>>> 1af5243d9f3 (CCLE-9108 - launch lti tools from nav menu)
     echo html_writer::start_tag('p');
     echo html_writer::link($launchurl->out(false), get_string("basiclti_in_new_window_open", "lti"), array('target' => '_blank'));
     echo html_writer::end_tag('p');
@@ -217,11 +196,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
-<<<<<<< HEAD
     $attributes['src'] = $launchurl;
-=======
-    $attributes['src'] = 'launch.php?id=' . $launchparam . '&triggerview=0';
->>>>>>> 1af5243d9f3 (CCLE-9108 - launch lti tools from nav menu)
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .
