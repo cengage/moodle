@@ -30,7 +30,7 @@ require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 if (isset($_GET['url'])) {
     $reg_token = registration_token();
-    $conf_url = new moodle_url('/mod/lti/openidconfiguration.php');
+    $conf_url = new moodle_url('/mod/lti/openid-configuration.php');
     $url = new moodle_url($_GET['url']);
     $url->param('openid_configuration', $conf_url->out(false));
     $url->param('registration_token', $reg_token);
