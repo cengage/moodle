@@ -134,6 +134,18 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         //screenReaderAnnounce(getExternalRegistrationContainer());
     };
 
+    /** Close the LTI Advantage Registration IFrame */
+    var closeLTIAdvRegistration = function(e) {
+        if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
+            getLTIAdvRegistrationContainer().empty();
+            hideLTIAdvRegistrationContainer();
+            showCartridgeRegistration();
+            showRegistrationChoices();
+            showToolList();
+            showRegistrationChoices();
+        }
+    };
+
     /**
      * Load the external registration template and render it in the DOM and display it.
      *
@@ -143,22 +155,13 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      * @return {Promise} jQuery Deferred object
      */
     var initiateRegistration = function(url) {
-
         // Show the external registration page in an iframe.
         var container = getLTIAdvRegistrationContainer();
-        var iframe = container.append("<iframe src='/mod/lti/startltiadvregistration.php?url="
-                         + encodeURIComponent( url ) + "'></iframe>");
+        container.empty();
+        container.append($("<iframe src='/mod/lti/startltiadvregistration.php?url="
+                         + encodeURIComponent( url ) + "'></iframe>"));
         showLTIAdvRegistrationContainer();
-        window.addEventListener("message", (e=>{
-            if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
-                iframe.remove();
-                hideLTIAdvRegistrationContainer();
-                showCartridgeRegistration();
-                showRegistrationChoices();
-                showToolList();
-                showRegistrationChoices();
-            }
-        }), false);
+        window.addEventListener("message", closeLTIAdvRegistration, false);
     };
 
     /**
