@@ -110,6 +110,26 @@ define(
         ];
 
         /**
+         * Hide the element, including aria and tab index.
+         * @param {HTMLElement} e
+         */
+        const hideElement = e => {
+            e.setAttribute('hidden', 'true');
+            e.setAttribute('aria-hidden', 'true');
+            e.setAttribute('tab-index', '-1');
+        };
+
+        /**
+         * Show the element, including aria and tab index (set to 1).
+         * @param {HTMLElement} e
+         */
+        const showElement = e => {
+            e.removeAttribute('hidden');
+            e.setAttribute('aria-hidden', 'false');
+            e.setAttribute('tab-index', '1');
+        };
+
+        /**
          * When more than one item needs to be added, the UI is simplified
          * to just list the items to be added. Form is hidden and the only
          * options is (save and return to course) or cancel.
@@ -117,59 +137,22 @@ define(
          * the unneeded elements.
          * @param {Object[]} items
          */
-        var showMultipleSummaryAndHideForm = function(items) {
-            /*const hide = function(e) {
-               e.hidden = true;
-            };
-            [...document.querySelector('#region-main-box form.mform').children]
-                .filter(e=>e.id !== 'add_multiple_summary')
-                .forEach(hide);
-            document.querySelector('#id_submitbutton').hidden = true;
-            str.get_strings([
-            {
-                key: 'contentitem_multiple_description',
-                component: 'mod_lti'
-            },
-            {
-                key: 'contentitem_multiple_graded',
-                component: 'mod_lti'
-            }
-           ]).done(strs => {
-                $("div#add_multiple_summary p").text(strs[0]);
-                items.forEach(item => {
-                    // Creating a new list element with strong for name and em for grading info.
-                    var li = $('<li><strong></strong> <em></em></li>');
-                    li.find('strong').text(item.name);
-                    if (item.instructorchoiceacceptgrades === 1) {
-                        li.find('em').text(strs[1].replace('$points', item.grade_modgrade_point || ''));
-                    }
-                    $("div#add_multiple_summary ul").append(li);
-                });
-                document.querySelector('#fgroup_id_buttonar').hidden = false;
-            });*/
-
-            demo(items);
-        };
-
-        const demo = async(items) => {
+        const showMultipleSummaryAndHideForm = async items => {
             const form = document.querySelector('#region-main-box form');
             const toolArea = form.querySelector('[data-attribute="dynamic-import"]');
-
-            Array.prototype.forEach.call(form.children, (formElement) => {
-                formElement.setAttribute('hidden', 'true');
-                formElement.setAttribute('aria-hidden', 'true');
-                formElement.setAttribute('tab-index', '-1');
-            });
+            const buttonGroup = form.querySelector('#fgroup_id_buttonar');
+            const submitAndLaunch = form.querySelector('#id_submitbutton');
+            Array.from(form.children).forEach(hideElement);
+            hideElement(submitAndLaunch);
 
             const {html, js} = await templates.renderForPromise('mod_lti/tool_deeplinking_results',
                 {items: items});
 
             await templates.replaceNodeContents(toolArea, html, js);
-
-            toolArea.removeAttribute('hidden');
-            toolArea.setAttribute('aria-hidden', 'false');
-            toolArea.setAttribute('tab-index', '1');
+            showElement(toolArea);
+            showElement(buttonGroup);
         };
+
 
         var configToVariant = function(config) {
             var variant = {};
