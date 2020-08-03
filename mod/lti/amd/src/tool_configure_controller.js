@@ -158,7 +158,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         // Show the external registration page in an iframe.
         var container = getLTIAdvRegistrationContainer();
         container.empty();
-        container.append($("<iframe src='/mod/lti/startltiadvregistration.php?url="
+        container.append($("<iframe src='startltiadvregistration.php?url="
                          + encodeURIComponent( url ) + "'></iframe>"));
         showLTIAdvRegistrationContainer();
         window.addEventListener("message", closeLTIAdvRegistration, false);

@@ -24,6 +24,8 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
 
 /**
  * Creates and returns an error message
@@ -90,11 +92,15 @@ if (!substr($requestheaders['Authorization'], 0, 7) == 'Bearer ') {
   return_error('missing_registration_token', 400);
 }
 
-$registrationtoken = trim(substr($requestheaders['Authorization'], 7));
-// Validate registrationtoken ...
+// Validate registrationtoken
+$registration_token_jwt = trim(substr($requestheaders['Authorization'], 7));
+$keyset = file_get_contents(new moodle_url('/mod/lti/certs.php'));
+$keysetarr = json_decode($keyset, true);
+$keys = JWK::parseKeySet($keysetarr);
+$registration_token = JWT::decode($registration_token_jwt, $keys, ['RS256']);
 
 // Get clientid from registrationtoken.
-$clientid = 'V34509adhAS';
+$clientid = $registration_token->sub;
 
 // Checks if clientid is already registered.
 if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {

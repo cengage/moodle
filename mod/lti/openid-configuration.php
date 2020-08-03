@@ -35,7 +35,7 @@ $conf = [
     'token_endpoint_auth_methods_supported' => ['private_key_jwt'],
     'token_endpoint_auth_signing_alg_values_supported' => ['RS256'],
     'jwks_uri' => (new moodle_url('/mod/lti/certs.php'))->out(false),
-    'registration_endpoint' => (new moodle_url('/mod/lti/registerlti13tool.php'))->out(false),
+    'registration_endpoint' => (new moodle_url('/mod/lti/openid-registration.php'))->out(false),
     'scopes_supported' => ['openid',
         'https://purl.imsglobal.org/spec/lti-gs/scope/contextgroup.readonly',
         'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem',
