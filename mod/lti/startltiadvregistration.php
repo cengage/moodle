@@ -29,7 +29,15 @@ require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 if (isset($_GET['url'])) {
-    $reg_token = registration_token();
+    $now = time();
+    $token = [
+        "sub" => random_string(15),
+        "scope" => "reg",
+        "iat" => $now,
+        "exp" => $now + 3600 
+    ];
+    $privatekey = get_private_key();
+    $reg_token = JWT::encode($token, $privatekey['key'], 'RS256', $privatekey['kid']);
     $conf_url = new moodle_url('/mod/lti/openid-configuration.php');
     $url = new moodle_url($_GET['url']);
     $url->param('openid_configuration', $conf_url->out(false));
