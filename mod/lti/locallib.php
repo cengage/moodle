@@ -3199,9 +3199,8 @@ function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce 
         }
     }
 
-    $privatekey = get_config('mod_lti', 'privatekey');
-    $kid = get_config('mod_lti', 'kid');
-    $jwt = JWT::encode($payload, $privatekey, 'RS256', $kid);
+    $privatekey = get_private_key();
+    $jwt = JWT::encode($payload, $privatekey['key'], 'RS256', $privatekey['kid']);
 
     $newparms = array();
     $newparms['id_token'] = $jwt;
@@ -4381,15 +4380,30 @@ function lti_new_access_token($typeid, $scopes) {
 
 }
 
-function registration_token() {
-    $now = time();
-    $token = [
-        "sub" => random_string(15),
-        "scope" => "reg",
-        "iat" => $now,
-        "exp" => $now + 3600 
-    ];
+function get_private_key() {
     $privatekey = get_config('mod_lti', 'privatekey');
     $kid = get_config('mod_lti', 'kid');
-    return JWT::encode($token, $privatekey, 'RS256', $kid); 
+    return [
+        "key" => $privatekey,
+        "kid" => $kid
+    ];
+}
+
+function jwks() {
+    $jwks = array('keys' => array());
+
+    $privatekey = get_private_key();
+    $res = openssl_pkey_get_private($privatekey['key']);
+    $details = openssl_pkey_get_details($res);
+
+    $jwk = array();
+    $jwk['kty'] = 'RSA';
+    $jwk['alg'] = 'RS256';
+    $jwk['kid'] = $privatekey['kid'];
+    $jwk['e'] = rtrim(strtr(base64_encode($details['rsa']['e']), '+/', '-_'), '=');
+    $jwk['n'] = rtrim(strtr(base64_encode($details['rsa']['n']), '+/', '-_'), '=');
+    $jwk['use'] = 'sig';
+
+    $jwks['keys'][] = $jwk;
+    return $jwks;
 }

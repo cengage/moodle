@@ -18,7 +18,6 @@
  * This file receives a registration request along with the registration token and returns a client_id.
  *
  * @package    mod_lti
- * @copyright  2019 Stephen Vickers
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -50,12 +49,7 @@ function return_response($message, $code = 200) {
  * @param $code Error code
  */
 function return_error($message, $code = 500) {
-  $error = <<< EOD
-    {
-      "error" : "{$message}"
-    }
-  EOD;
-  return_response($error, $code);
+  return_response($message, $code);
 }
 
 /**
@@ -78,7 +72,6 @@ function get_parameter($payload, $key, $required) {
     return null;
   }
   $parameter = $payload[$key];
-
   // Cleans parameters to avoid XSS and other issues.
   if (is_array($parameter)) {
     return clean_param_array($parameter, PARAM_TEXT, true);
@@ -87,16 +80,14 @@ function get_parameter($payload, $key, $required) {
 }
 
 // Retrieve registration token from Bearer Authorization header.
-$requestheaders = moodle\mod\lti\OAuthUtil::get_headers();
-if (!substr($requestheaders['Authorization'], 0, 7) == 'Bearer ') {
-  return_error('missing_registration_token', 400);
+$auth_header = moodle\mod\lti\OAuthUtil::get_headers()['Authorization'] ?? '';
+if (!($auth_header && substr($auth_header, 0, 7) == 'Bearer ')) {
+  return_error('missing_registration_token', 401);
 }
 
 // Validate registrationtoken
-$registration_token_jwt = trim(substr($requestheaders['Authorization'], 7));
-$keyset = file_get_contents(new moodle_url('/mod/lti/certs.php'));
-$keysetarr = json_decode($keyset, true);
-$keys = JWK::parseKeySet($keysetarr);
+$registration_token_jwt = trim(substr($auth_header, 7));
+$keys = JWK::parseKeySet(jwks());
 $registration_token = JWT::decode($registration_token_jwt, $keys, ['RS256']);
 
 // Get clientid from registrationtoken.
@@ -104,7 +95,7 @@ $clientid = $registration_token->sub;
 
 // Checks if clientid is already registered.
 if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {
-  return_error('clientid_already_registered', 400);
+  return_error('token_already_consumed', 401);
 }
 
 // Retrieve registration parameters.
@@ -121,18 +112,14 @@ $tokenendpointauthmethod = get_parameter($registrationpayload, 'token_endpoint_a
 $applicationtype = get_parameter($registrationpayload, 'application_type', false);
 $logouri = get_parameter($registrationpayload, 'logo_uri', false);
 
-// Get values from https://purl.imsglobal.org/spec/lti-tool-configuration claim.
-if (!isset($registrationpayload['https://purl.imsglobal.org/spec/lti-tool-configuration'])){
-  return_error('missing_parameter_https://purl.imsglobal.org/spec/lti-tool-configuration', 400);
-}
-$ltitoolconfiguration = $registrationpayload['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+$ltitoolconfiguration = get_parameter($registrationpayload, 'https://purl.imsglobal.org/spec/lti-tool-configuration', true);
 
 $domain = get_parameter($ltitoolconfiguration, 'domain', true);
 $targetlinkuri = get_parameter($ltitoolconfiguration, 'target_link_uri', true);
 $customparameters = get_parameter($ltitoolconfiguration, 'custom_parameters', false);
 $scopes = get_parameter($ltitoolconfiguration, 'scopes', false);
 $claims = get_parameter($ltitoolconfiguration, 'claims', false);
-$messages = get_parameter($ltitoolconfiguration, 'messages', false);
+//$messages = $ltitoolconfiguration['messages'] ?? [];
 $description = get_parameter($ltitoolconfiguration, 'description', false);
 
 // Create response objects.
@@ -165,13 +152,13 @@ $registrationresponse->rediret_uris = $redirecturis;
 if ($tokenendpointauthmethod !== 'private_key_jwt'){
   return_error('invalid_token_endpoint_auth_method', 400);
 }
-$registrationresponse->token_endpoint_auth_method = $tokenendpointauthmethod;
+$registrationresponse->token_endpoint_auth_method = ['private_key_jwt'];
 
 // Validate application type.
 if (!empty($applicationtype) && $applicationtype !== 'web') {
   return_error('invalid_application_type', 400);
 }
-$registrationresponse->application_type = $applicationtype;
+$registrationresponse->application_type = ['web'];
 
 // Creating tool configuration.
 $type = new stdClass();
@@ -203,10 +190,10 @@ $registrationresponse->logo_uri = $logouri;
 // Sets Course Visible.
 $config->lti_coursevisible = LTI_COURSEVISIBLE_PRECONFIGURED;
 // Sets Content Item.
-if (isset($messages)) {
+if (!empty($messages)) {
   $messagesresponse = [];
   foreach ($messages as $value) {
-    if ($value['type'] === 'LTIDeepLinkingRequest') {
+    if ($value['type'] === 'LtiDeepLinkingRequest') {
       $config->lti_contentitem = 1;
       $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'];
       array_push($messagesresponse, $value);
@@ -216,7 +203,7 @@ if (isset($messages)) {
 }
 
 // Sets key type.
-$config->lti_keytype = JWK_KEYSET;
+$config->lti_keytype = 'JWK_KEYSET';
 // Sets public keyset.
 $config->lti_publickeyset = $jwksuri;
 $registrationresponse->jwks_uri = $jwksuri;
@@ -328,7 +315,6 @@ $responsemessage = json_encode($registrationresponse);
 $responsemessage = substr($responsemessage, 0, -1);
 $responsemessage .= ',"https://purl.imsglobal.org/spec/lti-tool-configuration":' . json_encode($lticonfigurationresponse);
 $responsemessage .= '}';
-
 // Returning registration response
 header('Content-Type: application/json; charset=utf-8');
 return_response($responsemessage);
