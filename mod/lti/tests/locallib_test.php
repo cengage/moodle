@@ -1213,14 +1213,28 @@ MwIDAQAB
             'url' => 'http://example.com/messages/launch',
             'title' => 'Test title',
             'text' => 'Test text',
-            'frame' => []
+            'iframe' => []
         ];
         $contentitems[] = [
             'type' => 'ltiResourceLink',
             'url' => 'http://example.com/messages/launch2',
             'title' => 'Test title2',
             'text' => 'Test text2',
-            'frame' => []
+            'iframe' => [
+                'height' => 200,
+                'width' => 300
+            ],
+            'window' => []
+        ];
+        $contentitems[] = [
+            'type' => 'ltiResourceLink',
+            'url' => 'http://example.com/messages/launch3',
+            'title' => 'Test title3',
+            'text' => 'Test text3',
+            'window' => [
+                'targetName' => 'test-win',
+                'height' => 400
+            ]
         ];
 
         $contentitems = json_encode($contentitems);
@@ -1237,7 +1251,8 @@ MwIDAQAB
         $objgraph->url = 'http://example.com/messages/launch';
         $objgraph->title = 'Test title';
         $objgraph->text = 'Test text';
-        $objgraph->frame = [];
+        $objgraph->placementAdvice = new stdClass();
+        $objgraph->placementAdvice->presentationDocumentTarget = 'iframe';
         $objgraph->{$strtype} = 'LtiLinkItem';
         $objgraph->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
 
@@ -1245,15 +1260,30 @@ MwIDAQAB
         $objgraph2->url = 'http://example.com/messages/launch2';
         $objgraph2->title = 'Test title2';
         $objgraph2->text = 'Test text2';
-        $objgraph2->frame = [];
+        $objgraph2->placementAdvice = new stdClass();
+        $objgraph2->placementAdvice->presentationDocumentTarget = 'iframe';
+        $objgraph2->placementAdvice->displayHeight = 200;
+        $objgraph2->placementAdvice->displayWidth = 300;
         $objgraph2->{$strtype} = 'LtiLinkItem';
         $objgraph2->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+
+        $objgraph3 = new stdClass();
+        $objgraph3->url = 'http://example.com/messages/launch3';
+        $objgraph3->title = 'Test title3';
+        $objgraph3->text = 'Test text3';
+        $objgraph3->placementAdvice = new stdClass();
+        $objgraph3->placementAdvice->presentationDocumentTarget = 'window';
+        $objgraph3->placementAdvice->displayHeight = 400;
+        $objgraph3->placementAdvice->windowTarget = 'test-win';
+        $objgraph3->{$strtype} = 'LtiLinkItem';
+        $objgraph3->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
 
         $expected = new stdClass();
         $expected->{$strcontext} = 'http://purl.imsglobal.org/ctx/lti/v1/ContentItem';
         $expected->{$strgraph} = [];
         $expected->{$strgraph}[] = $objgraph;
         $expected->{$strgraph}[] = $objgraph2;
+        $expected->{$strgraph}[] = $objgraph3;
 
         $this->assertEquals($expected, $jsondecode);
     }

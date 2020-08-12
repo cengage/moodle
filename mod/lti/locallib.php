@@ -1444,6 +1444,11 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
             'text' => $item->text,
             'format' => FORMAT_PLAIN
         ];
+    } else {
+        $config->introeditor = [
+            'text' => '',
+            'format' => FORMAT_PLAIN
+        ];
     }
     if (isset($item->icon->{'@id'})) {
         $iconurl = new moodle_url($item->icon->{'@id'});
@@ -1612,7 +1617,35 @@ function lti_convert_content_items($param) {
                     $newitem->text = $item->html;
                     unset($newitem->html);
                 }
-                if (isset($item->presentation)) {
+                if (isset($item->iframe)) {
+                    // DeepLinking allows multiple options to be declared as supported.
+                    // We favor iframe over new window if both are specified.
+                    $newitem->placementAdvice = new stdClass();
+                    $newitem->placementAdvice->presentationDocumentTarget = 'iframe';
+                    if (isset($item->iframe->width)) {
+                        $newitem->placementAdvice->displayWidth = $item->iframe->width;
+                    }
+                    if (isset($item->iframe->height)) {
+                        $newitem->placementAdvice->displayHeight = $item->iframe->height;
+                    }
+                    unset($newitem->iframe);
+                    unset($newitem->window);
+                } else if (isset($item->window)) {
+                    $newitem->placementAdvice = new stdClass();
+                    $newitem->placementAdvice->presentationDocumentTarget = 'window';
+                    if (isset($item->window->targetName)) {
+                        $newitem->placementAdvice->windowTarget = $item->window->targetName;
+                    }
+                    if (isset($item->window->width)) {
+                        $newitem->placementAdvice->displayWidth = $item->window->width;
+                    }
+                    if (isset($item->window->height)) {
+                        $newitem->placementAdvice->displayHeight = $item->window->height;
+                    }
+                    unset($newitem->window);
+                } else if (isset($item->presentation)) {
+                    // This may have been part of an early draft but is not in the final spec
+                    // so keeping it around for now in case it's actually been used.
                     $newitem->placementAdvice = new stdClass();
                     if (isset($item->presentation->documentTarget)) {
                         $newitem->placementAdvice->presentationDocumentTarget = $item->presentation->documentTarget;

@@ -31,8 +31,18 @@
 
     Example context (json):
     {
+        "items": [
+            {
+                "name": "Chapter 1",
+                "instructorchoiceacceptgrades": 0
+            },
+            {
+                "name": "Quiz 1",
+                "instructorchoiceacceptgrades": 1,
+                "grade_modgrade_point": 20.5
+            }
+        ]
     }
-
 }}
 <p>
     {{#str}} contentitem_multiple_description, mod_lti {{/str}}

@@ -156,15 +156,20 @@ define(
 
         var configToVariant = function(config) {
             var variant = {};
-            ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon'].forEach(
+            ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon', 'launchcontainer'].forEach(
                 function(name) {
                     variant[name] = config[name] || '';
                 }
             );
+            // IGNORE_FILE_MERGE is -1.
+            variant.introeditor = {
+                "text": config.introeditor.text,
+                "format": config.introeditor.format,
+                "itemid": -1
+            };
             if (config.instructorchoiceacceptgrades === 1) {
                 variant.instructorchoiceacceptgrades = 1;
-                variant['grade[modgrade_type]'] = 'point';
-                variant['grade[modgrade_point]'] = config.grade_modgrade_point || 100;
+                variant.grade = config.grade_modgrade_point || 100;
             } else {
                 variant.instructorchoiceacceptgrades = 0;
             }

@@ -161,7 +161,7 @@ if ($mform->is_cancelled()) {
              * supplying variants which are applied to the base form data.
              * Variants are JSON objects which attribute names match the form keys.
              */
-            $variants = json_decode($fromform->add_multiple);
+            $variants = json_decode($fromform->add_multiple, true);
             foreach ($variants as &$variant) {
                 $formvariant = clone $fromform;
                 foreach ($variant as $key => $value) {
