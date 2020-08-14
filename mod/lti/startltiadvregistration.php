@@ -23,10 +23,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use Firebase\JWT\JWT;
 
 require_once("../../config.php");
 require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+require_login();
+$context = context_system::instance();
+require_capability('moodle/site:config', $context);
+
 
 if (isset($_GET['url'])) {
     $now = time();

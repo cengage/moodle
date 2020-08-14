@@ -134,7 +134,12 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         //screenReaderAnnounce(getExternalRegistrationContainer());
     };
 
-    /** Close the LTI Advantage Registration IFrame */
+    /**
+     * Close the LTI Advantage Registration IFrame.
+     *
+     * @private
+     * @param {Object} e post message event sent from the registration frame.
+     */
     var closeLTIAdvRegistration = function(e) {
         if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
             getLTIAdvRegistrationContainer().empty();
@@ -143,6 +148,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
             showRegistrationChoices();
             showToolList();
             showRegistrationChoices();
+            reloadToolList();
         }
     };
 
