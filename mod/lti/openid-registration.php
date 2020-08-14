@@ -119,7 +119,7 @@ $targetlinkuri = get_parameter($ltitoolconfiguration, 'target_link_uri', true);
 $customparameters = get_parameter($ltitoolconfiguration, 'custom_parameters', false);
 $scopes = get_parameter($ltitoolconfiguration, 'scopes', false);
 $claims = get_parameter($ltitoolconfiguration, 'claims', false);
-//$messages = $ltitoolconfiguration['messages'] ?? [];
+$messages = $ltitoolconfiguration['messages'] ?? [];
 $description = get_parameter($ltitoolconfiguration, 'description', false);
 
 // Create response objects.
@@ -181,6 +181,8 @@ $config->lti_description = $description;
 $lticonfigurationresponse->description = $description;
 // Sets LTI version.
 $config->lti_ltiversion = LTI_VERSION_1P3;
+// Default is to use siteid as instance guid
+$config->lti_organizationid_default = LTI_DEFAULT_ORGID_SITEID;
 // Sets ClientID.
 $config->lti_clientid = $clientid;
 $registrationresponse->client_id = $clientid;
