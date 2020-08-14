@@ -241,7 +241,7 @@ $string['keytype_rsa'] = 'RSA key';
 $string['launch_in_moodle'] = 'Launch tool in Moodle';
 $string['launch_in_popup'] = 'Launch tool in a pop-up';
 $string['launch_url'] = 'Tool URL';
-$string['add_lti13'] = 'Add LTI';
+$string['add_lti13'] = 'Add LTI Advantage';
 $string['add_lti11'] = 'Add Legacy LTI';
 $string['launch_url_help'] = 'The tool URL indicates the web address of the External Tool, and may contain additional information, such as the resource to show.
 If you are unsure what to enter for the tool URL, please check with the tool provider for more information.
