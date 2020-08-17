@@ -158,7 +158,9 @@ define(
          * which are used to insert more than one activity modules in one submit
          * by applying variation to the submitted form.
          * See /course/modedit.php.
+         * @private
          * @param {Object} config
+         * @return {Object} variant that will be used to modify form values on submit.
          */
         var configToVariant = function(config) {
             var variant = {};
