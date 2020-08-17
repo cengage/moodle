@@ -287,21 +287,21 @@ if (isset($claims)) {
   $config->lti_sendname = LTI_SETTING_NEVER;
 
   if (in_array('given_name', $claims)) {
-    $config->lti_sendname = LTI_SETTING_DELEGATE;
+    $config->lti_sendname = LTI_SETTING_ALWAYS;
     array_push($claimsresponse, 'given_name');
   }
   if (in_array('family_name', $claims)) {
-    $config->lti_sendname = LTI_SETTING_DELEGATE;
+    $config->lti_sendname = LTI_SETTING_ALWAYS;
     array_push($claimsresponse, 'family_name');
   }
   if (in_array('middle_name', $claims)) {
-    $config->lti_sendname = LTI_SETTING_DELEGATE;
+    $config->lti_sendname = LTI_SETTING_ALWAYS;
     array_push($claimsresponse, 'middle_name');
   }
 
   // Sets email privacy settings.
   if (in_array('email', $claims)) {
-    $config->lti_sendemailaddr = LTI_SETTING_DELEGATE;
+    $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
     array_push($claimsresponse, 'email');
   } else {
     $config->lti_sendemailaddr = LTI_SETTING_NEVER;

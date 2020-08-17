@@ -47,9 +47,11 @@ $conf = [
     'id_token_signing_alg_values_supported' => ['RS256'],
     'claims_supported' => ['sub', 'iss', 'name', 'given_name', 'family_name', 'email'],
     'https://purl.imsglobal.org/spec/lti-platform-configuration ' => [
-        'messages_supported' => ['LtiResourceLink', 'LtiDeepLinkingRequest', 'LtiDeploymentRequest'],
-        'placements' => ['AddContentMenu', 'AddToRichTextMenu', 'CourseNavigation'],
-        'variables' => ['CourseSection.timeFrame.end', 'CourseSection.timeFrame.begin', 'Context.id.history', 'ResourceLink.id.history']
+        'product_family_code' => 'moodle',
+        'version' => $CFG->release,
+        'messages_supported' => ['LtiResourceLink', 'LtiDeepLinkingRequest'],
+        'placements' => ['AddContentMenu'],
+        'variables' => ['Moodle.Person.userGroupIds']
     ]
 ];
 
