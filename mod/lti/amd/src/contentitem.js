@@ -153,7 +153,13 @@ define(
             showElement(buttonGroup);
         };
 
-
+        /**
+         * Transforms config values aimed at populating the lti mod form to JSON variant
+         * which are used to insert more than one activity modules in one submit
+         * by applying variation to the submitted form.
+         * See /course/modedit.php.
+         * @param {Object} config
+         */
         var configToVariant = function(config) {
             var variant = {};
             ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon', 'launchcontainer'].forEach(
