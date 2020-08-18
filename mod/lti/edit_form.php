@@ -215,7 +215,7 @@ class mod_lti_edit_types_form extends moodleform {
         $mform->setType('lti_launchcontainer', PARAM_INT);
 
         $mform->addElement('advcheckbox', 'lti_contentitem', get_string('contentitem_deeplinking', 'lti'));
-        $mform->addHelpButton('lti_contentitem', 'contentitem', 'lti');
+        $mform->addHelpButton('lti_contentitem', 'contentitem_deeplinking', 'lti');
         if ($istool) {
             $mform->disabledIf('lti_contentitem', null);
         }
