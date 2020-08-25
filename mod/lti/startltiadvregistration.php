@@ -40,13 +40,13 @@ if (isset($_GET['url'])) {
         "sub" => random_string(15),
         "scope" => "reg",
         "iat" => $now,
-        "exp" => $now + 3600 
+        "exp" => $now + 3600
     ];
     $privatekey = get_private_key();
-    $reg_token = JWT::encode($token, $privatekey['key'], 'RS256', $privatekey['kid']);
-    $conf_url = new moodle_url('/mod/lti/openid-configuration.php');
+    $regtoken = JWT::encode($token, $privatekey['key'], 'RS256', $privatekey['kid']);
+    $confurl = new moodle_url('/mod/lti/openid-configuration.php');
     $url = new moodle_url($_GET['url']);
-    $url->param('openid_configuration', $conf_url->out(false));
-    $url->param('registration_token', $reg_token);
+    $url->param('openid_configuration', $confurl->out(false));
+    $url->param('registration_token', $regtoken);
     header("Location: ".$url->out(false));
 }

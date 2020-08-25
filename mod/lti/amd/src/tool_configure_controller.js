@@ -131,7 +131,6 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         hideCartridgeRegistration();
         hideRegistrationChoices();
         getLTIAdvRegistrationContainer().removeClass('hidden');
-        //screenReaderAnnounce(getExternalRegistrationContainer());
     };
 
     /**
@@ -155,17 +154,16 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
     /**
      * Load the external registration template and render it in the DOM and display it.
      *
-     * @method renderExternalRegistrationWindow
+     * @method initiateRegistration
      * @private
-     * @param {Object} registrationRequest
-     * @return {Promise} jQuery Deferred object
+     * @param {String} url where to send the registration request
      */
     var initiateRegistration = function(url) {
         // Show the external registration page in an iframe.
         var container = getLTIAdvRegistrationContainer();
         container.empty();
         container.append($("<iframe src='startltiadvregistration.php?url="
-                         + encodeURIComponent( url ) + "'></iframe>"));
+                         + encodeURIComponent(url) + "'></iframe>"));
         showLTIAdvRegistrationContainer();
         window.addEventListener("message", closeLTIAdvRegistration, false);
     };

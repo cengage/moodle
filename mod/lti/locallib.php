@@ -2721,7 +2721,7 @@ function lti_prepare_type_for_save($type, $config) {
     if (isset($config->lti_toolurl)) {
         $type->baseurl = $config->lti_toolurl;
         if (isset($config->lti_tooldomain)) {
-            $type->tooldomain = $config->lti_tooldomain; 
+            $type->tooldomain = $config->lti_tooldomain;
         } else {
             $type->tooldomain = lti_get_domain_from_url($config->lti_toolurl);
         }
@@ -4459,6 +4459,11 @@ function lti_new_access_token($typeid, $scopes) {
 
 }
 
+/**
+ * Returns the private key to use to sign outgoing JWT.
+ *
+ * @return array keys are kid and key in PEM format.
+ */
 function get_private_key() {
     $privatekey = get_config('mod_lti', 'privatekey');
     $kid = get_config('mod_lti', 'kid');
@@ -4468,6 +4473,10 @@ function get_private_key() {
     ];
 }
 
+/**
+ * Returns the JWK Key Set for this site.
+ * @return array keyset exposting the site public key.
+ */
 function jwks() {
     $jwks = array('keys' => array());
 

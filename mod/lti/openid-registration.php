@@ -17,6 +17,7 @@
 /**
  * This file receives a registration request along with the registration token and returns a client_id.
  *
+ * @copyright  2020 Claude Vervoort (Cengage), Carlos Costa, Adrian Hutchinson (Macgraw Hill)
  * @package    mod_lti
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,78 +29,80 @@ use Firebase\JWT\JWT;
 
 /**
  * Creates and returns an error message
- * 
+ *
  * @param string $message Response message
  * @param int $code The response code
  */
 function return_response($message, $code = 200) {
-  $response = new \mod_lti\local\ltiservice\response();
-  // Set code.
-  $response->set_code($code);
-  // Set body.
-  $response->set_body($message);
-  $response->send();
-  die;
+    $response = new \mod_lti\local\ltiservice\response();
+    // Set code.
+    $response->set_code($code);
+    // Set body.
+    $response->set_body($message);
+    $response->send();
+    die;
 }
 
 /**
  * Helper function to return errors
- * 
- * @param $message Error message
- * @param $code Error code
+ *
+ * @param string $message Error message
+ * @param int $code Error code
  */
 function return_error($message, $code = 500) {
-  return_response($message, $code);
+    return_response($message, $code);
 }
 
 /**
  * Funcion used to validade paramteres.
- * 
+ *
  * This function is needed because the payload contains nested
  * objects, and optional_param() does not support arrays of arrays.
- * 
+ *
  * @param array $payload
  * @param string $key
  * @param boolean $required
- * 
+ *
  * @return mixed
  */
 function get_parameter($payload, $key, $required) {
-  if (!isset($payload[$key]) || empty($payload[$key])) {
-    if ($required) {
-      return_error('missing_parameter_' . $key, 400);
+    if (!isset($payload[$key]) || empty($payload[$key])) {
+        if ($required) {
+            return_error('missing_parameter_' . $key, 400);
+        }
+        return null;
     }
-    return null;
-  }
-  $parameter = $payload[$key];
-  // Cleans parameters to avoid XSS and other issues.
-  if (is_array($parameter)) {
-    return clean_param_array($parameter, PARAM_TEXT, true);
-  }
-  return clean_param($parameter, PARAM_TEXT);
+    $parameter = $payload[$key];
+    // Cleans parameters to avoid XSS and other issues.
+    if (is_array($parameter)) {
+        return clean_param_array($parameter, PARAM_TEXT, true);
+    }
+    return clean_param($parameter, PARAM_TEXT);
 }
 
 // Retrieve registration token from Bearer Authorization header.
-$auth_header = moodle\mod\lti\OAuthUtil::get_headers()['Authorization'] ?? '';
-if (!($auth_header && substr($auth_header, 0, 7) == 'Bearer ')) {
-  return_error('missing_registration_token', 401);
+$authheader = moodle\mod\lti\OAuthUtil::get_headers() ['Authorization'] ?? '';
+if (!($authheader && substr($authheader, 0, 7) == 'Bearer ')) {
+    return_error('missing_registration_token', 401);
 }
 
-// Validate registrationtoken
-$registration_token_jwt = trim(substr($auth_header, 7));
+// Validate registrationtoken.
+$registrationtokenjwt = trim(substr($authheader, 7));
 $keys = JWK::parseKeySet(jwks());
-$registration_token = JWT::decode($registration_token_jwt, $keys, ['RS256']);
+$registrationtoken = JWT::decode($registrationtokenjwt, $keys, ['RS256']);
 
 // Get clientid from registrationtoken.
-$clientid = $registration_token->sub;
+$clientid = $registrationtoken->sub;
 
 // Checks if clientid is already registered.
-if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {
-  return_error('token_already_consumed', 401);
+if (!empty($DB->get_record('lti_types', array(
+    'clientid' => $clientid
+)))) {
+    return_error('token_already_consumed', 401);
 }
 
 // Retrieve registration parameters.
-$registrationpayload = json_decode(file_get_contents('php://input'), true);
+$registrationpayload = json_decode(file_get_contents('php://input') , true);
 
 $responsetypes = get_parameter($registrationpayload, 'response_types', true);
 $granttypes = get_parameter($registrationpayload, 'grant_types', true);
@@ -129,34 +132,34 @@ $lticonfigurationresponse = new stdClass();
 // Validate response type.
 // According to specification, for this scenario, id_token must be explicitly set.
 if (!in_array('id_token', $responsetypes)) {
-  return_error('invalid_response_types', 400);
+    return_error('invalid_response_types', 400);
 }
 $registrationresponse->response_types = $responsetypes;
 
 // Validate granttypes.
 // According to specification, for this scenario implicit and client_cresentials must be explicitly set.
-if (!in_array('implicit', $granttypes) || !in_array('client_credentials', $granttypes)){
-  return_error('invalid_grant_types', 400);
+if (!in_array('implicit', $granttypes) || !in_array('client_credentials', $granttypes)) {
+    return_error('invalid_grant_types', 400);
 }
 $registrationresponse->grant_types = $granttypes;
 
 // Validate redirect uris.
 // According to specification, this parameter needs to be an array.
-if (!is_array($redirecturis)){
-  return_error('invalid_redirect_uris', 400);
+if (!is_array($redirecturis)) {
+    return_error('invalid_redirect_uris', 400);
 }
 $registrationresponse->rediret_uris = $redirecturis;
 
 // Validate token endpoint auth method.
 // According to specification, for this scenario private_key_jwt must be explicitly set.
-if ($tokenendpointauthmethod !== 'private_key_jwt'){
-  return_error('invalid_token_endpoint_auth_method', 400);
+if ($tokenendpointauthmethod !== 'private_key_jwt') {
+    return_error('invalid_token_endpoint_auth_method', 400);
 }
 $registrationresponse->token_endpoint_auth_method = ['private_key_jwt'];
 
 // Validate application type.
 if (!empty($applicationtype) && $applicationtype !== 'web') {
-  return_error('invalid_application_type', 400);
+    return_error('invalid_application_type', 400);
 }
 $registrationresponse->application_type = ['web'];
 
@@ -181,7 +184,7 @@ $config->lti_description = $description;
 $lticonfigurationresponse->description = $description;
 // Sets LTI version.
 $config->lti_ltiversion = LTI_VERSION_1P3;
-// Default is to use siteid as instance guid
+// Default is to use siteid as instance guid.
 $config->lti_organizationid_default = LTI_DEFAULT_ORGID_SITEID;
 // Sets ClientID.
 $config->lti_clientid = $clientid;
@@ -193,15 +196,15 @@ $registrationresponse->logo_uri = $logouri;
 $config->lti_coursevisible = LTI_COURSEVISIBLE_PRECONFIGURED;
 // Sets Content Item.
 if (!empty($messages)) {
-  $messagesresponse = [];
-  foreach ($messages as $value) {
-    if ($value['type'] === 'LtiDeepLinkingRequest') {
-      $config->lti_contentitem = 1;
-      $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'];
-      array_push($messagesresponse, $value);
+    $messagesresponse = [];
+    foreach ($messages as $value) {
+        if ($value['type'] === 'LtiDeepLinkingRequest') {
+            $config->lti_contentitem = 1;
+            $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'];
+            array_push($messagesresponse, $value);
+        }
     }
-  }
-  $lticonfigurationresponse->messages = $messagesresponse;
+    $lticonfigurationresponse->messages = $messagesresponse;
 }
 
 // Sets key type.
@@ -216,97 +219,97 @@ $registrationresponse->initiate_login_uri = $initiateloginuri;
 $config->lti_redirectionuris = implode(PHP_EOL, $redirecturis);
 // Sets custom parameters.
 if (isset($customparameters)) {
-  $paramssarray = [];
-  foreach ($customparameters as $key => $value){
-    array_push($paramssarray, $key . '=' . $value);
-  }
-  $config->lti_customparameters = implode(PHP_EOL, $paramssarray);
-  $lticonfigurationresponse->custom_parameters = $customparameters;
+    $paramssarray = [];
+    foreach ($customparameters as $key => $value) {
+        array_push($paramssarray, $key . '=' . $value);
+    }
+    $config->lti_customparameters = implode(PHP_EOL, $paramssarray);
+    $lticonfigurationresponse->custom_parameters = $customparameters;
 }
 // Sets launch container.
 $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
 
 // Sets Service info based on scopes.
 if (isset($scopes)) {
-  $scopesresponse = [];
-  // Expected scopes.
-  $scopescore = 'https://purl.imsglobal.org/spec/lti-ags/scope/score';
-  $scoperesult = 'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly';
-  $scopelineitemread = 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly';
-  $scopelineitem = 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem';
-  $scopenamesroles = 'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
-  $scopetoolsettings = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolsetting';
+    $scopesresponse = [];
+    // Expected scopes.
+    $scopescore = 'https://purl.imsglobal.org/spec/lti-ags/scope/score';
+    $scoperesult = 'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly';
+    $scopelineitemread = 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly';
+    $scopelineitem = 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem';
+    $scopenamesroles = 'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
+    $scopetoolsettings = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolsetting';
 
-  // Sets Assignment and Grade Services info.
-  $config->lti_acceptgrades = LTI_SETTING_NEVER;
-  $config->ltiservice_gradesynchronization = 0;
+    // Sets Assignment and Grade Services info.
+    $config->lti_acceptgrades = LTI_SETTING_NEVER;
+    $config->ltiservice_gradesynchronization = 0;
 
-  if (in_array($scopescore, $scopes)) {
-    $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
-    $config->ltiservice_gradesynchronization = 1;
-    array_push($scopesresponse, $scopescore);
-  }
-  if (in_array($scoperesult, $scopes)) {
-    $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
-    $config->ltiservice_gradesynchronization = 1;
-    array_push($scopesresponse, $scoperesult);
-  }
-  if (in_array($scopelineitemread, $scopes)) {
-    $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
-    $config->ltiservice_gradesynchronization = 1;
-    array_push($scopesresponse, $scopelineitemread);
-  }
-  if (in_array($scopelineitem, $scopes)) {
-    $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
-    $config->ltiservice_gradesynchronization = 2;
-    array_push($scopesresponse, $scopelineitem);
-  }
+    if (in_array($scopescore, $scopes)) {
+        $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
+        $config->ltiservice_gradesynchronization = 1;
+        array_push($scopesresponse, $scopescore);
+    }
+    if (in_array($scoperesult, $scopes)) {
+        $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
+        $config->ltiservice_gradesynchronization = 1;
+        array_push($scopesresponse, $scoperesult);
+    }
+    if (in_array($scopelineitemread, $scopes)) {
+        $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
+        $config->ltiservice_gradesynchronization = 1;
+        array_push($scopesresponse, $scopelineitemread);
+    }
+    if (in_array($scopelineitem, $scopes)) {
+        $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
+        $config->ltiservice_gradesynchronization = 2;
+        array_push($scopesresponse, $scopelineitem);
+    }
 
-  // Sets Names and Role Provisioning info.
-  if (in_array($scopenamesroles, $scopes)) {
-    $config->ltiservice_memberships = 1;
-    array_push($scopesresponse, $scopenamesroles);
-  } else {
-    $config->ltiservice_memberships = 0;
-  }
+    // Sets Names and Role Provisioning info.
+    if (in_array($scopenamesroles, $scopes)) {
+        $config->ltiservice_memberships = 1;
+        array_push($scopesresponse, $scopenamesroles);
+    } else {
+        $config->ltiservice_memberships = 0;
+    }
 
-  // Sets Tool Settings info.
-  if (in_array($scopetoolsettings, $scopes)) {
-    $config->ltiservice_toolsettings = 1;
-    array_push($scopesresponse, $scopetoolsettings);
-  } else {
-    $config->ltiservice_toolsettings = 0;
-  }
-  $lticonfigurationresponse->scopes = $scopesresponse;
+    // Sets Tool Settings info.
+    if (in_array($scopetoolsettings, $scopes)) {
+        $config->ltiservice_toolsettings = 1;
+        array_push($scopesresponse, $scopetoolsettings);
+    } else {
+        $config->ltiservice_toolsettings = 0;
+    }
+    $lticonfigurationresponse->scopes = $scopesresponse;
 }
 
 // Sets privacy settings.
 if (isset($claims)) {
-  $claimsresponse = [];
-  // Sets name privacy settings.
-  $config->lti_sendname = LTI_SETTING_NEVER;
+    $claimsresponse = [];
+    // Sets name privacy settings.
+    $config->lti_sendname = LTI_SETTING_NEVER;
 
-  if (in_array('given_name', $claims)) {
-    $config->lti_sendname = LTI_SETTING_ALWAYS;
-    array_push($claimsresponse, 'given_name');
-  }
-  if (in_array('family_name', $claims)) {
-    $config->lti_sendname = LTI_SETTING_ALWAYS;
-    array_push($claimsresponse, 'family_name');
-  }
-  if (in_array('middle_name', $claims)) {
-    $config->lti_sendname = LTI_SETTING_ALWAYS;
-    array_push($claimsresponse, 'middle_name');
-  }
+    if (in_array('given_name', $claims)) {
+        $config->lti_sendname = LTI_SETTING_ALWAYS;
+        array_push($claimsresponse, 'given_name');
+    }
+    if (in_array('family_name', $claims)) {
+        $config->lti_sendname = LTI_SETTING_ALWAYS;
+        array_push($claimsresponse, 'family_name');
+    }
+    if (in_array('middle_name', $claims)) {
+        $config->lti_sendname = LTI_SETTING_ALWAYS;
+        array_push($claimsresponse, 'middle_name');
+    }
 
-  // Sets email privacy settings.
-  if (in_array('email', $claims)) {
-    $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
-    array_push($claimsresponse, 'email');
-  } else {
-    $config->lti_sendemailaddr = LTI_SETTING_NEVER;
-  }
-  $lticonfigurationresponse->claims = $claimsresponse;
+    // Sets email privacy settings.
+    if (in_array('email', $claims)) {
+        $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
+        array_push($claimsresponse, 'email');
+    } else {
+        $config->lti_sendemailaddr = LTI_SETTING_NEVER;
+    }
+    $lticonfigurationresponse->claims = $claimsresponse;
 }
 
 // Registers tool.
@@ -317,6 +320,7 @@ $responsemessage = json_encode($registrationresponse);
 $responsemessage = substr($responsemessage, 0, -1);
 $responsemessage .= ',"https://purl.imsglobal.org/spec/lti-tool-configuration":' . json_encode($lticonfigurationresponse);
 $responsemessage .= '}';
-// Returning registration response
+// Returning registration response.
 header('Content-Type: application/json; charset=utf-8');
 return_response($responsemessage);
+
