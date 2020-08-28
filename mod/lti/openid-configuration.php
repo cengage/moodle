@@ -25,6 +25,7 @@
 define('NO_DEBUG_DISPLAY', true);
 define('NO_MOODLE_COOKIES', true);
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->libdir.'/weblib.php');
 
 $conf = [
@@ -38,8 +39,7 @@ $conf = [
         'https://purl.imsglobal.org/spec/lti-gs/scope/contextgroup.readonly',
         'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem',
         'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly',
-        'https://purl.imsglobal.org/spec/lti-ags/scope/score',
-        'https://purl.imsglobal.org/spec/lti-reg/scope/registration'],
+        'https://purl.imsglobal.org/spec/lti-ags/scope/score'],
     'response_types_supported' => ['id_token'],
     'subject_types_supported' => ['public', 'pairwise'],
     'id_token_signing_alg_values_supported' => ['RS256'],
@@ -49,7 +49,7 @@ $conf = [
         'version' => $CFG->release,
         'messages_supported' => ['LtiResourceLink', 'LtiDeepLinkingRequest'],
         'placements' => ['AddContentMenu'],
-        'variables' => ['Moodle.Person.userGroupIds']
+        'variables' => array_keys(lti_get_capabilities())
     ]
 ];
 
