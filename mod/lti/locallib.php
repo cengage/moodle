@@ -3823,6 +3823,7 @@ function lti_get_service_by_resource_id($services, $resourceid) {
 
 /**
  * Initializes an array with the scopes for services supported by the LTI module
+ * and authorized for this particular tool instance.
  *
  * @param object $type  LTI tool type
  * @param array  $typeconfig  LTI tool type configuration
@@ -3843,7 +3844,24 @@ function lti_get_permitted_service_scopes($type, $typeconfig) {
     }
 
     return $scopes;
+}
 
+/**
+ * Initializes an array with the scopes for services supported by the LTI module
+ *
+ * @return array List of scopes
+ */
+function lti_get_service_scopes() {
+
+    $services = lti_get_services();
+    $scopes = array();
+    foreach ($services as $service) {
+        $servicescopes = $service->get_scopes();
+        if (!empty($servicescopes)) {
+            $scopes = array_merge($scopes, $servicescopes);
+        }
+    }
+    return $scopes;
 }
 
 /**

@@ -28,6 +28,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->libdir.'/weblib.php');
 
+$scopes = lti_get_service_scopes();
+$scopes[] = 'openid';
 $conf = [
     'issuer' => $CFG->wwwroot,
     'token_endpoint' => (new moodle_url('/mod/lti/token.php'))->out(false),
@@ -35,11 +37,7 @@ $conf = [
     'token_endpoint_auth_signing_alg_values_supported' => ['RS256'],
     'jwks_uri' => (new moodle_url('/mod/lti/certs.php'))->out(false),
     'registration_endpoint' => (new moodle_url('/mod/lti/openid-registration.php'))->out(false),
-    'scopes_supported' => ['openid',
-        'https://purl.imsglobal.org/spec/lti-gs/scope/contextgroup.readonly',
-        'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem',
-        'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly',
-        'https://purl.imsglobal.org/spec/lti-ags/scope/score'],
+    'scopes_supported' => $scopes,
     'response_types_supported' => ['id_token'],
     'subject_types_supported' => ['public', 'pairwise'],
     'id_token_signing_alg_values_supported' => ['RS256'],
