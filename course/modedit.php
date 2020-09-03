@@ -156,22 +156,7 @@ if ($mform->is_cancelled()) {
     if (!empty($fromform->update)) {
         list($cm, $fromform) = update_moduleinfo($cm, $fromform, $course, $mform);
     } else if (!empty($fromform->add)) {
-        if (!empty($fromform->add_multiple)) {
-            /* Allows a tool to add more than one module at a time by
-             * supplying variants which are applied to the base form data.
-             * Variants are JSON objects which attribute names match the form keys.
-             */
-            $variants = json_decode($fromform->add_multiple, true);
-            foreach ($variants as &$variant) {
-                $formvariant = clone $fromform;
-                foreach ($variant as $key => $value) {
-                    $formvariant->$key = $value;
-                }
-                add_moduleinfo($formvariant, $course, $mform);
-            }
-        } else {
             $fromform = add_moduleinfo($fromform, $course, $mform);
-        }
     } else {
         print_error('invaliddata');
     }

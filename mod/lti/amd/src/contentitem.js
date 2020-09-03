@@ -144,13 +144,13 @@ define(
             const submitAndLaunch = form.querySelector('#id_submitbutton');
             Array.from(form.children).forEach(hideElement);
             hideElement(submitAndLaunch);
-
             const {html, js} = await templates.renderForPromise('mod_lti/tool_deeplinking_results',
                 {items: items});
 
             await templates.replaceNodeContents(toolArea, html, js);
             showElement(toolArea);
             showElement(buttonGroup);
+
         };
 
         /**
@@ -163,23 +163,19 @@ define(
          * @return {Object} variant that will be used to modify form values on submit.
          */
         var configToVariant = function(config) {
-            var variant = {};
+            const variant = {};
             ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon', 'launchcontainer'].forEach(
                 function(name) {
                     variant[name] = config[name] || '';
                 }
             );
-            // IGNORE_FILE_MERGE is -1.
-            variant.introeditor = {
-                "text": config.introeditor.text,
-                "format": config.introeditor.format,
-                "itemid": -1
-            };
+            variant['introeditor[text]'] = config.introeditor?config.introeditor.text:'';
+            variant['introeditor[format]'] = config.introeditor?config.introeditor.format:'';
             if (config.instructorchoiceacceptgrades === 1) {
-                variant.instructorchoiceacceptgrades = 1;
-                variant.grade = config.grade_modgrade_point || 100;
+                variant.instructorchoiceacceptgrades = '1';
+                variant['grade[modgrade_point]'] = config.grade_modgrade_point || '100';
             } else {
-                variant.instructorchoiceacceptgrades = 0;
+                variant.instructorchoiceacceptgrades = '0';
             }
             return variant;
         };
@@ -207,8 +203,21 @@ define(
                 returnData.multiple.forEach(function(v) {
                     variants.push(configToVariant(v));
                 });
-                $('#id_add_multiple').val(JSON.stringify(variants));
                 showMultipleSummaryAndHideForm(returnData.multiple);
+                const submitAndCourse = document.querySelector('#id_submitbutton2');
+                submitAndCourse.onclick = (e)=>{
+                    e.preventDefault();
+                    submitAndCourse.disabled = true;
+                    const fd = new FormData(document.querySelector('form.mform'));
+                    const chainPost = (next, variant)=>{
+                        Object.entries(variant).forEach(entry=>fd.set(entry[0], entry[1]));
+                        const body = new URLSearchParams(fd);
+                        return ()=>{
+                            fetch(document.location.pathname, {method: 'post', body}).then(next);
+                        };
+                    };
+                    variants.reverse().reduce(chainPost, ()=>{document.querySelector("#id_cancel").click();})();
+                };
             } else {
                 // Populate LTI configuration fields from return data.
                 for (index in ltiFormFields) {
