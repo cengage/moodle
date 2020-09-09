@@ -169,8 +169,8 @@ define(
                     variant[name] = config[name] || '';
                 }
             );
-            variant['introeditor[text]'] = config.introeditor?config.introeditor.text:'';
-            variant['introeditor[format]'] = config.introeditor?config.introeditor.format:'';
+            variant['introeditor[text]'] = config.introeditor ? config.introeditor.text : '';
+            variant['introeditor[format]'] = config.introeditor ? config.introeditor.format : '';
             if (config.instructorchoiceacceptgrades === 1) {
                 variant.instructorchoiceacceptgrades = '1';
                 variant['grade[modgrade_point]'] = config.grade_modgrade_point || '100';
@@ -209,14 +209,16 @@ define(
                     e.preventDefault();
                     submitAndCourse.disabled = true;
                     const fd = new FormData(document.querySelector('form.mform'));
-                    const chainPost = (next, variant)=>{
+                    const postVariant = (promise, variant)=>{
                         Object.entries(variant).forEach(entry=>fd.set(entry[0], entry[1]));
                         const body = new URLSearchParams(fd);
-                        return ()=>{
-                            fetch(document.location.pathname, {method: 'post', body}).then(next);
-                        };
+                        const doPost = ()=>fetch(document.location.pathname, {method: 'post', body});
+                        return promise.then(doPost).catch(doPost);
                     };
-                    variants.reverse().reduce(chainPost, ()=>{document.querySelector("#id_cancel").click();})();
+                    const backToCourse = ()=>{
+                        document.querySelector("#id_cancel").click();
+                    };
+                    variants.reduce(postVariant, Promise.resolve()).then(backToCourse).catch(backToCourse);
                 };
             } else {
                 // Populate LTI configuration fields from return data.
