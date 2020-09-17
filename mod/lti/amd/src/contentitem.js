@@ -137,7 +137,7 @@ define(
          * the unneeded elements.
          * @param {Object[]} items
          */
-        const showMultipleSummaryAndHideForm = async (items) => {
+        const showMultipleSummaryAndHideForm = async function(items) {
             const form = document.querySelector('#region-main-box form');
             const toolArea = form.querySelector('[data-attribute="dynamic-import"]');
             const buttonGroup = form.querySelector('#fgroup_id_buttonar');
@@ -150,7 +150,6 @@ define(
             await templates.replaceNodeContents(toolArea, html, js);
             showElement(toolArea);
             showElement(buttonGroup);
-
         };
 
         /**
@@ -210,7 +209,7 @@ define(
                     submitAndCourse.disabled = true;
                     const fd = new FormData(document.querySelector('form.mform'));
                     const postVariant = (promise, variant) => {
-                        Object.entries(variant).forEach( (entry) => fd.set(entry[0], entry[1]));
+                        Object.entries(variant).forEach((entry) => fd.set(entry[0], entry[1]));
                         const body = new URLSearchParams(fd);
                         const doPost = () => fetch(document.location.pathname, {method: 'post', body});
                         return promise.then(doPost).catch(doPost);
