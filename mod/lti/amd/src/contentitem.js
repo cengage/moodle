@@ -113,7 +113,7 @@ define(
          * Hide the element, including aria and tab index.
          * @param {HTMLElement} e
          */
-        const hideElement = e => {
+        const hideElement = (e) => {
             e.setAttribute('hidden', 'true');
             e.setAttribute('aria-hidden', 'true');
             e.setAttribute('tab-index', '-1');
@@ -123,7 +123,7 @@ define(
          * Show the element, including aria and tab index (set to 1).
          * @param {HTMLElement} e
          */
-        const showElement = e => {
+        const showElement = (e) => {
             e.removeAttribute('hidden');
             e.setAttribute('aria-hidden', 'false');
             e.setAttribute('tab-index', '1');
@@ -137,7 +137,7 @@ define(
          * the unneeded elements.
          * @param {Object[]} items
          */
-        const showMultipleSummaryAndHideForm = async items => {
+        const showMultipleSummaryAndHideForm = async (items) => {
             const form = document.querySelector('#region-main-box form');
             const toolArea = form.querySelector('[data-attribute="dynamic-import"]');
             const buttonGroup = form.querySelector('#fgroup_id_buttonar');
@@ -162,7 +162,7 @@ define(
          * @param {Object} config
          * @return {Object} variant that will be used to modify form values on submit.
          */
-        var configToVariant = function(config) {
+        var configToVariant = (config) => {
             const variant = {};
             ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon', 'launchcontainer'].forEach(
                 function(name) {
@@ -205,17 +205,17 @@ define(
                 });
                 showMultipleSummaryAndHideForm(returnData.multiple);
                 const submitAndCourse = document.querySelector('#id_submitbutton2');
-                submitAndCourse.onclick = (e)=>{
+                submitAndCourse.onclick = (e) => {
                     e.preventDefault();
                     submitAndCourse.disabled = true;
                     const fd = new FormData(document.querySelector('form.mform'));
-                    const postVariant = (promise, variant)=>{
-                        Object.entries(variant).forEach(entry=>fd.set(entry[0], entry[1]));
+                    const postVariant = (promise, variant) => {
+                        Object.entries(variant).forEach( (entry) => fd.set(entry[0], entry[1]));
                         const body = new URLSearchParams(fd);
-                        const doPost = ()=>fetch(document.location.pathname, {method: 'post', body});
+                        const doPost = () => fetch(document.location.pathname, {method: 'post', body});
                         return promise.then(doPost).catch(doPost);
                     };
-                    const backToCourse = ()=>{
+                    const backToCourse = () => {
                         document.querySelector("#id_cancel").click();
                     };
                     variants.reduce(postVariant, Promise.resolve()).then(backToCourse).catch(backToCourse);
