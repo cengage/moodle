@@ -111,7 +111,7 @@ define(
 
         /**
          * Hide the element, including aria and tab index.
-         * @param {HTMLElement} e
+         * @param {HTMLElement} e the element to be hidden.
          */
         const hideElement = (e) => {
             e.setAttribute('hidden', 'true');
@@ -121,7 +121,7 @@ define(
 
         /**
          * Show the element, including aria and tab index (set to 1).
-         * @param {HTMLElement} e
+         * @param {HTMLElement} e the element to be shown.
          */
         const showElement = (e) => {
             e.removeAttribute('hidden');
@@ -135,7 +135,7 @@ define(
          * options is (save and return to course) or cancel.
          * This function injects the summary to the form page, and hides
          * the unneeded elements.
-         * @param {Object[]} items
+         * @param {Object[]} items items to be added to the course.
          */
         const showMultipleSummaryAndHideForm = async function(items) {
             const form = document.querySelector('#region-main-box form');
@@ -158,7 +158,7 @@ define(
          * by applying variation to the submitted form.
          * See /course/modedit.php.
          * @private
-         * @param {Object} config
+         * @param {Object} config transforms a config to an actual form data to be posted.
          * @return {Object} variant that will be used to modify form values on submit.
          */
         var configToVariant = (config) => {
