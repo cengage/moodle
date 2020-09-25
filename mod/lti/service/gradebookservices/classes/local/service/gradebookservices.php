@@ -118,8 +118,8 @@ class gradebookservices extends service_base {
      * @return array
      */
     public function get_scopes() {
-        return [self::SCOPE_GRADEBOOKSERVICES_LINEITEM_READ, self::SCOPE_GRADEBOOKSERVICES_RESULT_READ, self::SCOPE_GRADEBOOKSERVICES_SCORE,
-            self::SCOPE_GRADEBOOKSERVICES_LINEITEM];
+        return [self::SCOPE_GRADEBOOKSERVICES_LINEITEM_READ, self::SCOPE_GRADEBOOKSERVICES_RESULT_READ,
+            self::SCOPE_GRADEBOOKSERVICES_SCORE, self::SCOPE_GRADEBOOKSERVICES_LINEITEM];
     }
 
     /**
