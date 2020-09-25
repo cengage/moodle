@@ -120,7 +120,7 @@ $ltitoolconfiguration = get_parameter($registrationpayload, 'https://purl.imsglo
 $domain = get_parameter($ltitoolconfiguration, 'domain', true);
 $targetlinkuri = get_parameter($ltitoolconfiguration, 'target_link_uri', true);
 $customparameters = get_parameter($ltitoolconfiguration, 'custom_parameters', false);
-$scopes = get_parameter($registrationpayload, 'scope', false);
+$scopes = explode(" ", get_parameter($registrationpayload, 'scope', false) ?? '');
 $claims = get_parameter($ltitoolconfiguration, 'claims', false);
 $messages = $ltitoolconfiguration['messages'] ?? [];
 $description = get_parameter($ltitoolconfiguration, 'description', false);
@@ -280,7 +280,7 @@ if (isset($scopes)) {
     } else {
         $config->ltiservice_toolsettings = 0;
     }
-    $lticonfigurationresponse->scopes = $scopesresponse;
+    $registrationresponse->scope = implode(' ', $scopesresponse);
 }
 
 // Sets privacy settings.
