@@ -22,7 +22,7 @@ Feature: Content-Item support
     And I set the field "Tool URL" to local url "/mod/lti/tests/fixtures/tool_provider.php"
     And I set the field "Tool configuration usage" to "Show in activity chooser and as a preconfigured tool"
     And I expand all fieldsets
-    And I set the field "supports Deep Linking (Content-Item message)" to "1"
+    And I set the field "Supports Deep Linking (Content-Item message)" to "1"
     And I press "Save changes"
     And I log out
 
