@@ -20,13 +20,13 @@ Feature: Create/edit tool configuration that has Deep Linking support
     And I set the field "Tool URL" to local url "/mod/lti/tests/fixtures/tool_provider.php"
     And I set the field "Tool configuration usage" to "Show in activity chooser and as a preconfigured tool"
     And I expand all fieldsets
-    And I set the field "Supports Deep Linking (Content-Item message)" to "1"
+    And I set the field "Supports Deep Linking (Content-Item Message)" to "1"
     And I press "Save changes"
     And I follow "Edit"
     And I expand all fieldsets
-    Then the field "Supports Deep Linking (Content-Item message)" matches value "1"
-    And I set the field "Supports Deep Linking (Content-Item message)" to "0"
+    Then the field "Supports Deep Linking (Content-Item Message)" matches value "1"
+    And I set the field "Supports Deep Linking (Content-Item Message)" to "0"
     And I press "Save changes"
     And I follow "Edit"
     And I expand all fieldsets
-    And the field "Supports Deep Linking (Content-Item message)" matches value "0"
+    And the field "Supports Deep Linking (Content-Item Message)" matches value "0"
