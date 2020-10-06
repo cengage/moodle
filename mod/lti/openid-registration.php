@@ -69,8 +69,8 @@ $type->state = LTI_TOOL_STATE_PENDING;
 try {
     $clientid = validate_registration_token(trim(substr($authheader, 7)));
     $config = registration_to_config($registrationpayload, $clientid);
-    $responsemessage = json_encode(config_to_registration($config));
-    lti_add_type($type, $config);
+    $typeid = lti_add_type($type, clone $config);
+    $responsemessage = json_encode(config_to_registration($config, $typeid));
     // Returning registration response.
     header('Content-Type: application/json; charset=utf-8');
     return_response($responsemessage);

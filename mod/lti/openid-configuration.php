@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file returns an array of available public keys
+ * This file returns the OpenId/LTI Configuration for this site.
+ * It is part of the LTI Tool Dynamic Registration, and used by
+ * tools to get the site configuration and registration end-point.
  *
  * @package    mod_lti
  * @copyright  2020 Claude Vervoort (Cengage), Carlos Costa, Adrian Hutchinson (Macgraw Hill)

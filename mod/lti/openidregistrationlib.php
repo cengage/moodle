@@ -36,7 +36,7 @@ const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolset
 
 
 class LTIRegistrationException extends Exception {
-    
+
     /**
      * @var string The name of the string from error.php to print
      */
@@ -50,26 +50,27 @@ class LTIRegistrationException extends Exception {
     /**
      * Constructor
      * @param string $errormsg The error message.
-     * @param number $httperrorcode
+     * @param int $httperrorcode
      */
-    function __construct($errormsg, $httperrorcode) {
+    function __construct(string $errormsg, int $httperrorcode) {
         $this->errormsg = $errormsg;
         $this->httperrorcode = $httperrorcode;
     }
 }
+
 /**
  * Function used to validate parameters.
  *
  * This function is needed because the payload contains nested
  * objects, and optional_param() does not support arrays of arrays.
  *
- * @param array $payload
+ * @param array $payload that may contain the parameter key
  * @param string $key
  * @param boolean $required
  *
  * @return mixed
  */
-function get_parameter($payload, $key, $required) {
+function get_parameter(array $payload, string $key, bool $required) {
     if (!isset($payload[$key]) || empty($payload[$key])) {
         if ($required) {
             throw new LTIRegistrationException('missing required attribute ', $key);
@@ -84,7 +85,15 @@ function get_parameter($payload, $key, $required) {
     return clean_param($parameter, PARAM_TEXT);
 }
 
-function registration_to_config($registrationpayload, $clientid) {
+/**
+ * Transforms an LTI 1.3 Registration to a Moodle LTI Config.
+ *
+ * @param array $registrationpayload the registration data received from the tool.
+ * @param string $clientid the clientid to be issued for that tool.
+ *
+ * @return object the Moodle LTI config.
+ */
+function registration_to_config(array $registrationpayload, string $clientid) : object {
     $responsetypes = get_parameter($registrationpayload, 'response_types', true);
     $granttypes = get_parameter($registrationpayload, 'grant_types', true);
     $initiateloginuri = get_parameter($registrationpayload, 'initiate_login_uri', true);
@@ -106,16 +115,10 @@ function registration_to_config($registrationpayload, $clientid) {
     $messages = $ltitoolconfiguration['messages'] ?? [];
     $description = get_parameter($ltitoolconfiguration, 'description', false);
 
-
     // Validate response type.
     // According to specification, for this scenario, id_token must be explicitly set.
     if (!in_array('id_token', $responsetypes)) {
         throw new LTIRegistrationException('invalid_response_types', 400);
-    }
-
-    // According to specification, for this scenario implicit and client_credentials must be explicitly set.
-    if (!in_array('implicit', $granttypes) || !in_array('client_credentials', $granttypes)) {
-        throw new LTIRegistrationException('invalid_grant_types', 400);
     }
 
     // According to specification, this parameter needs to be an array.
@@ -132,26 +135,24 @@ function registration_to_config($registrationpayload, $clientid) {
         throw new LTIRegistrationException('invalid_application_type', 400);
     }
 
-
     $config = new stdClass();
     $config->lti_clientid = $clientid;
     $config->lti_toolurl = $targetlinkuri;
     $config->lti_tooldomain = $domain;
     $config->lti_typename = $clientname;
     $config->lti_description = $description;
-    $lticonfigurationresponse->description = $description;
     $config->lti_ltiversion = LTI_VERSION_1P3;
     $config->lti_organizationid_default = LTI_DEFAULT_ORGID_SITEID;
     $config->lti_icon = $logouri;
-    $registrationresponse->logo_uri = $logouri;
     $config->lti_coursevisible = LTI_COURSEVISIBLE_PRECONFIGURED;
+    $config->lti_contentitem = 0;
     // Sets Content Item.
     if (!empty($messages)) {
         $messagesresponse = [];
         foreach ($messages as $value) {
             if ($value['type'] === 'LtiDeepLinkingRequest') {
                 $config->lti_contentitem = 1;
-                $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'];
+                $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'] ?? '';
                 array_push($messagesresponse, $value);
             }
         }
@@ -161,6 +162,7 @@ function registration_to_config($registrationpayload, $clientid) {
     $config->lti_publickeyset = $jwksuri;
     $config->lti_initiatelogin = $initiateloginuri;
     $config->lti_redirectionuris = implode(PHP_EOL, $redirecturis);
+    $config->lti_customparameters = '';
     // Sets custom parameters.
     if (isset($customparameters)) {
         $paramssarray = [];
@@ -173,11 +175,12 @@ function registration_to_config($registrationpayload, $clientid) {
     $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
 
     // Sets Service info based on scopes.
+    $config->lti_acceptgrades = LTI_SETTING_NEVER;
+    $config->ltiservice_gradesynchronization = 0;
+    $config->ltiservice_memberships = 0;
+    $config->ltiservice_toolsettings = 0;
     if (isset($scopes)) {
-        // Expected scopes.
         // Sets Assignment and Grade Services info.
-        $config->lti_acceptgrades = LTI_SETTING_NEVER;
-        $config->ltiservice_gradesynchronization = 0;
 
         if (in_array(SCOPE_SCORE, $scopes)) {
             $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
@@ -199,44 +202,47 @@ function registration_to_config($registrationpayload, $clientid) {
         // Sets Names and Role Provisioning info.
         if (in_array(SCOPE_NRPS, $scopes)) {
             $config->ltiservice_memberships = 1;
-        } else {
-            $config->ltiservice_memberships = 0;
         }
 
         // Sets Tool Settings info.
         if (in_array(SCOPE_TOOL_SETTING, $scopes)) {
             $config->ltiservice_toolsettings = 1;
-        } else {
-            $config->ltiservice_toolsettings = 0;
         }
     }
 
     // Sets privacy settings.
+    $config->lti_sendname = LTI_SETTING_NEVER;
+    $config->lti_sendemailaddr = LTI_SETTING_NEVER;
     if (isset($claims)) {
         // Sets name privacy settings.
-        $config->lti_sendname = LTI_SETTING_NEVER;
 
+        if (in_array('name', $claims)) {
+            $config->lti_sendname = LTI_SETTING_ALWAYS;
+        }
         if (in_array('given_name', $claims)) {
             $config->lti_sendname = LTI_SETTING_ALWAYS;
         }
         if (in_array('family_name', $claims)) {
             $config->lti_sendname = LTI_SETTING_ALWAYS;
         }
-        if (in_array('middle_name', $claims)) {
-            $config->lti_sendname = LTI_SETTING_ALWAYS;
-        }
 
         // Sets email privacy settings.
         if (in_array('email', $claims)) {
             $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
-        } else {
-            $config->lti_sendemailaddr = LTI_SETTING_NEVER;
         }
     }
     return $config;
 }
 
-function config_to_registration($config) {
+/**
+ * Transforms a moodle LTI 1.3 Config to an OAuth/LTI Client Registration.
+ *
+ * @param object $config Moodle LTI Config.
+ * @param inmt $typeid which is the LTI deployment id.
+ *
+ * @return array the Client Registration as an associative array.
+ */
+function config_to_registration(object $config, int $typeid) : array {
     $registrationresponse = [];
     $registrationresponse['client_id'] = $config->lti_clientid;
     $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
@@ -246,10 +252,11 @@ function config_to_registration($config) {
     $registrationresponse['grant_types'] = ['client_credentials', 'implicit'];
     $registrationresponse['redirect_uris'] = explode(PHP_EOL, $config->lti_redirectionuris);
     $registrationresponse['application_type'] = ['web'];
-    $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt'; 
+    $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
     $registrationresponse['client_name'] = $config->lti_typename;
     $registrationresponse['logo_uri'] = $config->lti_icon ?? '';
     $lticonfigurationresponse = [];
+    $lticonfigurationresponse['deployment_id'] = strval($typeid);
     $lticonfigurationresponse['target_link_uri'] = $config->lti_toolurl;
     $lticonfigurationresponse['domain'] = $config->lti_tooldomain ?? '';
     $lticonfigurationresponse['description'] = $config->lti_description ?? '';
@@ -261,8 +268,13 @@ function config_to_registration($config) {
         }
         $lticonfigurationresponse['messages'] = [$contentitemmessage];
     }
-    if (isset($config->lti_customparameters)) {
-        $lticonfigurationresponse['custom_parameters'] = explode(PHP_EOL, $config->lti_customparameters);;
+    if (isset($config->lti_customparameters) && !empty($config->lti_customparameters)) {
+        $params = [];
+        foreach(explode(PHP_EOL, $config->lti_customparameters) as $param) {
+            $split = explode('=', $param);
+            $params[$split[0]] = $split[1];
+        }
+        $lticonfigurationresponse['custom_parameters'] = $params;
     }
     $scopesresponse = [];
     if ($config->ltiservice_gradesynchronization > 0) {
@@ -270,21 +282,20 @@ function config_to_registration($config) {
         $scopesresponse[] = SCOPE_RESULT;
         $scopesresponse[] = SCOPE_LINEITEM_RO;
     }
-    if ($config->ltiservice_gradesynchronization = 2) {
+    if ($config->ltiservice_gradesynchronization == 2) {
         $scopesresponse[] = SCOPE_LINEITEM;
     }
-    if ($config->ltiservice_memberships = 1) {
+    if ($config->ltiservice_memberships == 1) {
         $scopesresponse[] = SCOPE_NRPS;
     }
-    if ($config->ltiservice_toolsettings = 1) {
+    if ($config->ltiservice_toolsettings == 1) {
         $scopesresponse[] = SCOPE_TOOL_SETTING;
     }
     $registrationresponse['scope'] = implode(' ', $scopesresponse);
 
-    $claimsresponse = [];
-    $claimsresponse[] = 'sub';
+    $claimsresponse = ['sub', 'iss'];
     if ($config->lti_sendname = LTI_SETTING_ALWAYS) {
-        $claimsresponse[] = 'given_name';
+        $claimsresponse[] = 'name';
         $claimsresponse[] = 'family_name';
         $claimsresponse[] = 'middle_name';
     }
@@ -296,7 +307,15 @@ function config_to_registration($config) {
     return $registrationresponse;
 }
 
-function validate_registration_token($registrationtokenjwt) {
+/**
+ * Validates the registration token is properly signed and not used yet.
+ * Return the client id to use for this registration.
+ *
+ * @param string $registrationtokenjwt registration token
+ *
+ * @return string client id for the registration
+ */
+function validate_registration_token(string $registrationtokenjwt) : string {
     global $DB;
     $keys = JWK::parseKeySet(jwks());
     $registrationtoken = JWT::decode($registrationtokenjwt, $keys, ['RS256']);

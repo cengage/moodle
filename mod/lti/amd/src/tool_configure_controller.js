@@ -110,7 +110,6 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         return $(SELECTORS.LTIADV_REGISTRATION_CONTAINER);
     };
 
-
     /**
      * Stops displaying the external registration content.
      *

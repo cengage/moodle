@@ -25,7 +25,7 @@
 
 use Firebase\JWT\JWT;
 
-require_once("../../config.php");
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 

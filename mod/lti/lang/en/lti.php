@@ -66,6 +66,8 @@ $string['activate'] = 'Activate';
 $string['activatetoadddescription'] = 'You will need to activate this tool before you can add a description.';
 $string['active'] = 'Active';
 $string['activity'] = 'Activity';
+$string['add_lti13'] = 'Add LTI Advantage';
+$string['add_lti11'] = 'Add Legacy LTI';
 $string['addnewapp'] = 'Enable external application';
 $string['addserver'] = 'Add new trusted server';
 $string['addtype'] = 'Add preconfigured tool';
@@ -241,8 +243,6 @@ $string['keytype_rsa'] = 'RSA key';
 $string['launch_in_moodle'] = 'Launch tool in Moodle';
 $string['launch_in_popup'] = 'Launch tool in a pop-up';
 $string['launch_url'] = 'Tool URL';
-$string['add_lti13'] = 'Add LTI Advantage';
-$string['add_lti11'] = 'Add Legacy LTI';
 $string['launch_url_help'] = 'The tool URL indicates the web address of the External Tool, and may contain additional information, such as the resource to show.
 If you are unsure what to enter for the tool URL, please check with the tool provider for more information.
 
