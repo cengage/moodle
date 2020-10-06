@@ -1,4 +1,3 @@
-
 <?php
 // This file is part of Moodle - http://moodle.org/
 //
@@ -18,23 +17,33 @@
 /**
  * This file receives a registration request along with the registration token and returns a client_id.
  *
- * @copyright  2020 Claude Vervoort (Cengage), Carlos Costa, Adrian Hutchinson (Macgraw Hill)
  * @package    mod_lti
+ * @copyright  2020 Claude Vervoort (Cengage), Carlos Costa, Adrian Hutchinson (Macgraw Hill)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-require_once(__DIR__ . '/../../config.php');
+defined('MOODLE_INTERNAL') || die;
+
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 
+/** score scope */
 const SCOPE_SCORE = 'https://purl.imsglobal.org/spec/lti-ags/scope/score';
+/** result scope */
 const SCOPE_RESULT = 'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly';
+/** lineitem read-only scope */
 const SCOPE_LINEITEM_RO = 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly';
+/** lineitem full access scope */
 const SCOPE_LINEITEM = 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem';
+/** Names and Roles (membership) scope */
 const SCOPE_NRPS = 'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
+/** Tool Settings scope */
 const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolsetting';
 
 
+/**
+ * Exception when transforming the registration to LTI config.
+ */
 class LTIRegistrationException extends Exception {
 
     /**
@@ -52,7 +61,7 @@ class LTIRegistrationException extends Exception {
      * @param string $errormsg The error message.
      * @param int $httperrorcode
      */
-    function __construct(string $errormsg, int $httperrorcode) {
+    public function __construct(string $errormsg, int $httperrorcode) {
         $this->errormsg = $errormsg;
         $this->httperrorcode = $httperrorcode;
     }
@@ -66,7 +75,7 @@ class LTIRegistrationException extends Exception {
  *
  * @param array $payload that may contain the parameter key
  * @param string $key
- * @param boolean $required
+ * @param bool $required
  *
  * @return mixed
  */
@@ -238,7 +247,7 @@ function registration_to_config(array $registrationpayload, string $clientid) : 
  * Transforms a moodle LTI 1.3 Config to an OAuth/LTI Client Registration.
  *
  * @param object $config Moodle LTI Config.
- * @param inmt $typeid which is the LTI deployment id.
+ * @param int $typeid which is the LTI deployment id.
  *
  * @return array the Client Registration as an associative array.
  */
@@ -270,7 +279,7 @@ function config_to_registration(object $config, int $typeid) : array {
     }
     if (isset($config->lti_customparameters) && !empty($config->lti_customparameters)) {
         $params = [];
-        foreach(explode(PHP_EOL, $config->lti_customparameters) as $param) {
+        foreach (explode(PHP_EOL, $config->lti_customparameters) as $param) {
             $split = explode('=', $param);
             $params[$split[0]] = $split[1];
         }

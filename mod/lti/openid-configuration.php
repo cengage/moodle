@@ -16,6 +16,7 @@
 
 /**
  * This file returns the OpenId/LTI Configuration for this site.
+ *
  * It is part of the LTI Tool Dynamic Registration, and used by
  * tools to get the site configuration and registration end-point.
  *

@@ -36,9 +36,7 @@
  * This file contains unit tests for lti/openidregistrationlib.php
  *
  * @package    mod_lti
- * @category   phpunit
- * @copyright  2020 Claude Vervoort
- * @copyright  2029 Cengage
+ * @copyright  2020 Claude Vervoort, Cengage
  * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -53,7 +51,10 @@ require_once($CFG->dirroot . '/mod/lti/openidregistrationlib.php');
  */
 class mod_lti_openidregistrationlib_testcase extends advanced_testcase {
 
-    private $registration_full_json = <<<EOD
+    /**
+     * A has-it-all client registration.
+     */
+    private $registrationfulljson = <<<EOD
     {
         "application_type": "web",
         "response_types": ["id_token"],
@@ -72,7 +73,7 @@ class mod_lti_openidregistrationlib_testcase extends advanced_testcase {
         "tos_uri#ja": "https://client.example.org/tos?lang=ja",
         "token_endpoint_auth_method": "private_key_jwt",
         "contacts": ["ve7jtb@example.org", "mary@example.org"],
-        "scope": "https://purl.imsglobal.org/spec/lti-ags/scope/score https://purl.imsglobal.org/spec/lti-ags/scope/lineitem https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly",
+        "scope": "https://purl.imsglobal.org/spec/lti-ags/scope/score https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
         "https://purl.imsglobal.org/spec/lti-tool-configuration": {
             "domain": "client.example.org",
             "description": "Learn Botany by tending to your little (virtual) garden.",
@@ -94,7 +95,10 @@ class mod_lti_openidregistrationlib_testcase extends advanced_testcase {
     }
 EOD;
 
-    private $registration_minimal_json = <<<EOD
+    /**
+     * A minimalist client registration.
+     */
+    private $registrationminimaljson = <<<EOD
     {
         "application_type": "web",
         "response_types": ["id_token"],
@@ -116,7 +120,8 @@ EOD;
      * Test the mapping from Registration JSON to LTI Config for a has-it-all tool registration.
      */
     public function test_to_config_full() {
-        $registration = json_decode($this->registration_full_json, true);
+        $registration = json_decode($this->registrationfulljson, true);
+        $registration['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly'; 
         $config = registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
@@ -143,7 +148,7 @@ EOD;
      * Test the mapping from Registration JSON to LTI Config for a minimal tool registration.
      */
     public function test_to_config_minimal() {
-        $registration = json_decode($this->registration_minimal_json, true);
+        $registration = json_decode($this->registrationminimaljson, true);
         $config = registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
@@ -167,7 +172,8 @@ EOD;
      * Test the transformation from lti config to OpenId LTI Client Registration response.
      */
     public function test_config_to_registration() {
-        $orig = json_decode($this->registration_full_json, true);
+        $orig = json_decode($this->registrationfulljson, true);
+        $orig['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly'; 
         $reg = config_to_registration(registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
@@ -180,17 +186,17 @@ EOD;
             'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly '.
             'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem '.
             'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly', $reg['scope']);
-        $lti_orig = $orig['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $ltiorig = $orig['https://purl.imsglobal.org/spec/lti-tool-configuration'];
         $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
         $this->assertEquals("12", $lti['deployment_id']);
-        $this->assertEquals($lti_orig['target_link_uri'], $lti['target_link_uri']);
-        $this->assertEquals($lti_orig['domain'], $lti['domain']);
-        $this->assertEquals($lti_orig['custom_parameters'], $lti['custom_parameters']);
-        $this->assertEquals($lti_orig['description'], $lti['description']);
-        $dlmsg_orig = $lti_orig['messages'][0];
+        $this->assertEquals($ltiorig['target_link_uri'], $lti['target_link_uri']);
+        $this->assertEquals($ltiorig['domain'], $lti['domain']);
+        $this->assertEquals($ltiorig['custom_parameters'], $lti['custom_parameters']);
+        $this->assertEquals($ltiorig['description'], $lti['description']);
+        $dlmsgorig = $ltiorig['messages'][0];
         $dlmsg = $lti['messages'][0];
-        $this->assertEquals($dlmsg_orig['type'], $dlmsg['type']);
-        $this->assertEquals($dlmsg_orig['target_link_uri'], $dlmsg['target_link_uri']);
+        $this->assertEquals($dlmsgorig['type'], $dlmsg['type']);
+        $this->assertEquals($dlmsgorig['target_link_uri'], $dlmsg['target_link_uri']);
     }
 
 }
