@@ -33,20 +33,18 @@ require_login();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 
-
-if (isset($_GET['url'])) {
-    $now = time();
-    $token = [
-        "sub" => random_string(15),
-        "scope" => "reg",
-        "iat" => $now,
-        "exp" => $now + 3600
-    ];
-    $privatekey = get_private_key();
-    $regtoken = JWT::encode($token, $privatekey['key'], 'RS256', $privatekey['kid']);
-    $confurl = new moodle_url('/mod/lti/openid-configuration.php');
-    $url = new moodle_url($_GET['url']);
-    $url->param('openid_configuration', $confurl->out(false));
-    $url->param('registration_token', $regtoken);
-    header("Location: ".$url->out(false));
-}
+$starturl = required_param('url', PARAM_URL);
+$now = time();
+$token = [
+    "sub" => random_string(15),
+    "scope" => "reg",
+    "iat" => $now,
+    "exp" => $now + 3600
+];
+$privatekey = get_private_key();
+$regtoken = JWT::encode($token, $privatekey['key'], 'RS256', $privatekey['kid']);
+$confurl = new moodle_url('/mod/lti/openid-configuration.php');
+$url = new moodle_url($starturl);
+$url->param('openid_configuration', $confurl->out(false));
+$url->param('registration_token', $regtoken);
+header("Location: ".$url->out(false));
