@@ -52,7 +52,7 @@ require_once($CFG->dirroot . '/mod/lti/openidregistrationlib.php');
 class mod_lti_openidregistrationlib_testcase extends advanced_testcase {
 
     /**
-     * A has-it-all client registration.
+     * @var string A has-it-all client registration.
      */
     private $registrationfulljson = <<<EOD
     {
@@ -96,7 +96,7 @@ class mod_lti_openidregistrationlib_testcase extends advanced_testcase {
 EOD;
 
     /**
-     * A minimalist client registration.
+     * @var string A minimalist client registration.
      */
     private $registrationminimaljson = <<<EOD
     {
@@ -121,7 +121,7 @@ EOD;
      */
     public function test_to_config_full() {
         $registration = json_decode($this->registrationfulljson, true);
-        $registration['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly'; 
+        $registration['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
         $config = registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
@@ -173,7 +173,7 @@ EOD;
      */
     public function test_config_to_registration() {
         $orig = json_decode($this->registrationfulljson, true);
-        $orig['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly'; 
+        $orig['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
         $reg = config_to_registration(registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
