@@ -75,7 +75,7 @@ try {
     header('Content-Type: application/json; charset=utf-8');
     return_response($responsemessage);
 } catch (LTIRegistrationException $e) {
-    return_error($e->errormsg, $e->httperrorcode);
+    return_error($e->getMessage(), $e->getCode());
 }
 
 

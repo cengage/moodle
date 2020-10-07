@@ -117,6 +117,32 @@ EOD;
 EOD;
 
     /**
+     * @var string A minimalist with deep linking client registration.
+     */
+    private $registrationminimaldljson = <<<EOD
+    {
+        "application_type": "web",
+        "response_types": ["id_token"],
+        "grant_types": ["implict", "client_credentials"],
+        "initiate_login_uri": "https://client.example.org/lti/init",
+        "redirect_uris":
+        ["https://client.example.org/callback"],
+        "client_name": "Virtual Garden",
+        "jwks_uri": "https://client.example.org/.well-known/jwks.json",
+        "token_endpoint_auth_method": "private_key_jwt",
+        "https://purl.imsglobal.org/spec/lti-tool-configuration": {
+            "domain": "client.example.org",
+            "target_link_uri": "https://client.example.org/lti",
+            "messages": [
+                {
+                    "type": "LtiDeepLinkingRequest"
+                }
+            ]
+        }
+    }
+EOD;
+
+    /**
      * Test the mapping from Registration JSON to LTI Config for a has-it-all tool registration.
      */
     public function test_to_config_full() {
@@ -166,6 +192,50 @@ EOD;
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendname);
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendemailaddr);
         $this->assertEquals(0, $config->lti_contentitem);
+    }
+
+    /**
+     * Test the mapping from Registration JSON to LTI Config for a minimal tool with
+     * deep linking support registration.
+     */
+    public function test_to_config_minimal_with_deeplinking() {
+        $registration = json_decode($this->registrationminimaldljson, true);
+        $config = registration_to_config($registration, 'TheClientId');
+        $this->assertEquals(1, $config->lti_contentitem);
+        $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
+    }
+
+    /**
+     * Validation Test: initiation login.
+     */
+    public function test_validation_initlogin() {
+        $registration = json_decode($this->registrationfulljson, true);
+        $this->expectException(LTIRegistrationException::class);
+        $this->expectExceptionCode(400);
+        unset($registration['initiate_login_uri']);
+        registration_to_config($registration, 'TheClientId');
+    }
+
+    /**
+     * Validation Test: redirect uris.
+     */
+    public function test_validation_redirecturis() {
+        $registration = json_decode($this->registrationfulljson, true);
+        $this->expectException(LTIRegistrationException::class);
+        $this->expectExceptionCode(400);
+        unset($registration['redirect_uris']);
+        registration_to_config($registration, 'TheClientId');
+    }
+
+    /**
+     * Validation Test: jwks uri empty.
+     */
+    public function test_validation_jwks() {
+        $registration = json_decode($this->registrationfulljson, true);
+        $this->expectException(LTIRegistrationException::class);
+        $this->expectExceptionCode(400);
+        $registration['jwks_uri'] = '';
+        registration_to_config($registration, 'TheClientId');
     }
 
     /**

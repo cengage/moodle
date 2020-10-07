@@ -43,29 +43,9 @@ const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolset
 
 /**
  * Exception when transforming the registration to LTI config.
+ * Code is the HTTP Error code.
  */
-class LTIRegistrationException extends Exception {
-
-    /**
-     * @var string The name of the string from error.php to print
-     */
-    public $errormsg;
-
-    /**
-     * @var string The name of the string from error.php to print
-     */
-    public $httperrorcode;
-
-    /**
-     * Constructor
-     * @param string $errormsg The error message.
-     * @param int $httperrorcode
-     */
-    public function __construct(string $errormsg, int $httperrorcode) {
-        $this->errormsg = $errormsg;
-        $this->httperrorcode = $httperrorcode;
-    }
-}
+class LTIRegistrationException extends Exception {}
 
 /**
  * Function used to validate parameters.
@@ -82,7 +62,7 @@ class LTIRegistrationException extends Exception {
 function get_parameter(array $payload, string $key, bool $required) {
     if (!isset($payload[$key]) || empty($payload[$key])) {
         if ($required) {
-            throw new LTIRegistrationException('missing required attribute ', $key);
+            throw new LTIRegistrationException('missing required attribute '.$key, 400);
         }
         return null;
     }
