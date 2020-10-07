@@ -43,9 +43,11 @@ const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolset
 
 /**
  * Exception when transforming the registration to LTI config.
+ *
  * Code is the HTTP Error code.
  */
-class LTIRegistrationException extends Exception {}
+class LTIRegistrationException extends Exception {
+}
 
 /**
  * Function used to validate parameters.
