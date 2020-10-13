@@ -268,5 +268,4 @@ EOD;
         $this->assertEquals($dlmsgorig['type'], $dlmsg['type']);
         $this->assertEquals($dlmsgorig['target_link_uri'], $dlmsg['target_link_uri']);
     }
-
 }

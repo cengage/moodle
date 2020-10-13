@@ -77,5 +77,3 @@ try {
 } catch (LTIRegistrationException $e) {
     return_error($e->getMessage(), $e->getCode());
 }
-
-

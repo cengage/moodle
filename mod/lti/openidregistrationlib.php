@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file receives a registration request along with the registration token and returns a client_id.
+ * This library exposes functions for LTI Dynamic Registration.
  *
  * @package    mod_lti
  * @copyright  2020 Claude Vervoort (Cengage), Carlos Costa, Adrian Hutchinson (Macgraw Hill)
@@ -40,7 +40,6 @@ const SCOPE_NRPS = 'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmember
 /** Tool Settings scope */
 const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolsetting';
 
-
 /**
  * Exception when transforming the registration to LTI config.
  *
@@ -56,8 +55,8 @@ class LTIRegistrationException extends Exception {
  * objects, and optional_param() does not support arrays of arrays.
  *
  * @param array $payload that may contain the parameter key
- * @param string $key
- * @param bool $required
+ * @param string $key the key of the value to be looked for in the payload
+ * @param bool $required if required, not finding a value will raise an LTIRegistrationException
  *
  * @return mixed
  */
@@ -84,9 +83,8 @@ function get_parameter(array $payload, string $key, bool $required) {
  *
  * @return object the Moodle LTI config.
  */
-function registration_to_config(array $registrationpayload, string $clientid) : object {
+function registration_to_config(array $registrationpayload, string $clientid): object {
     $responsetypes = get_parameter($registrationpayload, 'response_types', true);
-    $granttypes = get_parameter($registrationpayload, 'grant_types', true);
     $initiateloginuri = get_parameter($registrationpayload, 'initiate_login_uri', true);
     $redirecturis = get_parameter($registrationpayload, 'redirect_uris', true);
     $clientname = get_parameter($registrationpayload, 'client_name', true);
@@ -233,7 +231,7 @@ function registration_to_config(array $registrationpayload, string $clientid) : 
  *
  * @return array the Client Registration as an associative array.
  */
-function config_to_registration(object $config, int $typeid) : array {
+function config_to_registration(object $config, int $typeid): array {
     $registrationresponse = [];
     $registrationresponse['client_id'] = $config->lti_clientid;
     $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
@@ -306,7 +304,7 @@ function config_to_registration(object $config, int $typeid) : array {
  *
  * @return string client id for the registration
  */
-function validate_registration_token(string $registrationtokenjwt) : string {
+function validate_registration_token(string $registrationtokenjwt): string {
     global $DB;
     $keys = JWK::parseKeySet(jwks());
     $registrationtoken = JWT::decode($registrationtokenjwt, $keys, ['RS256']);
@@ -315,9 +313,7 @@ function validate_registration_token(string $registrationtokenjwt) : string {
     $clientid = $registrationtoken->sub;
 
     // Checks if clientid is already registered.
-    if (!empty($DB->get_record('lti_types', array(
-        'clientid' => $clientid
-    )))) {
+    if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {
         debugging("client id already consumed: {$clientid}.", DEBUG_INFO);
         throw new LTIRegistrationException("token_already_used", 401);
     }
