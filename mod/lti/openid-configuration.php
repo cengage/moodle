@@ -25,13 +25,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_lti\local\ltiopenid\registration_helper;
+
 define('NO_DEBUG_DISPLAY', true);
 define('NO_MOODLE_COOKIES', true);
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->libdir.'/weblib.php');
 
-$scopes = lti_get_service_scopes();
+$scopes = registration_helper::lti_get_service_scopes();
 $scopes[] = 'openid';
 $conf = [
     'issuer' => $CFG->wwwroot,

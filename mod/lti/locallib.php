@@ -54,6 +54,7 @@ defined('MOODLE_INTERNAL') || die;
 use moodle\mod\lti as lti;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
+use mod_lti\local\ltiopenid\jwks_helper;
 
 global $CFG;
 require_once($CFG->dirroot.'/mod/lti/OAuth.php');
@@ -3277,7 +3278,7 @@ function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce 
         }
     }
 
-    $privatekey = get_private_key();
+    $privatekey = jwks_helper::get_private_key();
     $jwt = JWT::encode($payload, $privatekey['key'], 'RS256', $privatekey['kid']);
 
     $newparms = array();
@@ -3843,24 +3844,6 @@ function lti_get_permitted_service_scopes($type, $typeconfig) {
         }
     }
 
-    return $scopes;
-}
-
-/**
- * Initializes an array with the scopes for services supported by the LTI module
- *
- * @return array List of scopes
- */
-function lti_get_service_scopes() {
-
-    $services = lti_get_services();
-    $scopes = array();
-    foreach ($services as $service) {
-        $servicescopes = $service->get_scopes();
-        if (!empty($servicescopes)) {
-            $scopes = array_merge($scopes, $servicescopes);
-        }
-    }
     return $scopes;
 }
 
@@ -4477,39 +4460,3 @@ function lti_new_access_token($typeid, $scopes) {
 
 }
 
-/**
- * Returns the private key to use to sign outgoing JWT.
- *
- * @return array keys are kid and key in PEM format.
- */
-function get_private_key() {
-    $privatekey = get_config('mod_lti', 'privatekey');
-    $kid = get_config('mod_lti', 'kid');
-    return [
-        "key" => $privatekey,
-        "kid" => $kid
-    ];
-}
-
-/**
- * Returns the JWK Key Set for this site.
- * @return array keyset exposting the site public key.
- */
-function jwks() {
-    $jwks = array('keys' => array());
-
-    $privatekey = get_private_key();
-    $res = openssl_pkey_get_private($privatekey['key']);
-    $details = openssl_pkey_get_details($res);
-
-    $jwk = array();
-    $jwk['kty'] = 'RSA';
-    $jwk['alg'] = 'RS256';
-    $jwk['kid'] = $privatekey['kid'];
-    $jwk['e'] = rtrim(strtr(base64_encode($details['rsa']['e']), '+/', '-_'), '=');
-    $jwk['n'] = rtrim(strtr(base64_encode($details['rsa']['n']), '+/', '-_'), '=');
-    $jwk['use'] = 'sig';
-
-    $jwks['keys'][] = $jwk;
-    return $jwks;
-}

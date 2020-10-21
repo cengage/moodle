@@ -44,7 +44,9 @@
 defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/lti/openidregistrationlib.php');
+
+use mod_lti\local\ltiopenid\registration_exception;
+use mod_lti\local\ltiopenid\registration_helper;
 
 /**
  * OpenId LTI Registration library tests
@@ -148,7 +150,7 @@ EOD;
     public function test_to_config_full() {
         $registration = json_decode($this->registrationfulljson, true);
         $registration['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
-        $config = registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
         $this->assertEquals('TheClientId', $config->lti_clientid);
@@ -175,7 +177,7 @@ EOD;
      */
     public function test_to_config_minimal() {
         $registration = json_decode($this->registrationminimaljson, true);
-        $config = registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
         $this->assertEquals('TheClientId', $config->lti_clientid);
@@ -200,7 +202,7 @@ EOD;
      */
     public function test_to_config_minimal_with_deeplinking() {
         $registration = json_decode($this->registrationminimaldljson, true);
-        $config = registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::registration_to_config($registration, 'TheClientId');
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
     }
@@ -210,10 +212,10 @@ EOD;
      */
     public function test_validation_initlogin() {
         $registration = json_decode($this->registrationfulljson, true);
-        $this->expectException(LTIRegistrationException::class);
+        $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         unset($registration['initiate_login_uri']);
-        registration_to_config($registration, 'TheClientId');
+        registration_helper::registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -221,10 +223,10 @@ EOD;
      */
     public function test_validation_redirecturis() {
         $registration = json_decode($this->registrationfulljson, true);
-        $this->expectException(LTIRegistrationException::class);
+        $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         unset($registration['redirect_uris']);
-        registration_to_config($registration, 'TheClientId');
+        registration_helper::registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -232,10 +234,10 @@ EOD;
      */
     public function test_validation_jwks() {
         $registration = json_decode($this->registrationfulljson, true);
-        $this->expectException(LTIRegistrationException::class);
+        $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         $registration['jwks_uri'] = '';
-        registration_to_config($registration, 'TheClientId');
+        registration_helper::registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -244,7 +246,7 @@ EOD;
     public function test_config_to_registration() {
         $orig = json_decode($this->registrationfulljson, true);
         $orig['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
-        $reg = config_to_registration(registration_to_config($orig, 'clid'), 12);
+        $reg = registration_helper::config_to_registration(registration_helper::registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
         $this->assertEquals($orig['initiate_login_uri'], $reg['initiate_login_uri']);

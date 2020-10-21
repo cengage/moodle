@@ -34,24 +34,12 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         EXTERNAL_REGISTRATION_PAGE_CONTAINER: '#external-registration-page-container',
         CARTRIDGE_REGISTRATION_CONTAINER: '#cartridge-registration-container',
         CARTRIDGE_REGISTRATION_FORM: '#cartridge-registration-form',
-        LTIADV_REGISTRATION_CONTAINER: '#ltiadv-registration-container',
         ADD_TOOL_FORM: '#add-tool-form',
         TOOL_LIST_CONTAINER: '#tool-list-container',
         TOOL_CREATE_BUTTON: '#tool-create-button',
         TOOL_CREATE_LTILEGACY_BUTTON: '#tool-createltilegacy-button',
         REGISTRATION_CHOICE_CONTAINER: '#registration-choice-container',
         TOOL_URL: '#tool-url'
-    };
-
-    /**
-     * Get the tool create button element.
-     *
-     * @method getToolCreateButton
-     * @private
-     * @return {Object} jQuery object
-     */
-    var getToolCreateButton = function() {
-        return $(SELECTORS.TOOL_CREATE_BUTTON);
     };
 
     /**
@@ -99,55 +87,23 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
     };
 
     /**
-     * Return the container that holds all elements for the external registration, including
-     * the cancel button and the iframe.
-     *
-     * @method getExternalRegistrationContainer
-     * @private
-     * @return {JQuery} jQuery object
-     */
-    var getLTIAdvRegistrationContainer = function() {
-        return $(SELECTORS.LTIADV_REGISTRATION_CONTAINER);
-    };
-
-    /**
-     * Stops displaying the external registration content.
-     *
-     * @method hideExternalRegistrationContent
-     * @private
-     */
-    var hideLTIAdvRegistrationContainer = function() {
-        getLTIAdvRegistrationContainer().addClass('hidden');
-    };
-
-    /**
-     * Displays the external registration content.
-     *
-     * @method showExternalRegistrationContent
-     * @private
-     */
-    var showLTIAdvRegistrationContainer = function() {
-        hideCartridgeRegistration();
-        hideRegistrationChoices();
-        getLTIAdvRegistrationContainer().removeClass('hidden');
-    };
-
-    /**
-     * Close the LTI Advantage Registration IFrame.
+     * Create an event handler to close the LTI Advantage Registration IFrame.
      *
      * @private
-     * @param {Object} e post message event sent from the registration frame.
+     * @param {Object} originalContent initial content of the external registration frame.
      */
-    var closeLTIAdvRegistration = function(e) {
-        if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
-            getLTIAdvRegistrationContainer().empty();
-            hideLTIAdvRegistrationContainer();
-            showCartridgeRegistration();
-            showRegistrationChoices();
-            showToolList();
-            showRegistrationChoices();
-            reloadToolList();
-        }
+    var getCloseLTIAdvRegistration = function(originalContent) {
+        return (e) => {
+            if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
+                hideExternalRegistration();
+                getExternalRegistrationContainer().empty();
+                originalContent.appendTo(getExternalRegistrationContainer());
+                showRegistrationChoices();
+                showToolList();
+                showRegistrationChoices();
+                reloadToolList();
+            }
+        };
     };
 
     /**
@@ -159,12 +115,12 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      */
     var initiateRegistration = function(url) {
         // Show the external registration page in an iframe.
-        var container = getLTIAdvRegistrationContainer();
-        container.empty();
+        var container = getExternalRegistrationContainer();
+        var originalContent = container.children().detach();
         container.append($("<iframe src='startltiadvregistration.php?url="
                          + encodeURIComponent(url) + "'></iframe>"));
-        showLTIAdvRegistrationContainer();
-        window.addEventListener("message", closeLTIAdvRegistration, false);
+        showExternalRegistration();
+        window.addEventListener("message", getCloseLTIAdvRegistration(originalContent), false);
     };
 
     /**
@@ -380,30 +336,6 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      * URL. It can either be a cartridge or a registration url.
      *
      * @method addLTILegacyTool
-                        <button id="tool-create-button" type="submit" class="btn btn-success">
-                        <button id="tool-create-button" type="submit" class="btn btn-success">
-                        <button id="tool-create-button" type="submit" class="btn btn-success">
-                        <button id="tool-create-button" type="submit" class="btn btn-success">
-                            <span class="btn-text">{{#str}} add {{/str}}</span>
-                            <div class="btn-loader">
-                                {{> mod_lti/loader }}
-                            </div>
-                        </button>
-                            <span class="btn-text">{{#str}} add {{/str}}</span>
-                            <div class="btn-loader">
-                                {{> mod_lti/loader }}
-                            </div>
-                        </button>
-                            <span class="btn-text">{{#str}} add {{/str}}</span>
-                            <div class="btn-loader">
-                                {{> mod_lti/loader }}
-                            </div>
-                        </button>
-                            <span class="btn-text">{{#str}} add {{/str}}</span>
-                            <div class="btn-loader">
-                                {{> mod_lti/loader }}
-                            </div>
-                        </button>
      * @private
      * @return {Promise} jQuery Deferred object
      */
@@ -413,8 +345,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         if (url === "") {
             return $.Deferred().resolve();
         }
-        var toolButton = $(SELECTORS.TOOL_CREATE_LTI2_BUTTON);
-        var toolButton = getToolCreateButton();
+        var toolButton = $(SELECTORS.TOOL_CREATE_LTILEGACY_BUTTON);
         startLoading(toolButton);
 
         var promise = toolType.isCartridge(url);

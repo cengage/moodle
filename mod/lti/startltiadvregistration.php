@@ -25,9 +25,10 @@
 
 use Firebase\JWT\JWT;
 
+use mod_lti\local\ltiopenid\jwks_helper;
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/weblib.php');
-require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 require_login();
 $context = context_system::instance();
@@ -39,9 +40,9 @@ $token = [
     "sub" => random_string(15),
     "scope" => "reg",
     "iat" => $now,
-    "exp" => $now + 3600
+    "exp" => $now + HOURSECS
 ];
-$privatekey = get_private_key();
+$privatekey = jwks_helper::get_private_key();
 $regtoken = JWT::encode($token, $privatekey['key'], 'RS256', $privatekey['kid']);
 $confurl = new moodle_url('/mod/lti/openid-configuration.php');
 $url = new moodle_url($starturl);
