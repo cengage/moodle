@@ -91,6 +91,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      *
      * @private
      * @param {Object} originalContent initial content of the external registration frame.
+     * @return {Function} event handler to close the IFrame
      */
     var getCloseLTIAdvRegistration = function(originalContent) {
         return (e) => {

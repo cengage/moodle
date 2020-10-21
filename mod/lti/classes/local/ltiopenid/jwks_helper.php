@@ -78,6 +78,4 @@ class jwks_helper {
         return $jwks;
     }
 
-    public static function foo() {}
-
 }

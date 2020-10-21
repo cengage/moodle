@@ -64,8 +64,7 @@ class registration_helper {
      *
      * @return mixed
      */
-    private static function get_parameter(array $payload, string $key, bool $required)
-    {
+    private static function get_parameter(array $payload, string $key, bool $required) {
         if (!isset($payload[$key]) || empty($payload[$key])) {
             if ($required) {
                 throw new registration_exception('missing required attribute '.$key, 400);
@@ -99,7 +98,8 @@ class registration_helper {
         $applicationtype = self::get_parameter($registrationpayload, 'application_type', false);
         $logouri = self::get_parameter($registrationpayload, 'logo_uri', false);
 
-        $ltitoolconfiguration = self::get_parameter($registrationpayload, 'https://purl.imsglobal.org/spec/lti-tool-configuration', true);
+        $ltitoolconfiguration = self::get_parameter($registrationpayload,
+            'https://purl.imsglobal.org/spec/lti-tool-configuration', true);
 
         $domain = self::get_parameter($ltitoolconfiguration, 'domain', true);
         $targetlinkuri = self::get_parameter($ltitoolconfiguration, 'target_link_uri', true);
@@ -329,7 +329,7 @@ class registration_helper {
      *
      * @return array List of scopes
      */
-    function lti_get_service_scopes() {
+    public static function lti_get_service_scopes() {
 
         $services = lti_get_services();
         $scopes = array();
