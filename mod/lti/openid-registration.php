@@ -25,6 +25,7 @@ define('NO_DEBUG_DISPLAY', true);
 define('NO_MOODLE_COOKIES', true);
 
 use mod_lti\local\ltiopenid\registration_helper;
+use mod_lti\local\ltiopenid\registration_exception;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
@@ -48,7 +49,7 @@ if (!($authheader && substr($authheader, 0, 7) == 'Bearer ')) {
         $typeid = lti_add_type($type, clone $config);
         $message = json_encode(registration_helper::config_to_registration($config, $typeid));
         header('Content-Type: application/json; charset=utf-8');
-    } catch (LTIRegistrationException $e) {
+    } catch (registration_exception $e) {
         $code = $e->getCode();
         $message = $e->getMessage();
     }

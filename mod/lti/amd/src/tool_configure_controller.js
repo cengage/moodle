@@ -32,6 +32,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
     var SELECTORS = {
         EXTERNAL_REGISTRATION_CONTAINER: '#external-registration-container',
         EXTERNAL_REGISTRATION_PAGE_CONTAINER: '#external-registration-page-container',
+        EXTERNAL_REGISTRATION_TEMPLATE_CONTAINER: '#external-registration-template-container',
         CARTRIDGE_REGISTRATION_CONTAINER: '#cartridge-registration-container',
         CARTRIDGE_REGISTRATION_FORM: '#cartridge-registration-form',
         ADD_TOOL_FORM: '#add-tool-form',
@@ -87,24 +88,20 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
     };
 
     /**
-     * Create an event handler to close the LTI Advantage Registration IFrame.
+     * Close the LTI Advantage Registration IFrame.
      *
      * @private
-     * @param {Object} originalContent initial content of the external registration frame.
-     * @return {Function} event handler to close the IFrame
+     * @param {Object} e post message event sent from the registration frame.
      */
-    var getCloseLTIAdvRegistration = function(originalContent) {
-        return (e) => {
-            if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
-                hideExternalRegistration();
-                getExternalRegistrationContainer().empty();
-                originalContent.appendTo(getExternalRegistrationContainer());
-                showRegistrationChoices();
-                showToolList();
-                showRegistrationChoices();
-                reloadToolList();
-            }
-        };
+    var closeLTIAdvRegistration = function(e) {
+        if (e.data && 'org.imsglobal.lti.close' === e.data.subject) {
+            $(SELECTORS.EXTERNAL_REGISTRATION_TEMPLATE_CONTAINER).empty();
+            hideExternalRegistration();
+            showRegistrationChoices();
+            showToolList();
+            showRegistrationChoices();
+            reloadToolList();
+        }
     };
 
     /**
@@ -116,12 +113,12 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      */
     var initiateRegistration = function(url) {
         // Show the external registration page in an iframe.
-        var container = getExternalRegistrationContainer();
-        var originalContent = container.children().detach();
+        $(SELECTORS.EXTERNAL_REGISTRATION_PAGE_CONTAINER).removeClass('hidden');
+        var container = $(SELECTORS.EXTERNAL_REGISTRATION_TEMPLATE_CONTAINER);
         container.append($("<iframe src='startltiadvregistration.php?url="
                          + encodeURIComponent(url) + "'></iframe>"));
         showExternalRegistration();
-        window.addEventListener("message", getCloseLTIAdvRegistration(originalContent), false);
+        window.addEventListener("message", closeLTIAdvRegistration, false);
     };
 
     /**
