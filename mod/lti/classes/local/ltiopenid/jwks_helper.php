@@ -23,10 +23,6 @@
  */
 namespace mod_lti\local\ltiopenid;
 
-defined('MOODLE_INTERNAL') || die;
-
-global $CFG;
-
 /**
  * This class exposes functions for LTI 1.3 Key Management.
  *
