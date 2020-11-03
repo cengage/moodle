@@ -41,9 +41,15 @@ $typeid = optional_param('type', -1, PARAM_INT);
 $types = lti_get_tools_by_url($starturl, null);
 
 if (!empty($types) && $typeid == -1) {
+    $pageurl = new moodle_url('/mod/lti/startltiadvregistration.php');
+    $PAGE->set_context($context);
+    $PAGE->set_url($pageurl);
+    $PAGE->set_pagelayout('maintenance');
     $output = $PAGE->get_renderer('mod_lti');
-    $page = new \mod_lti\output\registration_upgrade_choice_page();
+    $page = new \mod_lti\output\registration_upgrade_choice_page($types);
+    echo $output->header();
     echo $output->render($page);
+    echo $output->footer();
 } else {
     $sub = random_string(15); 
     $scope = "reg";
