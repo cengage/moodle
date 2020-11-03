@@ -38,6 +38,7 @@ use stdClass;
  */
 class external_registration_return_page implements renderable, templatable {
 
+
     /**
      * Export this data so it can be used as the context for a mustache template.
      *

@@ -38,6 +38,9 @@ use stdClass;
  */
 class registration_upgrade_choice_page implements renderable, templatable {
 
+    public function __construct($tools) {
+        $this->tools = $tools;
+    }
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
@@ -45,6 +48,11 @@ class registration_upgrade_choice_page implements renderable, templatable {
      * @return stdClass Data to be used by the template
      */
     public function export_for_template(renderer_base $output) {
-        return new stdClass();
+        $renderData = new stdClass();
+        $renderData->tools = [];
+        foreach ($this->tools as $tool) {
+            $renderData->tools[]=(object)$tool;
+        }
+        return $renderData;
     }
 }
