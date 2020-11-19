@@ -26,6 +26,7 @@
 use Firebase\JWT\JWT;
 
 use mod_lti\local\ltiopenid\jwks_helper;
+use mod_lti\local\ltiopenid\registration_helper;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/weblib.php');
@@ -51,11 +52,11 @@ if (!empty($types) && $typeid == -1) {
     echo $output->render($page);
     echo $output->footer();
 } else {
-    $sub = random_string(15); 
-    $scope = "reg";
+    $sub = registration_helper::new_clientid(); 
+    $scope = registration_helper::REG_TOKEN_OP_NEW_REG;
     if ($typeid>0) {
-        $sub = $typeid;
-        $scope = "reg_update";
+        $sub = ""+$typeid;
+        $scope = registration_helper::REG_TOKEN_OP_UPDATE_REG;
     }
     $now = time();
     $token = [

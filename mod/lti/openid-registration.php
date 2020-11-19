@@ -32,27 +32,48 @@ require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 $code = 200;
 $message = '';
-// Retrieve registration token from Bearer Authorization header.
-$authheader = moodle\mod\lti\OAuthUtil::get_headers() ['Authorization'] ?? '';
-if (!($authheader && substr($authheader, 0, 7) == 'Bearer ')) {
-    $message = 'missing_registration_token';
-    $code = 401;
-} else {
-    $registrationpayload = json_decode(file_get_contents('php://input'), true);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GET')) {
+    $doregister = $_SERVER['REQUEST_METHOD'] === 'POST'; 
+    // Retrieve registration token from Bearer Authorization header.
+    $authheader = moodle\mod\lti\OAuthUtil::get_headers() ['Authorization'] ?? '';
+    if (!($authheader && substr($authheader, 0, 7) == 'Bearer ')) {
+        $message = 'missing_registration_token';
+        $code = 401;
+    } else {
+        $registrationpayload = json_decode(file_get_contents('php://input'), true);
 
-    // Registers tool.
-    $type = new stdClass();
-    $type->state = LTI_TOOL_STATE_PENDING;
-    try {
-        $clientid = registration_helper::validate_registration_token(trim(substr($authheader, 7)));
-        $config = registration_helper::registration_to_config($registrationpayload, $clientid);
-        $typeid = lti_add_type($type, clone $config);
-        $message = json_encode(registration_helper::config_to_registration($config, $typeid));
-        header('Content-Type: application/json; charset=utf-8');
-    } catch (registration_exception $e) {
-        $code = $e->getCode();
-        $message = $e->getMessage();
+        // Registers tool.
+        try {
+            $tokenres = registration_helper::validate_registration_token(trim(substr($authheader, 7)));
+            if (array_key_exists('type', $tokenres)) {
+                // it's an update/upgrade to 1.3
+                $type = $tokenres['type'];
+                $typeid = $type->id;
+                if ($doregister) {
+                    $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
+                    registration_helper::update($type, clone $config);
+                }
+            } else if ($doregister) {
+                    $type = new stdClass();
+                    $type->state = LTI_TOOL_STATE_PENDING;
+                    $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
+                    $typeid = lti_add_type($type, clone $config);
+            }
+            if ($typeid) {
+                $message = json_encode(registration_helper::config_to_registration($config, $typeid));
+                header('Content-Type: application/json; charset=utf-8');
+            } else {
+                $code = 404;
+                $message = "No registration found.";
+            }
+        } catch (registration_exception $e) {
+            $code = $e->getCode();
+            $message = $e->getMessage();
+        }
     }
+} else {
+    $code = 400;
+    $message = 'Unsupported operation';
 }
 $response = new \mod_lti\local\ltiservice\response();
 // Set code.

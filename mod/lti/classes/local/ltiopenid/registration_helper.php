@@ -51,6 +51,10 @@ class registration_helper {
     /** Tool Settings scope */
     const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolsetting';
 
+    /** Indicates the token is to create a new registration */
+    const REG_TOKEN_OP_NEW_REG = 'reg';
+    /** Indicates the token is to update an existing registration */
+    const REG_TOKEN_OP_UPDATE_REG = 'reg-update';
 
     /**
      * Function used to validate parameters.
@@ -247,18 +251,25 @@ class registration_helper {
      */
     public static function config_to_registration(object $config, int $typeid): array {
         $registrationresponse = [];
-        $registrationresponse['client_id'] = $config->lti_clientid;
-        $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
-        $registrationresponse['response_types'] = ['id_token'];
-        $registrationresponse['jwks_uri'] = $config->lti_publickeyset;
-        $registrationresponse['initiate_login_uri'] = $config->lti_initiatelogin;
-        $registrationresponse['grant_types'] = ['client_credentials', 'implicit'];
-        $registrationresponse['redirect_uris'] = explode(PHP_EOL, $config->lti_redirectionuris);
-        $registrationresponse['application_type'] = 'web';
-        $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
+        $lticonfigurationresponse = [];
+        if ($config->lti_ltiversion === LTI_VERSION_1P3) {
+            $registrationresponse['client_id'] = $config->lti_clientid;
+            $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
+            $registrationresponse['response_types'] = ['id_token'];
+            $registrationresponse['jwks_uri'] = $config->lti_publickeyset;
+            $registrationresponse['initiate_login_uri'] = $config->lti_initiatelogin;
+            $registrationresponse['grant_types'] = ['client_credentials', 'implicit'];
+            $registrationresponse['redirect_uris'] = explode(PHP_EOL, $config->lti_redirectionuris);
+            $registrationresponse['application_type'] = ['web'];
+            $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
+        } else if ($config->lti_ltiversion === LTI_VERSION_1) {
+
+        } else if ($config->lti_ltiversion === LTI_VERSION_2) {
+
+        }
+        
         $registrationresponse['client_name'] = $config->lti_typename;
         $registrationresponse['logo_uri'] = $config->lti_icon ?? '';
-        $lticonfigurationresponse = [];
         $lticonfigurationresponse['deployment_id'] = strval($typeid);
         $lticonfigurationresponse['target_link_uri'] = $config->lti_toolurl;
         $lticonfigurationresponse['domain'] = $config->lti_tooldomain ?? '';
@@ -316,21 +327,32 @@ class registration_helper {
      *
      * @param string $registrationtokenjwt registration token
      *
-     * @return string client id for the registration
+     * @return array with 2 keys: clientid for the registration, type but only if it's an update
      */
-    public static function validate_registration_token(string $registrationtokenjwt): string {
+    public static function validate_registration_token(string $registrationtokenjwt): array {
         global $DB;
         $keys = JWK::parseKeySet(jwks_helper::get_jwks());
         $registrationtoken = JWT::decode($registrationtokenjwt, $keys, ['RS256']);
-
+        $response = [];
         // Get clientid from registrationtoken.
         $clientid = $registrationtoken->sub;
-
-        // Checks if clientid is already registered.
-        if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {
-            throw new registration_exception("token_already_used", 401);
+        if ($registrationtoken->scope = self::REG_TOKEN_OP_NEW_REG) {
+            // Checks if clientid is already registered.
+            if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {
+                throw new registration_exception("token_already_used", 401);
+            }
+            $response['clientid'] = $clientid;
+        } else if ($registrationtoken->scope = self::REG_TOKEN_OP_UPDATE_REG) {
+            $tool = lti_get_type($registrationtoken->sub);
+            if (!$tool) {
+                throw new registration_exception("Unknown client", 400);
+            }
+            $response['clientid'] = $tool->clientid??self::new_clientid();
+            $response['type'] = $tool;
+        } else {
+            throw new registration_exception("Incorrect scope", 403);
         }
-        return $clientid;
+        return $response;
     }
 
     /**
@@ -349,6 +371,14 @@ class registration_helper {
             }
         }
         return $scopes;
+    }
+
+    public static function new_clientid() {
+        return random_string(15);
+    }
+
+    public static function sign(string $key, string $salt, string $secret): string {
+        return base64_encode(hash_hmac('sha-256', $key.$salt, $secret, true));
     }
 
 }
