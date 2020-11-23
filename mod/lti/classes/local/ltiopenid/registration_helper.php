@@ -260,7 +260,7 @@ class registration_helper {
             $registrationresponse['initiate_login_uri'] = $config->lti_initiatelogin;
             $registrationresponse['grant_types'] = ['client_credentials', 'implicit'];
             $registrationresponse['redirect_uris'] = explode(PHP_EOL, $config->lti_redirectionuris);
-            $registrationresponse['application_type'] = ['web'];
+            $registrationresponse['application_type'] = 'web';
             $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
         } else if ($config->lti_ltiversion === LTI_VERSION_1) {
 
