@@ -52,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GE
                 if ($doregister) {
                     $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
                     registration_helper::update($type, clone $config);
+                } else {
+                    $config = lti_get_type_config($type->id);
                 }
             } else if ($doregister) {
                     $type = new stdClass();

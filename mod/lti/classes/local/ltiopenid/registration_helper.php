@@ -241,79 +241,100 @@ class registration_helper {
         return $config;
     }
 
+    private static function add_previous_key_claim(array &$lticonfig, $key, $secret) {
+        if ($key) {
+            $oauthconsumer = [];
+            $oauthconsumer['key'] = $key;
+            $oauthconsumer['nonce'] = random_string(random_int(10,20));
+            $oauthconsumer['sign'] = hash('sha256', $key.$secret.$oauthconsumer['nonce']);
+            $lticonfig['oauth_consumer'] = $oauthconsumer; 
+        }
+    }
+
     /**
      * Transforms a moodle LTI 1.3 Config to an OAuth/LTI Client Registration.
      *
      * @param object $config Moodle LTI Config.
      * @param int $typeid which is the LTI deployment id.
+     * @param object $type tool instance in case the tool already exists
      *
      * @return array the Client Registration as an associative array.
      */
-    public static function config_to_registration(object $config, int $typeid): array {
+    public static function config_to_registration(object $config, int $typeid, object $type = null): array {
+        $configarray = [];
+        foreach( (array)$config  as $k=>$v) {
+            if (substr($k, 0, 4) == 'lti_') {
+                $k = substr($k, 4);
+            }
+            $configarray[$k] = $v;
+        }
+        $config = (object) $configarray;
         $registrationresponse = [];
         $lticonfigurationresponse = [];
-        if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-            $registrationresponse['client_id'] = $config->lti_clientid;
+        $ltiversion = $type ? $type->ltiversion : $config->ltiversion;
+        $lticonfigurationresponse['version'] = $ltiversion; 
+        if ($ltiversion === LTI_VERSION_1P3) {
+            $registrationresponse['client_id'] = $config->clientid;
             $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
             $registrationresponse['response_types'] = ['id_token'];
-            $registrationresponse['jwks_uri'] = $config->lti_publickeyset;
-            $registrationresponse['initiate_login_uri'] = $config->lti_initiatelogin;
+            $registrationresponse['jwks_uri'] = $config->publickeyset;
+            $registrationresponse['initiate_login_uri'] = $config->initiatelogin;
             $registrationresponse['grant_types'] = ['client_credentials', 'implicit'];
-            $registrationresponse['redirect_uris'] = explode(PHP_EOL, $config->lti_redirectionuris);
+            $registrationresponse['redirect_uris'] = explode(PHP_EOL, $config->redirectionuris);
             $registrationresponse['application_type'] = 'web';
             $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
-        } else if ($config->lti_ltiversion === LTI_VERSION_1) {
-
-        } else if ($config->lti_ltiversion === LTI_VERSION_2) {
-
+        } else if ($ltiversion === LTI_VERSION_1 && $type) {
+            registration_helper::add_previous_key_claim($lticonfigurationresponse, $config->resourcekey, $config->password);
+        } else if ($ltiversion === LTI_VERSION_2 && $type) {
+            $toolproxy = lti_get_tool_proxy($type->toolproxyid);
+            registration_helper::add_previous_key_claim($lticonfigurationresponse, $key, $version);
         }
-        
-        $registrationresponse['client_name'] = $config->lti_typename;
-        $registrationresponse['logo_uri'] = $config->lti_icon ?? '';
+        $registrationresponse['client_name'] = $type ? $type->name : $config->typename;
+        $registrationresponse['logo_uri'] = $type ? ($type->secureicon??$type->icon??'') : $config->icon ?? '';
         $lticonfigurationresponse['deployment_id'] = strval($typeid);
-        $lticonfigurationresponse['target_link_uri'] = $config->lti_toolurl;
-        $lticonfigurationresponse['domain'] = $config->lti_tooldomain ?? '';
-        $lticonfigurationresponse['description'] = $config->lti_description ?? '';
-        if ($config->lti_contentitem == 1) {
+        $lticonfigurationresponse['target_link_uri'] = $type ? $type->baseurl : $config->toolurl ?? '';
+        $lticonfigurationresponse['domain'] = $type ? $type->tooldomain : $config->tooldomain ?? '';
+        $lticonfigurationresponse['description'] = $type ? $type->description ?? '' : $config->description ?? '';
+        if ($config->contentitem ?? 0 == 1) {
             $contentitemmessage = [];
             $contentitemmessage['type'] = 'LtiDeepLinkingRequest';
-            if (isset($config->lti_toolurl_ContentItemSelectionRequest)) {
-                $contentitemmessage['target_link_uri'] = $config->lti_toolurl_ContentItemSelectionRequest;
+            if (isset($config->toolurl_ContentItemSelectionRequest)) {
+                $contentitemmessage['target_link_uri'] = $config->toolurl_ContentItemSelectionRequest;
             }
             $lticonfigurationresponse['messages'] = [$contentitemmessage];
         }
-        if (isset($config->lti_customparameters) && !empty($config->lti_customparameters)) {
+        if (isset($config->customparameters) && !empty($config->customparameters)) {
             $params = [];
-            foreach (explode(PHP_EOL, $config->lti_customparameters) as $param) {
+            foreach (explode(PHP_EOL, $config->customparameters) as $param) {
                 $split = explode('=', $param);
                 $params[$split[0]] = $split[1];
             }
             $lticonfigurationresponse['custom_parameters'] = $params;
         }
         $scopesresponse = [];
-        if ($config->ltiservice_gradesynchronization > 0) {
+        if ($config->ltiservice_gradesynchronization ?? 0 > 0) {
             $scopesresponse[] = self::SCOPE_SCORE;
             $scopesresponse[] = self::SCOPE_RESULT;
             $scopesresponse[] = self::SCOPE_LINEITEM_RO;
         }
-        if ($config->ltiservice_gradesynchronization == 2) {
+        if ($config->ltiservice_gradesynchronization ?? 0 == 2) {
             $scopesresponse[] = self::SCOPE_LINEITEM;
         }
-        if ($config->ltiservice_memberships == 1) {
+        if ($config->ltiservice_memberships ?? 0 == 1) {
             $scopesresponse[] = self::SCOPE_NRPS;
         }
-        if ($config->ltiservice_toolsettings == 1) {
+        if ($config->ltiservice_toolsettings ?? 0 == 1) {
             $scopesresponse[] = self::SCOPE_TOOL_SETTING;
         }
         $registrationresponse['scope'] = implode(' ', $scopesresponse);
 
         $claimsresponse = ['sub', 'iss'];
-        if ($config->lti_sendname == LTI_SETTING_ALWAYS) {
+        if ($config->sendname == LTI_SETTING_ALWAYS) {
             $claimsresponse[] = 'name';
             $claimsresponse[] = 'family_name';
             $claimsresponse[] = 'given_name';
         }
-        if ($config->lti_sendemailaddr == LTI_SETTING_ALWAYS) {
+        if ($config->sendemailaddr == LTI_SETTING_ALWAYS) {
             $claimsresponse[] = 'email';
         }
         $lticonfigurationresponse['claims'] = $claimsresponse;

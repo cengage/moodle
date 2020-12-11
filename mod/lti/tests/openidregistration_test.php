@@ -342,4 +342,46 @@ EOD;
         $this->assertFalse(in_array('name', $lti['claims']));
     }
 
+    /**
+     * Test the transformation from lti config 1.1 to Registration Response.
+     */
+    public function test_config_to_registration_lti11() {
+        $config = [];
+        $config['contentitem'] = 1;
+        $config['toolurl_ContentItemSelectionRequest'] = '';
+        $config['sendname'] = 0;
+        $config['sendemailaddr'] = 1;
+        $config['acceptgrades'] = 2;
+        $config['resourcekey'] = 'testkey';
+        $config['password'] = 'testp@ssw0rd';
+        $config['customparameters'] = 'a1=b1';
+        $type = [];
+        $type['id'] = 130;
+        $type['name'] = 'LTI Test 1.1';
+        $type['baseurl'] = 'https://base.test.url/test';
+        $type['tooldomain'] = 'base.test.url';
+        $type['ltiversion'] = 'LTI-1p0';
+        $type['icon'] = 'https://base.test.url/icon.png';
+
+        $reg = registration_helper::config_to_registration((object)$config, $type['id'], (object)$type);
+        $this->assertFalse(isset($reg['client_id']));
+        $this->assertFalse(isset($reg['initiate_login_uri']));
+        $this->assertEquals($type['name'], $reg['client_name']);
+        $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $this->assertEquals(LTI_VERSION_1, $lti['version']);
+        $this->assertEquals('b1', $lti['custom_parameters']['a1']);
+        $this->assertEquals('LtiDeepLinkingRequest', $lti['messages'][0]['type']);
+        $this->assertEquals('base.test.url', $lti['domain']);
+        $this->assertEquals($type['baseurl'], $lti['target_link_uri']);
+        $oauth = $lti['oauth_consumer'];
+        $this->assertEquals('testkey', $oauth['key']);
+        $this->assertFalse(empty($oauth['nonce']));
+        $this->assertEquals(hash('sha256', 'testkeytestp@ssw0rd'.$oauth['nonce']), $oauth['sign']);
+        $this->assertTrue(in_array('iss', $lti['claims']));
+        $this->assertTrue(in_array('sub', $lti['claims']));
+        $this->assertTrue(in_array('email', $lti['claims']));
+        $this->assertFalse(in_array('family_name', $lti['claims']));
+        $this->assertFalse(in_array('given_name', $lti['claims']));
+        $this->assertFalse(in_array('name', $lti['claims']));
+    }
 }
