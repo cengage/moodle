@@ -40,14 +40,15 @@
  * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+namespace mod_lti\local\ltiopenid;
 use mod_lti\local\ltiopenid\registration_exception;
 use mod_lti\local\ltiopenid\registration_helper;
 
+$toolproxy = null;
 /**
  * OpenId LTI Registration library tests
  */
-class mod_lti_openidregistrationlib_testcase extends advanced_testcase {
+class mod_lti_openidregistrationlib_testcase extends \advanced_testcase {
 
     /**
      * @var string A has-it-all client registration.
@@ -384,4 +385,56 @@ EOD;
         $this->assertFalse(in_array('given_name', $lti['claims']));
         $this->assertFalse(in_array('name', $lti['claims']));
     }
+
+    /**
+     * Test the transformation from lti config 2.0 to Registration Response.
+     * For LTI 2.0 we limit to just passing the previous key/secret.
+     */
+    public function test_config_to_registration_lti20() {
+        $config = [];
+        $config['contentitem'] = 1;
+        $config['toolurl_ContentItemSelectionRequest'] = '';
+        $type = [];
+        $type['id'] = 131;
+        $type['name'] = 'LTI Test 1.2';
+        $type['baseurl'] = 'https://base.test.url/test';
+        $type['tooldomain'] = 'base.test.url';
+        $type['ltiversion'] = 'LTI-2p0';
+        $type['icon'] = 'https://base.test.url/icon.png';
+        $type['toolproxyid'] = 9;
+        global $toolproxy;
+        $toolproxy = [];
+        $toolproxy['id'] = 9;
+        $toolproxy['guid'] = 'lti2guidtest';
+        $toolproxy['secret'] = 'peM7YDx420bo';
+
+        $reg = registration_helper::config_to_registration((object)$config, $type['id'], (object)$type);
+        $this->assertFalse(isset($reg['client_id']));
+        $this->assertFalse(isset($reg['initiate_login_uri']));
+        $this->assertEquals($type['name'], $reg['client_name']);
+        $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $this->assertEquals(LTI_VERSION_2, $lti['version']);
+        $this->assertEquals('LtiDeepLinkingRequest', $lti['messages'][0]['type']);
+        $this->assertEquals('base.test.url', $lti['domain']);
+        $this->assertEquals($type['baseurl'], $lti['target_link_uri']);
+        $oauth = $lti['oauth_consumer'];
+        $this->assertEquals('lti2guidtest', $toolproxy['guid']);
+        $this->assertFalse(empty($oauth['nonce']));
+        $this->assertEquals(hash('sha256', 'lti2guidtestpeM7YDx420bo'.$oauth['nonce']), $oauth['sign']);
+        $this->assertTrue(in_array('iss', $lti['claims']));
+        $this->assertTrue(in_array('sub', $lti['claims']));
+        $this->assertFalse(in_array('email', $lti['claims']));
+        $this->assertFalse(in_array('family_name', $lti['claims']));
+        $this->assertFalse(in_array('given_name', $lti['claims']));
+        $this->assertFalse(in_array('name', $lti['claims']));
+    }
+
+}
+
+function lti_get_tool_proxy($proxyid) {
+    global $toolproxy;
+    if ($toolproxy['id'] == $proxyid) {
+        return $toolproxy;
+    }
+    return null;
 }

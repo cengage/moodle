@@ -136,7 +136,7 @@ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
         $key_parts = OAuthUtil::urlencode_rfc3986($key_parts);
         $key = implode('&', $key_parts);
 
-        $computed_signature = base64_encode(hash_hmac(strtolower(substr(get_name(), 5)), $base_string, $key, true));
+        $computed_signature = base64_encode(hash_hmac(strtolower(substr($this->get_name(), 5)), $base_string, $key, true));
         $oauth_last_computed_signature = $computed_signature;
         return $computed_signature;
     }
