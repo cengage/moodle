@@ -287,7 +287,7 @@ class registration_helper {
             registration_helper::add_previous_key_claim($lticonfigurationresponse, $config->resourcekey, $config->password);
         } else if ($ltiversion === LTI_VERSION_2 && $type) {
             $toolproxy = lti_get_tool_proxy($type->toolproxyid);
-            registration_helper::add_previous_key_claim($lticonfigurationresponse, $key, $version);
+            registration_helper::add_previous_key_claim($lticonfigurationresponse, $toolproxy['guid'], $toolproxy['secret']);
         }
         $registrationresponse['client_name'] = $type ? $type->name : $config->typename;
         $registrationresponse['logo_uri'] = $type ? ($type->secureicon??$type->icon??'') : $config->icon ?? '';
@@ -329,12 +329,12 @@ class registration_helper {
         $registrationresponse['scope'] = implode(' ', $scopesresponse);
 
         $claimsresponse = ['sub', 'iss'];
-        if ($config->sendname == LTI_SETTING_ALWAYS) {
+        if ($config->sendname ?? '' == LTI_SETTING_ALWAYS) {
             $claimsresponse[] = 'name';
             $claimsresponse[] = 'family_name';
             $claimsresponse[] = 'given_name';
         }
-        if ($config->sendemailaddr == LTI_SETTING_ALWAYS) {
+        if ($config->sendemailaddr ?? '' == LTI_SETTING_ALWAYS) {
             $claimsresponse[] = 'email';
         }
         $lticonfigurationresponse['claims'] = $claimsresponse;
