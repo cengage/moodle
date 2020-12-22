@@ -38,8 +38,9 @@ use stdClass;
  */
 class registration_upgrade_choice_page implements renderable, templatable {
 
-    public function __construct($tools) {
+    public function __construct($tools, $startregurl) {
         $this->tools = $tools;
+        $this->startregurl = $startregurl;
     }
     /**
      * Export this data so it can be used as the context for a mustache template.
@@ -49,9 +50,16 @@ class registration_upgrade_choice_page implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         $renderData = new stdClass();
+        $renderData->startregurlenc = urlencode($this->startregurl);
         $renderData->tools = [];
         foreach ($this->tools as $tool) {
-            $renderData->tools[]=(object)$tool;
+            /*
+            $renderData->tools[]=[];
+            $renderData->tools['name']=$renderData->tools['name'];
+            $renderData->tools['baseurl']=$renderData->tools['baseurl'];
+            $renderData->tools['ltiversion']=$renderData->tools['ltiversion'];
+            $renderData->tools['typeid']=$renderData->tools['typeid'];*/
+            $renderData->tools[] = (object)$tool;
         }
         return $renderData;
     }
