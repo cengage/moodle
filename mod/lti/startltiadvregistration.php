@@ -47,7 +47,7 @@ if (!empty($types) && $typeid == -1) {
     $PAGE->set_url($pageurl);
     $PAGE->set_pagelayout('maintenance');
     $output = $PAGE->get_renderer('mod_lti');
-    $page = new \mod_lti\output\registration_upgrade_choice_page($types);
+    $page = new \mod_lti\output\registration_upgrade_choice_page($types, $starturl);
     echo $output->header();
     echo $output->render($page);
     echo $output->footer();
@@ -55,7 +55,7 @@ if (!empty($types) && $typeid == -1) {
     $sub = registration_helper::new_clientid(); 
     $scope = registration_helper::REG_TOKEN_OP_NEW_REG;
     if ($typeid>0) {
-        $sub = ""+$typeid;
+        $sub = strval($typeid);
         $scope = registration_helper::REG_TOKEN_OP_UPDATE_REG;
     }
     $now = time();

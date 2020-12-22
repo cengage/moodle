@@ -274,7 +274,7 @@ class registration_helper {
         $ltiversion = $type ? $type->ltiversion : $config->ltiversion;
         $lticonfigurationresponse['version'] = $ltiversion; 
         if ($ltiversion === LTI_VERSION_1P3) {
-            $registrationresponse['client_id'] = $config->clientid;
+            $registrationresponse['client_id'] = $type?$type->clientid:$config->clientid;
             $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
             $registrationresponse['response_types'] = ['id_token'];
             $registrationresponse['jwks_uri'] = $config->publickeyset;
@@ -357,13 +357,13 @@ class registration_helper {
         $response = [];
         // Get clientid from registrationtoken.
         $clientid = $registrationtoken->sub;
-        if ($registrationtoken->scope = self::REG_TOKEN_OP_NEW_REG) {
+        if ($registrationtoken->scope == self::REG_TOKEN_OP_NEW_REG) {
             // Checks if clientid is already registered.
             if (!empty($DB->get_record('lti_types', array('clientid' => $clientid)))) {
                 throw new registration_exception("token_already_used", 401);
             }
             $response['clientid'] = $clientid;
-        } else if ($registrationtoken->scope = self::REG_TOKEN_OP_UPDATE_REG) {
+        } else if ($registrationtoken->scope == self::REG_TOKEN_OP_UPDATE_REG) {
             $tool = lti_get_type($registrationtoken->sub);
             if (!$tool) {
                 throw new registration_exception("Unknown client", 400);

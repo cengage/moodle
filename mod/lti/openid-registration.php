@@ -40,30 +40,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GE
         $message = 'missing_registration_token';
         $code = 401;
     } else {
-        $registrationpayload = json_decode(file_get_contents('php://input'), true);
 
         // Registers tool.
         try {
             $tokenres = registration_helper::validate_registration_token(trim(substr($authheader, 7)));
             if (array_key_exists('type', $tokenres)) {
-                // it's an update/upgrade to 1.3
                 $type = $tokenres['type'];
-                $typeid = $type->id;
-                if ($doregister) {
-                    $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
-                    registration_helper::update($type, clone $config);
-                } else {
-                    $config = lti_get_type_config($type->id);
-                }
-            } else if ($doregister) {
-                    $type = new stdClass();
-                    $type->state = LTI_TOOL_STATE_PENDING;
-                    $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
-                    $typeid = lti_add_type($type, clone $config);
             }
-            if ($typeid) {
-                $message = json_encode(registration_helper::config_to_registration($config, $typeid));
+            //var_dump($tokenres);
+            if ($doregister) {
+                $registrationpayload = json_decode(file_get_contents('php://input'), true);
+                $config = registration_helper::registration_to_config($registrationpayload, $type?$type->clientid:$tokenres['clientid']);
+                if ($type) {
+                    lti_update_type($type, clone $config);
+                    $typeid = $type->id;
+                } else {
+                    $typeid = lti_add_type($type, clone $config);
+                }
                 header('Content-Type: application/json; charset=utf-8');
+                $message = json_encode(registration_helper::config_to_registration((object)$config, $typeid));
+            } else if ($type) {
+                $config = lti_get_type_config($type->id);
+                header('Content-Type: application/json; charset=utf-8');
+                $message = json_encode(registration_helper::config_to_registration((object)$config, $type->id, $type));
             } else {
                 $code = 404;
                 $message = "No registration found.";
