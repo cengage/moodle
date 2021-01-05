@@ -54,7 +54,7 @@ $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
-$menulinkid = optional_param('menulinkid', 0, PARAM_INT);
+$coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 $cm = null;
 
 if ($id) {
@@ -73,8 +73,8 @@ if ($id) {
     $lti->instructorcustomparameters = null;
     $lti->debuglaunch = false;
     $lti->course = $courseid;
-    if ($menulinkid != 0) {
-        $lti->toolurl = $DB->get_field('lti_menu_links', 'url', ['id' => $menulinkid]);
+    if ($coursenavid != 0) {
+        $lti->toolurl = $DB->get_field('lti_course_nav_messages', 'url', ['id' => $coursenavid]);
     }
     $course = get_course($courseid);
     $context = context_course::instance($courseid);

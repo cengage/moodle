@@ -870,7 +870,7 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
                 new moodle_url('/mod/lti/view.php', [
                     'course' => $course->id,
                     'ltitypeid' => $type->id,
-                    'menulinkid' => $menulink->id
+                    'coursenavid' => $menulink->id
                 ]),
                 navigation_node::TYPE_RESOURCE,
                 null,

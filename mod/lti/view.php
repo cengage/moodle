@@ -56,7 +56,7 @@ $l  = optional_param('l', 0, PARAM_INT);  // lti ID.
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
 $ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
 $courseid = optional_param('course', 0, PARAM_INT);
-$menulinkid = optional_param('menulinkid', 0, PARAM_INT);
+$coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 
 $cm = null;
 $pageparams = array();
@@ -67,8 +67,8 @@ if ($ltitypeid && $courseid) {
     $lti->showdescriptionlaunch = false;
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     $context = context_course::instance($courseid);
-    $pageparams = array('ltitypeid' => $ltitypeid, 'courseid' => $courseid, 'menulinkid' => $menulinkid);
-    $launchparam = 'ltitypeid=' . $ltitypeid . '&courseid=' . $courseid . '&menulinkid=' . $menulinkid;
+    $pageparams = array('ltitypeid' => $ltitypeid, 'courseid' => $courseid, 'coursenavid' => $coursenavid);
+    $launchparam = 'ltitypeid=' . $ltitypeid . '&courseid=' . $courseid . '&coursenavid=' . $coursenavid;
 
     if (is_guest($context, $USER) || !isloggedin()) {
         throw new moodle_exception('guestsarenotallowed', 'error');

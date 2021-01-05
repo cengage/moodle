@@ -2633,7 +2633,7 @@ function lti_get_type_type_config($id) {
 
     $type->lti_asmenulink = $basicltitype->asmenulink;
 
-    $ltimenulinks = $DB->get_records_select('lti_menu_links', 'typeid=?', [$id], null, 'id, label, url');
+    $ltimenulinks = $DB->get_records_select('lti_course_nav_messages', 'typeid=?', [$id], null, 'id, label, url');
 
     foreach ($ltimenulinks as $record) {
         $type->lti_menulinklabel[] = $record->label;
@@ -2850,12 +2850,12 @@ function lti_update_type($type, $config) {
         try {
             $transaction = $DB->start_delegated_transaction();
 
-            $DB->delete_records('lti_menu_links', array('typeid'=> $type->id)) && isset($menulinks);
+            $DB->delete_records('lti_course_nav_messages', array('typeid'=> $type->id)) && isset($menulinks);
 
             if (isset($menulinks)) {
                 foreach ($menulinks as $key => $value) {
                     $value["typeid"] = $type->id;
-                    $DB->insert_record('lti_menu_links', $value);
+                    $DB->insert_record('lti_course_nav_messages', $value);
                 }
             }
 
@@ -2929,51 +2929,37 @@ function lti_load_course_menu_links(int $courseid, $activeonly=false) {
         $join = ' LEFT ';
     }
     $records = $DB->get_recordset_sql(
-        "SELECT l.id,
-                l.name,
-                l.description,
+        "SELECT l.id as typeid,
+                l.name as typename,
+                l.description as typedesc,
+                nav.label,
                 lc.course,
-                lc.menulinkid
-           FROM {lti_types} AS l
-     $join JOIN {lti_course_menu_placements} AS lc ON (lc.typeid=l.id AND lc.course=?)
-          WHERE l.asmenulink=1
-       ORDER BY l.name", [$courseid]
+                lc.coursenavid
+           FROM {lti_course_nav_messages} AS nav 
+           JOIN {lti_types} AS l ON nav.typeid=l.id
+     $join JOIN {lti_course_menu_placements} AS lc ON (lc.coursenavid=nav.id AND lc.course=?)
+       ORDER BY l.name, nav.label", [$courseid]
     );
 
     $types = [];
     foreach ($records as $record) {
-        if (!array_key_exists($record->id, $types)) {
+        if (!array_key_exists($record->typeid, $types)) {
             $type = new stdClass();
-            $type->id = $record->id;
-            $type->name = $record->name;
-            $type->description = trim($record->description);
-            $type->selected = $record->course != null;
-
+            $type->id = $record->typeid;
+            $type->name = $record->typename;
+            $type->description = trim($record->typedesc);
+            $type->selected = $record->course == $courseid;
             $type->menulinks = [];
-            $linkrecords = $DB->get_recordset_sql(
-                "SELECT l.id,
-                        l.typeid,
-                        l.label
-                   FROM {lti_menu_links} AS l
-                  WHERE l.typeid=?
-               ORDER BY l.id", [$type->id]
-            );
-            foreach ($linkrecords as $linkrecord) {
-                $menulink = new stdClass();
-                $menulink->id = $linkrecord->id;
-                $menulink->typeid = $linkrecord->typeid;
-                $menulink->label = $linkrecord->label;
-                $menulink->selected = false;
-
-                $type->menulinks[$menulink->id] = $menulink;
-            }
-
             $types[$type->id] = $type;
         }
-
-        if ($record->menulinkid) {
-            $types[$record->id]->menulinks[$record->menulinkid]->selected = true;
-        }
+        $type = $types[$record->typeid];
+        $type->selected = $record->course != null || $type->selected;
+        $menulink = new stdClass();
+        $menulink->id = $record->id;
+        $menulink->typeid = $record->typeid;
+        $menulink->label = $record->label;
+        $menulink->selected = $record->course == $courseid;
+        $type->menulinks[$menulink->id] = $menulink;
     }
 
     return $types;
@@ -2994,18 +2980,18 @@ function lti_set_course_menu_links(int $courseid, array $menulinks) {
         $ltitools = lti_organize_menuplacement_form_data($menulinks);
         foreach ($ltitools as $key => $ltitool) {
             if ($ltitool->menulinks) {
-                foreach ($ltitool->menulinks as $menulinkid) {
+                foreach ($ltitool->menulinks as $coursenavid) {
                     $DB->insert_record('lti_course_menu_placements', (object)[
                         'typeid' => $ltitool->id,
                         'course' => $courseid,
-                        'menulinkid' => $menulinkid
+                        'coursenavid' => $coursenavid
                     ]);
                 }
             } else {
                 $DB->insert_record('lti_course_menu_placements', (object)[
                     'typeid' => $ltitool->id,
                     'course' => $courseid,
-                    'menulinkid' => NULL
+                    'coursenavid' => NULL
                 ]);
             }
         }
@@ -3079,7 +3065,7 @@ function lti_add_type($type, $config) {
         if (isset($menulinks)) {
             foreach ($menulinks as $key => $value) {
                 $value['typeid'] = $id;
-                $DB->insert_record('lti_menu_links', $value);
+                $DB->insert_record('lti_course_nav_messages', $value);
             }
         }
 
