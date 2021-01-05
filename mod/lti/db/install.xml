@@ -164,31 +164,35 @@
         <INDEX NAME="token" UNIQUE="true" FIELDS="token"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="lti_course_menu_placements" COMMENT="Course menu link placements">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Primary key of course (null for system-wide settings)"/>
-        <FIELD NAME="typeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Primary key of LTI type(tool)"/>
-        <FIELD NAME="menulinkid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Primary key of LTI menu link"/>
-        </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id" COMMENT="The course for which the setting exists"/>
-        <KEY NAME="typeid" TYPE="foreign" FIELDS="typeid" REFTABLE="lti_types" REFFIELDS="id" COMMENT="The tool referenced"/>
-        <KEY NAME="menulinkid" TYPE="foreign" FIELDS="menulinkid" REFTABLE="lti_menu_links" REFFIELDS="id" COMMENT="The menu link referenced"/>
-      </KEYS>
-    </TABLE>
-    <TABLE NAME="lti_menu_links" COMMENT="LTI menu links">
+    <TABLE NAME="lti_course_nav_messages" COMMENT="LTI Course Navigation links">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="typeid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Primary key of LTI type(tool)"/>
         <FIELD NAME="label" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Label of menu link url"/>
-        <FIELD NAME="url" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Menu link url"/>
+        <FIELD NAME="url" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Menu link url"/>
+        <FIELD NAME="customparameters" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Additional custom parameters for this message"/>
+        <FIELD NAME="allowlearners" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="typeid" TYPE="foreign" FIELDS="typeid" REFTABLE="lti_types" REFFIELDS="id" COMMENT="The tool referenced"/>
       </KEYS>
+    </TABLE>
+    <TABLE NAME="lti_course_menu_placements" COMMENT="Course menu link placements">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Primary key of course (null for system-wide settings)"/>
+        <FIELD NAME="coursenavid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Primary key of LTI Course Navigation Message"/>
+        </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id" COMMENT="The course for which the setting exists"/>
+        <KEY NAME="coursenavid" TYPE="foreign" FIELDS="coursenavid" REFTABLE="lti_course_nav_messages" REFFIELDS="id" COMMENT="The course navigation message referenced"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="coursenavuniq" UNIQUE="true" FIELDS="course,coursenavid"/>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

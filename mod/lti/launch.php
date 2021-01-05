@@ -57,6 +57,7 @@ $ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_TEXT);
 $foruserid = optional_param('user', 0, PARAM_INT);
 $menulinkid = optional_param('menulinkid', 0, PARAM_INT);
+$coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 $cm = null;
 
 if ($cmid) {
@@ -75,8 +76,8 @@ if ($cmid) {
     $lti->instructorcustomparameters = null;
     $lti->debuglaunch = false;
     $lti->course = $courseid;
-    if ($menulinkid != 0) {
-        $lti->toolurl = $DB->get_field('lti_menu_links', 'url', ['id' => $menulinkid]);
+    if ($coursenavid != 0) {
+        $lti->toolurl = $DB->get_field('lti_course_nav_messages', 'url', ['id' => $coursenavid]);
     }
     $course = get_course($courseid);
     $context = context_course::instance($courseid);

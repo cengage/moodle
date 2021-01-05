@@ -230,22 +230,19 @@ class mod_lti_edit_types_form extends moodleform {
         }
 
         $mform->addElement('html', html_writer::tag('span', '', array('id' => 'menulinkanchor')));
-        $mform->addElement('checkbox', 'lti_asmenulink', get_string('placementasmenulink', 'lti'));
         $repeatarray = array();
         $repeateloptions = array();
 
         $repeatarray[] = $mform->createElement('text', 'lti_menulinklabel', get_string('placementmenulinklabel', 'lti'));
         $repeateloptions['lti_menulinklabel']['type'] = PARAM_TEXT;
-        $repeateloptions['lti_menulinklabel']['disabledif'] = array('lti_asmenulink', 'notchecked');
 
         $repeatarray[] = $mform->createElement('text', 'lti_menulinkurl', get_string('placementmenulinkurl', 'lti'), [
             'size' => '64'
         ]);
         $repeateloptions['lti_menulinkurl']['type'] = PARAM_URL;
-        $repeateloptions['lti_menulinkurl']['disabledif'] = array('lti_asmenulink', 'notchecked');
 
         if (isset($typeid) && !empty($typeid)) {
-            $numberofmenulinks = $DB->count_records('lti_menu_links', array('typeid'=> $typeid));
+            $numberofmenulinks = $DB->count_records('lti_course_nav_messages', array('typeid'=> $typeid));
             if ($numberofmenulinks == 0) {
                 $numberofmenulinks = 1;
             }
