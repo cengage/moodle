@@ -146,6 +146,10 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             'state'
         ));
 
+        $lticoursemenuplacements = new backup_nested_element('lticoursemenuplacements');
+        $lticoursemenuplacement = new backup_nested_element('lticoursemenuplacement', array('id'), array(
+            'coursenavid'
+        ));
         // Build the tree
         $lti->add_child($ltitype);
         $ltitype->add_child($ltitypesconfigs);
@@ -156,6 +160,8 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         $ltitoolsettings->add_child($ltitoolsetting);
         $lti->add_child($ltisubmissions);
         $ltisubmissions->add_child($ltisubmission);
+        $lti->add_child($lticoursemenuplacements);
+        $lticoursemenuplacements->add_child($lticoursemenuplacement);
 
         // Define sources.
         $ltirecord = $DB->get_record('lti', ['id' => $this->task->get_activityid()]);
@@ -192,6 +198,8 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         if ($userinfo) {
             $ltisubmission->set_source_table('lti_submission', array('ltiid' => backup::VAR_ACTIVITYID));
         }
+
+        $lticoursemenuplacement->set_source_table('lti_course_menu_placements', array('course' => backup::VAR_COURSEID ));
 
         // Define id annotations
         $ltitype->annotate_ids('user', 'createdby');

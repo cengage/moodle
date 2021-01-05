@@ -23,6 +23,8 @@
  * @author     David Shepard
  */
 
+use mod_lti\local\lti_coursenav_lib;
+
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
@@ -43,7 +45,7 @@ $PAGE->set_title(format_string($course->shortname) . ': ' . get_string('selectco
 require_capability('mod/lti:addcoursetool', context_course::instance($courseid));
 
 $customdata['courseid'] = $courseid;
-$customdata['menulinks'] = lti_load_course_menu_links($courseid);
+$customdata['menulinks'] = lti_coursenav_lib::get()->load_coursenav_links($courseid);
 $form = new mod_lti_menuplacement_form($url, $customdata);
 
 $redirect = new moodle_url('/course/view.php', array('id' => $courseid));
@@ -52,7 +54,7 @@ if ($form->is_cancelled()) {
 }
 
 if ($fromform = $form->get_data()) {
-    lti_set_course_menu_links($courseid, (array) $fromform);
+    lti_coursenav_lib::get()->set_coursenav_links_from_form_data($courseid, (array) $fromform);
     redirect($redirect, get_string('changessaved', 'mod_lti'), null,
             \core\output\notification::NOTIFY_SUCCESS);
 }

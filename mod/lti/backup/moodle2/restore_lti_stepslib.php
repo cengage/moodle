@@ -70,6 +70,7 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
             '/activity/lti/ltitype/ltitypesconfigs/ltitypesconfigencrypted');
         $paths[] = new restore_path_element('ltitoolproxy', '/activity/lti/ltitype/ltitoolproxy');
         $paths[] = new restore_path_element('ltitoolsetting', '/activity/lti/ltitype/ltitoolproxy/ltitoolsettings/ltitoolsetting');
+        $paths[] = new restore_path_element('lticoursemenuplacement', '/activity/lti/lticoursemenuplacements/lticoursemenuplacement');
 
         if ($userinfo) {
             $submission = new restore_path_element('ltisubmission', '/activity/lti/ltisubmissions/ltisubmission');
@@ -276,6 +277,28 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
         $newitemid = $DB->insert_record('lti_submission', $data);
 
         $this->set_mapping('ltisubmission', $oldid, $newitemid);
+    }
+
+    /**
+     * Process restoration of course nav. This information will repeat
+     * for each LTI Link in the archive and need only to be processed
+     * once. It will only restore the course navigation if restore happens
+     * on the same site.
+     * @param mixed $data The data from backup XML file
+     */
+    protected function process_lticoursemenuplacement($data) {
+        global $DB;
+        $data = (object)$data;
+        if ($this->task->is_samesite()) {
+            $coursenavid = $data->coursenavid;
+            if ($DB->record_exists('lti_course_nav_messages', array('id'=> $coursenavid))) {
+                if (!$DB->record_exists('lti_course_menu_placements',
+                    array('course'=>$this->get_courseid(), 'coursenavid'=>$coursenavid))) {
+                    $data->course = $this->get_courseid();
+                    $DB->insert_record('lti_course_menu_placements', $data);
+                }
+            }
+        }
     }
 
     protected function after_execute() {
