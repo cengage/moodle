@@ -46,15 +46,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_lti\local\lti_coursenav_lib;
+
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
+
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
 $courseid = optional_param('courseid', 0, PARAM_INT);
-$ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
-$menulinkid = optional_param('menulinkid', 0, PARAM_INT);
+$coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 $cm = null;
 
 if ($id) {
@@ -66,19 +68,18 @@ if ($id) {
     if (is_guest($context, $USER) || !isloggedin()) {
         throw new moodle_exception('guestsarenotallowed', 'error');
     }
-} else {
-    //$id is 0 when LTI is launched via menu link.
-    $lti = $DB->get_record('lti_types', ['id' => $ltitypeid]);
-    $lti->typeid = $ltitypeid;
-    $lti->instructorcustomparameters = null;
-    $lti->debuglaunch = false;
-    $lti->course = $courseid;
-    if ($menulinkid != 0) {
-        $lti->toolurl = $DB->get_field('lti_menu_links', 'url', ['id' => $menulinkid]);
-    }
+} else if ($coursenavid) {
+    //$id is 0 when LTI is launched via navigation link.
+    $lti = lti_coursenav_lib::get()->get_lti_message($courseid, $coursenavid);
     $course = get_course($courseid);
     $context = context_course::instance($courseid);
+} else {
+    // TODO FIX THIS
+    throw new moodle_exception('cannotlaunch-nomsgid', 'error');
 }
+
+require_login($course, true, $cm);
+require_capability('mod/lti:view', $context);
 
 $typeid = $lti->typeid;
 if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
@@ -88,16 +89,13 @@ if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
         if (!isset($SESSION->lti_initiatelogin_status)) {
-            echo lti_initiate_login($course->id, $id, $lti, $config);
+            echo lti_initiate_login($course->id, $id>0?$id:$coursenavid, $lti, $config, $lti->message_type ?? 'basic-lti-launch-request');
             exit;
         } else {
             unset($SESSION->lti_initiatelogin_status);
         }
     }
 }
-
-require_login($course, true, $cm);
-require_capability('mod/lti:view', $context);
 
 // Completion and trigger events.
 if ($cm) {

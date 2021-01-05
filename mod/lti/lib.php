@@ -48,6 +48,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use mod_lti\local\lti_coursenav_lib;
+
 /**
  * List of features supported in URL module
  * @param string $feature FEATURE_xx constant for requested feature
@@ -818,7 +820,8 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
 
     // Only show the "Course apps" node if the user is editing or if there are
     // actual course menu apps to show.
-    $coursemenulinks = lti_load_course_menu_links($course->id, true);
+    $learner = !has_capability('moodle/course:manageactivities', $coursecontext);
+    $coursemenulinks = lti_coursenav_lib::get()->load_coursenav_links($course->id, true, $learner);
     if (empty($coursemenulinks) && !$PAGE->user_is_editing()) {
         return;
     }
@@ -833,19 +836,7 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
         $courseappsurl = new \moodle_url('/course/view.php', array('id' => $course->id));
     }
 
-    $appsnode = navigation_node::create(
-        get_string('courseapps', 'mod_lti'),
-        $courseappsurl, // We have to add a URL for node to appear.
-        navigation_node::TYPE_CATEGORY,
-        null,
-        'courseapps',
-        new pix_icon('icon', get_string('courseapps', 'mod_lti'), 'mod_lti')
-    );
-
-    $appsnode->make_inactive();
-    $appsnode = new flat_navigation_node($appsnode, 0);
-    $appsnode->set_showdivider(true, get_string('courseapps', 'mod_lti'));
-    $appsnode = $coursenode->add_node($appsnode);
+    $icon = new pix_icon('e/anchor', get_string('courseapps', 'mod_lti'));
 
     foreach ($coursemenulinks as $type) {
 
@@ -860,36 +851,36 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
             $selectedmenuitem = true;
 
             $node = navigation_node::create(
-                $type->name . ' - ' . $menulink->label,
+                $menulink->label,
                 new moodle_url('/mod/lti/view.php', [
                     'course' => $course->id,
-                    'ltitypeid' => $type->id,
-                    'menulinkid' => $menulink->id
+                    'coursenavid' => $menulink->id
                 ]),
                 navigation_node::TYPE_RESOURCE,
                 null,
-                'ltimenu-'.$type->id.'-'.$menulink->id
+                'ltimenu-'.$type->id.'-'.$menulink->id,
+                $icon
             );
 
-            $node->set_parent($appsnode);
+            $node->set_parent($coursenode);
             $coursenode->add_node($node);
         }
         
-        // If no menu labels selected, display selected LTI tool.
-        if (!$selectedmenuitem) {
-            $node = navigation_node::create(
-                $type->name,
-                new moodle_url('/mod/lti/view.php', [
-                    'course' => $course->id,
-                    'ltitypeid' => $type->id,
-                ]),
-                navigation_node::TYPE_RESOURCE,
-                null,
-                'ltimenu-'.$type->id
-            );
+    }
+    
+    if ($PAGE->user_is_editing()) {
+        $appsnode = navigation_node::create(
+            get_string('courseapps', 'mod_lti'),
+            $courseappsurl, // We have to add a URL for node to appear.
+        navigation_node::TYPE_CATEGORY,
+            null,
+            'courseapps',
+            $icon
+        );
 
-            $node->set_parent($appsnode);
-            $coursenode->add_node($node);
-        }
+        $appsnode->make_inactive();
+        $appsnode = new flat_navigation_node($appsnode, 0);
+        $appsnode->set_showdivider(true, get_string('courseapps', 'mod_lti'));
+        $appsnode = $coursenode->add_node($appsnode);
     }
 }

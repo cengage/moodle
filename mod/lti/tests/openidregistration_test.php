@@ -41,8 +41,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace mod_lti\local\ltiopenid;
+
+defined('MOODLE_INTERNAL') || die;
 use mod_lti\local\ltiopenid\registration_exception;
 use mod_lti\local\ltiopenid\registration_helper;
+
+global $CFG;
+require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 /**
  * OpenId LTI Registration library tests
@@ -141,6 +146,45 @@ EOD;
 EOD;
 
     /**
+     * @var string A registration with course navigations.
+     */
+    private $registrationcoursenavjson = <<<EOD
+    {
+        "application_type": "web",
+        "response_types": ["id_token"],
+        "grant_types": ["implict", "client_credentials"],
+        "initiate_login_uri": "https://client.example.org/lti/init",
+        "redirect_uris":
+        ["https://client.example.org/callback"],
+        "client_name": "Virtual Garden",
+        "jwks_uri": "https://client.example.org/.well-known/jwks.json",
+        "token_endpoint_auth_method": "private_key_jwt",
+        "https://purl.imsglobal.org/spec/lti-tool-configuration": {
+            "domain": "client.example.org",
+            "target_link_uri": "https://client.example.org/lti",
+            "messages": [
+                {
+                    "type": "LtiDeepLinkingRequest"
+                },
+                {
+                    "type": "ContextLaunchRequest",
+                    "label": "Course Nav for All"
+                },
+                {
+                    "type": "ContextLaunchRequest",
+                    "label": "Course Nav for Instructor",
+                    "target_link_uri": "https://client.example.org/lti/dashboard",
+                    "custom_parameters": {
+                        "param1":"value1"
+                    },
+                    "roles":["http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor"]
+                }
+            ]
+        }
+    }
+EOD;
+
+    /**
      * Test the mapping from Registration JSON to LTI Config for a has-it-all tool registration.
      */
     public function test_to_config_full() {
@@ -206,6 +250,23 @@ EOD;
         $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
+    }
+
+        /**
+     * Test the mapping from Registration JSON to LTI Config for a minimal tool with
+     * deep linking support registration.
+     */
+    public function test_to_config_with_coursenav() {
+        $registration = json_decode($this->registrationcoursenavjson, true);
+        $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
+        $this->assertEquals("Course Nav for All", $config->lti_menulinklabel[0]);
+        $this->assertEquals("Course Nav for Instructor", $config->lti_menulinklabel[1]);
+        $this->assertEquals("", $config->lti_menulinkurl[0]);
+        $this->assertEquals("https://client.example.org/lti/dashboard", $config->lti_menulinkurl[1]);
+        $this->assertEquals("", $config->lti_menulinkcustomparameters[0]);
+        $this->assertTrue(str_contains($config->lti_menulinkcustomparameters[1], "param1=value1" ));
+        $this->assertEquals("1", $config->lti_menulinkallowlearners[0]);
+        $this->assertEquals("0", $config->lti_menulinkallowlearners[1]);
     }
 
     /**
@@ -345,6 +406,43 @@ EOD;
         $this->assertFalse(in_array('family_name', $lti['claims']));
         $this->assertFalse(in_array('given_name', $lti['claims']));
         $this->assertFalse(in_array('name', $lti['claims']));
+    }
+
+    /**
+     * Test the transformation from lti config to OpenId LTI Client Registration response with Course Navigation.
+     */
+    public function test_config_to_registration_with_coursenavs() {
+        $type = new \stdClass();
+        $orig = json_decode($this->registrationcoursenavjson, true);
+        $reghelper = registration_helper::get();
+        $config = $reghelper->registration_to_config($orig, 'clid');
+        lti_prepare_type_for_save($type, $config);
+        $reg = $reghelper->config_to_registration($config, 12, $type);
+        $this->assertEquals('clid', $reg['client_id']);
+        $this->assertEquals('', $reg['scope']);
+        $ltiorig = $orig['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $navs = array_filter($lti['messages'], function($m) {return $m['type'] === 'ContextLaunchRequest';});
+        $this->assertEquals(2, sizeof($navs));
+    }
+
+    /**
+     * Test an update to tool will try to preserve course navs identifiers.
+     */
+    public function test_registration_to_config_with_coursenavs_update() {
+        $type = new \stdClass();
+        $orig = json_decode($this->registrationcoursenavjson, true);
+        $reghelper = registration_helper::get();
+        $config = $reghelper->registration_to_config($orig, 'clid');
+        lti_prepare_type_for_save($type, $config);
+        $type->menulinks[0]['id']=4792;
+        $type->menulinks[0]['label']='Label change treated as new nav';
+        $type->menulinks[1]['id']=4793;
+        $config = $reghelper->registration_to_config($orig, 'clid', $type);
+        $type = new \stdClass();
+        lti_prepare_type_for_save($type, $config);
+        $this->assertEmpty($type->menulinks[0]['id']);
+        $this->assertEquals(4793, $type->menulinks[1]['id']);
     }
 
     /**

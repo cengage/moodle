@@ -229,32 +229,6 @@ class mod_lti_edit_types_form extends moodleform {
             $mform->disabledIf('lti_toolurl__ContentItemSelectionRequest', null);
         }
 
-        $mform->addElement('html', html_writer::tag('span', '', array('id' => 'menulinkanchor')));
-        $mform->addElement('checkbox', 'lti_asmenulink', get_string('placementasmenulink', 'lti'));
-        $repeatarray = array();
-        $repeateloptions = array();
-
-        $repeatarray[] = $mform->createElement('text', 'lti_menulinklabel', get_string('placementmenulinklabel', 'lti'));
-        $repeateloptions['lti_menulinklabel']['type'] = PARAM_TEXT;
-        $repeateloptions['lti_menulinklabel']['disabledif'] = array('lti_asmenulink', 'notchecked');
-
-        $repeatarray[] = $mform->createElement('text', 'lti_menulinkurl', get_string('placementmenulinkurl', 'lti'), [
-            'size' => '64'
-        ]);
-        $repeateloptions['lti_menulinkurl']['type'] = PARAM_URL;
-        $repeateloptions['lti_menulinkurl']['disabledif'] = array('lti_asmenulink', 'notchecked');
-
-        if (isset($typeid) && !empty($typeid)) {
-            $numberofmenulinks = $DB->count_records('lti_menu_links', array('typeid'=> $typeid));
-            if ($numberofmenulinks == 0) {
-                $numberofmenulinks = 1;
-            }
-        } else {
-            $numberofmenulinks = 1;
-        }
-
-        $this->repeat_elements($repeatarray, $numberofmenulinks,
-            $repeateloptions, 'option_repeats', 'option_add_fields', 1, get_string('placementaddmenulinkbutton', 'lti'), true);
         $mform->addElement('hidden', 'oldicon');
         $mform->setType('oldicon', PARAM_URL);
 
@@ -267,6 +241,36 @@ class mod_lti_edit_types_form extends moodleform {
         $mform->setType('lti_secureicon', PARAM_URL);
         $mform->setAdvanced('lti_secureicon');
         $mform->addHelpButton('lti_secureicon', 'secure_icon_url', 'lti');
+
+        $mform->addElement('header', 'menulink', get_string('placementmenulink_header', 'lti'));
+        $repeatarray = array();
+        $repeateloptions = array();
+
+        $repeatarray[] = $mform->createElement('html', '<div class=\'lti_menulinkpanel\'>');
+        $repeatarray[] = $mform->createElement('hidden', 'lti_menulinkid');
+        $repeateloptions['lti_menulinkid']['type'] = PARAM_INT;
+        $repeatarray[] = $mform->createElement('text', 'lti_menulinklabel', get_string('placementmenulink_label', 'lti'));
+        $repeateloptions['lti_menulinklabel']['type'] = PARAM_TEXT;
+        $repeateloptions['lti_menulinklabel']['rule'] = [null, 'required', null, 'client'];
+        $repeatarray[] = $mform->createElement('text', 'lti_menulinkurl', get_string('placementmenulink_url', 'lti'), [
+            'size' => '64'
+        ]);
+        $repeateloptions['lti_menulinkurl']['type'] = PARAM_URL;
+        $repeatarray[] = $mform->createElement('textarea', 'lti_menulinkcustomparameters', get_string('custom', 'lti'), array('rows' => 4, 'cols' => 60));
+        $repeateloptions['lti_menulinkcustomparameters']['type'] = PARAM_TEXT;
+        $repeatarray[] = $mform->createElement('advcheckbox', 'lti_menulinkallowlearners', get_string('placementmenulink_allowlearners', 'lti'));
+        $repeateloptions['lti_menulinkallowlearners']['helpbutton'] = ['placementmenulink_allowlearners', 'lti'];
+        $repeatarray[] = $mform->createElement('submit', 'lti_removemenulink',  get_string('placementmenulink_remove', 'lti'), [], false);
+        $repeatarray[] = $mform->createElement('html', '</div>');
+
+        $numberofmenulinks = 0;
+        if (isset($typeid) && !empty($typeid)) {
+            $numberofmenulinks = $DB->count_records('lti_course_nav_messages', array('typeid'=> $typeid));
+        }
+
+        $this->repeat_elements($repeatarray, $numberofmenulinks,
+            $repeateloptions, 'option_repeats', 'option_add_fields', 1, get_string('placementaddmenulinkbutton', 'lti'), true, 'lti_removemenulink');
+
 
         if (!$istool) {
             // Display the lti advantage services.
@@ -417,16 +421,8 @@ class mod_lti_edit_types_form extends moodleform {
 
         $menulinkscount = count($data['lti_menulinklabel']);
         for ($i = 0 ; $i < $menulinkscount; $i++) {
-            // If menu link label or url are empty, but not both, give an error.
-            if (empty($data['lti_menulinklabel'][$i]) XOR empty($data['lti_menulinkurl'][$i])){
-
-                if (empty($data['lti_menulinklabel'][$i])) {
-                    $errors['lti_menulinklabel['.$i.']'] = get_string('erroremptymenulinklabel', 'mod_lti');
-                }
-
-                if (empty($data['lti_menulinkurl'][$i])) {
-                    $errors['lti_menulinkurl['.$i.']'] = get_string('erroremptymenulinkurl', 'mod_lti');
-                }
+            if (empty($data['lti_menulinklabel'][$i])) {
+                $errors['lti_menulinklabel['.$i.']'] = get_string('erroremptymenulinklabel', 'mod_lti');
             }
         }
         return $errors;

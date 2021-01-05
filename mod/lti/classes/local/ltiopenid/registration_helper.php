@@ -97,10 +97,18 @@ class registration_helper {
      *
      * @param array $registrationpayload the registration data received from the tool.
      * @param string $clientid the clientid to be issued for that tool.
+     * @param object $type this registration will update if this in an update case.
      *
      * @return object the Moodle LTI config.
      */
-    public function registration_to_config(array $registrationpayload, string $clientid): object {
+    public function registration_to_config(array $registrationpayload, string $clientid, object $type = null): object {
+        $customparamstotext = function($cp) {
+            $paramssarray = [];
+            foreach ($cp as $key => $value) {
+                array_push($paramssarray, $key . '=' . $value);
+            }
+            return implode(PHP_EOL, $paramssarray);
+        };
         $responsetypes = $this->get_parameter($registrationpayload, 'response_types', true);
         $initiateloginuri = $this->get_parameter($registrationpayload, 'initiate_login_uri', true);
         $redirecturis = $this->get_parameter($registrationpayload, 'redirect_uris', true);
@@ -173,7 +181,34 @@ class registration_helper {
                     $config->lti_contentitem = 1;
                     $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'] ?? '';
                     array_push($messagesresponse, $value);
-                }
+                } else if ($value['type'] === 'ContextLaunchRequest') {
+                    if (!isset($config->lti_menulinklabel)) {
+                        $config->lti_menulinklabel = [];
+                        $config->lti_menulinkurl = [];
+                        $config->lti_menulinkcustomparameters = [];
+                        $config->lti_menulinkallowlearner = [];
+                    }
+                    $config->lti_menulinklabel[] = $value['label'];
+                    $config->lti_menulinkurl[] = $value['target_link_uri']??'';
+                    $config->lti_menulinkcustomparameters[] = $customparamstotext($value['custom_parameters']??[]);
+                    if (isset($value['roles'])) {
+                        $config->lti_menulinkallowlearners[] =
+                        empty(array_filter($value['roles'], function ($role) {
+                            return stripos($role, 'learner') !== false;
+                        }))?"0":"1";
+                    } else {
+                        $config->lti_menulinkallowlearners[] = '1'; 
+                    }
+                    $id = null;
+                    if (isset($type) && isset($type->menulinks)) {
+                        $matchinglinks = array_values(array_filter($type->menulinks, 
+                            function($ml) use ($value) {return strtolower($ml['label'])==strtolower($value['label']);}));
+                        if (count($matchinglinks) === 1) {
+                            $id = $matchinglinks[0]['id'];
+                        }
+                    }
+                    $config->lti_menulinkid[] = $id;
+                } 
             }
         }
 
@@ -184,11 +219,7 @@ class registration_helper {
         $config->lti_customparameters = '';
         // Sets custom parameters.
         if (isset($customparameters)) {
-            $paramssarray = [];
-            foreach ($customparameters as $key => $value) {
-                array_push($paramssarray, $key . '=' . $value);
-            }
-            $config->lti_customparameters = implode(PHP_EOL, $paramssarray);
+            $config->lti_customparameters = $customparamstotext($customparameters);
         }
         // Sets launch container.
         $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
@@ -355,6 +386,18 @@ class registration_helper {
         }
         if ($config->sendemailaddr ?? '' == LTI_SETTING_ALWAYS) {
             $claimsresponse[] = 'email';
+        }
+        if (!empty($type->menulinks)) {
+            $lticonfigurationresponse['messages'] = $lticonfigurationresponse['messages']??[];
+            foreach($type->menulinks as $menulink) {
+                $message = [];
+                $message['type'] = 'ContextLaunchRequest';
+                $message['label'] = $menulink['label'];
+                if (isset($menulink['url'])) {
+                    $message['target_link_uri'] = $menulink['url'];
+                }
+                $lticonfigurationresponse['messages'][] = $message; 
+            } 
         }
         $lticonfigurationresponse['claims'] = $claimsresponse;
         $registrationresponse['https://purl.imsglobal.org/spec/lti-tool-configuration'] = $lticonfigurationresponse;
