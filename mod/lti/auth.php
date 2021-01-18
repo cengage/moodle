@@ -22,6 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_lti\local\lti_message_helper;
+use mod_lti\local\lti_message_type;
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 global $_POST, $_SERVER;
@@ -43,7 +46,7 @@ $responsetype = optional_param('response_type', '', PARAM_TEXT);
 $clientid = optional_param('client_id', '', PARAM_TEXT);
 $redirecturi = optional_param('redirect_uri', '', PARAM_URL);
 $loginhint = optional_param('login_hint', '', PARAM_TEXT);
-$ltimessagehint = optional_param('lti_message_hint', 0, PARAM_INT);
+$ltimessagehint = optional_param('lti_message_hint', '', PARAM_TEXT);
 $state = optional_param('state', '', PARAM_TEXT);
 $responsemode = optional_param('response_mode', '', PARAM_TEXT);
 $nonce = optional_param('nonce', '', PARAM_TEXT);
@@ -65,8 +68,8 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 if ($ok) {
-    list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
-    $ok = ($id !== $ltimessagehint);
+    list($courseid, $typeid, $id, $messagetype, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
+    $ok = ("{$id},{$messagetype}" !== $ltimessagehint);
     if (!$ok) {
         $error = 'invalid_request';
     } else {
@@ -113,13 +116,23 @@ if ($ok && !empty($prompt) && ($prompt !== 'none')) {
 if ($ok) {
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     if ($id) {
-        $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        require_login($course, true, $cm);
-        require_capability('mod/lti:view', $context);
-        $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-        $lti->cmid = $cm->id;
-        list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
+        if ($messagetype === lti_message_type::BASIC_LAUNCH) {
+            $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
+            $context = context_module::instance($cm->id);
+            require_login($course, true, $cm);
+            require_capability('mod/lti:view', $context);
+            $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+            $lti->cmid = $cm->id;
+            list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
+        } else if ($messagetype === lti_message_type::COURSE_NAV_LAUNCH) {
+            require_login($course);
+            $coursenavmsg = $DB->get_record('lti_course_nav_messages', ['id' => $id]);
+            $lti = lti_message_helper::to_message($coursenavmsg->id, $coursenavmsg->typeid, $course->id, $coursenavmsg->url, $coursenavmsg->customparams, $messagetype);
+            list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
+             // TODO: should we bother checking for association with the course?
+        } else {
+            $params['error'] = 'invalid_request';
+        }
     } else {
         require_login($course);
         $context = context_course::instance($courseid);

@@ -53,6 +53,9 @@ use mod_lti_testcase;
 
 defined('MOODLE_INTERNAL') || die;
 
+use mod_lti\local\lti_message_type;
+use mod_lti\local\lti_message_helper;
+
 global $CFG;
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->dirroot . '/mod/lti/servicelib.php');
@@ -1041,6 +1044,36 @@ class locallib_test extends mod_lti_testcase {
     /**
      * Test lti_build_standard_message().
      */
+    public function test_lti_build_standard_message_with_message_type() {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $type = new stdClass();
+        $data = new stdClass();
+        $data->lti_contentitem = true;
+        $type->state = LTI_TOOL_STATE_CONFIGURED;
+        $type->name = "Test tool";
+        $type->baseurl = $this->getExternalTestFileUrl('/test.html');
+        
+        $typeid = lti_add_type($type, $data);
+
+        $typeconfig = lti_get_type_config($typeid);
+
+        $course = $this->getDataGenerator()->create_course();
+        $lti = lti_message_helper::to_message(38291, $typeid, $course->id, 'https://test.example/coursenav', '', lti_message_type::COURSE_NAV_LAUNCH);
+
+        $message = lti_build_standard_message($lti, '2', LTI_VERSION_1);
+
+        $this->assertEquals(LTI_VERSION_1, $message['lti_version']);
+        $this->assertEquals(lti_message_type::COURSE_NAV_LAUNCH, $message['lti_message_type']);
+        $this->assertFalse(isset($message['resource_link_id']), 'No resource link id should be in message');
+        $this->assertEquals('2', $message['tool_consumer_instance_guid']);
+        $this->assertEquals('PHPUnit test site', $message['tool_consumer_instance_description']);
+    }
+
+    /**
+     * Test lti_build_standard_message().
+     */
     public function test_lti_build_standard_message_institution_name_not_set() {
         $this->resetAfterTest();
 
@@ -1654,9 +1687,38 @@ MwIDAQAB
         $this->assertEquals($CFG->wwwroot, $request['iss']);
         $this->assertEquals('http://some-lti-tool-url', $request['target_link_uri']);
         $this->assertEquals(123456789, $request['login_hint']);
-        $this->assertEquals($instance->id, $request['lti_message_hint']);
+        $this->assertEquals("{$instance->id},basic-lti-launch-request", $request['lti_message_hint']);
         $this->assertEquals('some-client-id', $request['client_id']);
         $this->assertEquals('some-type-id', $request['lti_deployment_id']);
+    }
+
+    /**
+     * Test lti_build_login_request() for Course Nav launches.
+     */
+    public function test_lti_build_login_request_coursenav_launch() {
+        global $USER, $CFG;
+
+        $this->resetAfterTest();
+
+        $USER->id = 123456789;
+
+        $course   = $this->getDataGenerator()->create_course();
+
+        $config = new stdClass();
+        $config->lti_clientid = 'some-client-id';
+        $config->typeid = 333;
+        $config->lti_toolurl = 'https://some-lti-tool.url';
+
+        $instance = lti_message_helper::to_message(12, $config->typeid, $course->id, '', '', 'ContextLaunchRequest' );
+
+        $request = lti_build_login_request($course->id, $instance->id, $instance, $config, $instance->message_type);
+
+        $this->assertEquals($CFG->wwwroot, $request['iss']);
+        $this->assertEquals('https://some-lti-tool.url', $request['target_link_uri']);
+        $this->assertEquals(123456789, $request['login_hint']);
+        $this->assertEquals("{$instance->id},ContextLaunchRequest", $request['lti_message_hint']);
+        $this->assertEquals('some-client-id', $request['client_id']);
+        $this->assertEquals('333', $request['lti_deployment_id']);
     }
 
     /**
