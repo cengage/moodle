@@ -1009,8 +1009,10 @@ function lti_build_standard_message($instance, $orgid, $ltiversion, $messagetype
     global $CFG;
 
     $requestparams = array();
-
-    if ($instance) {
+    if ($instance && isset($instance->message_type)) {
+        $messagetype = $instance->message_type;
+    }
+    if ($instance && $messagetype === 'basic-lti-launch-request') {
         $requestparams['resource_link_id'] = $instance->id;
         if (property_exists($instance, 'resource_link_id') and !empty($instance->resource_link_id)) {
             $requestparams['resource_link_id'] = $instance->resource_link_id;
@@ -2865,19 +2867,15 @@ function lti_prepare_type_for_save($type, $config) {
         $type->asmenulink = $config->lti_asmenulink;
     }
 
-    $menulinkscount = count($config->lti_menulinklabel);
-    for ($i = 0 ; $i < $menulinkscount; $i++) {
-
-        $menulinklabel = $config->lti_menulinklabel[$i];
-        $menulinkurl = $config->lti_menulinkurl[$i];
-
-        if (empty($menulinklabel) && empty($menulinkurl)) {
+    foreach($config->lti_menulinklabel??[] as $i => $navlabel) {
+        if (empty($navlabel)) {
             continue;
         }
+        // add custom params and role restriction, possibly rename
 
         $type->menulinks[] = array (
-            "label" => $menulinklabel,
-            "url" => $menulinkurl
+            "label" => $navlabel,
+            "url" => $config->lti_menulinkurl[$i]??''
         );
     }
 
@@ -2996,7 +2994,9 @@ function lti_load_course_menu_links(int $courseid, $activeonly=false) {
         "SELECT l.id as typeid,
                 l.name as typename,
                 l.description as typedesc,
+                nav.id,
                 nav.label,
+                nav.allowlearners,
                 lc.course,
                 lc.coursenavid
            FROM {lti_course_nav_messages} AS nav 
@@ -3017,12 +3017,13 @@ function lti_load_course_menu_links(int $courseid, $activeonly=false) {
             $types[$type->id] = $type;
         }
         $type = $types[$record->typeid];
-        $type->selected = $record->course != null || $type->selected;
+        $type->selected = $record->course == $courseid || $type->selected;
         $menulink = new stdClass();
         $menulink->id = $record->id;
         $menulink->typeid = $record->typeid;
         $menulink->label = $record->label;
         $menulink->selected = $record->course == $courseid;
+        $menulink->allowlearners = $record->allowlearners;
         $type->menulinks[$menulink->id] = $menulink;
     }
 
@@ -3804,7 +3805,13 @@ function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype =
         $title = '', $text = '', $foruserid = 0) {
     global $SESSION;
 
+<<<<<<< HEAD
     $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text);
+=======
+    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype);
+    $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id},{$messagetype}," . base64_encode($title) . ',' .
+        base64_encode($text);
+>>>>>>> a149b45b7ed (course nav: support 1.3 wip)
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3874,7 +3881,11 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;
     $params['login_hint'] = $USER->id;
+<<<<<<< HEAD
     $params['lti_message_hint'] = json_encode($ltihint);
+=======
+    $params['lti_message_hint'] = "{$id},{$messagetype}"; 
+>>>>>>> a149b45b7ed (course nav: support 1.3 wip)
     $params['client_id'] = $config->lti_clientid;
     $params['lti_deployment_id'] = $config->typeid;
     return $params;

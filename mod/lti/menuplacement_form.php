@@ -45,26 +45,20 @@ class mod_lti_menuplacement_form extends moodleform {
 
         $selectedtypesforcourse = $this->_customdata['menulinks'];
         foreach ($selectedtypesforcourse as $type) {
-            $checkboxid = 'ltitool-' . $type->id;
-            $labeltext = html_writer::tag('strong', $type->name);
+            $mform->addElement('header', '', $type->name);
             if (!empty($type->description)) {
-                $labeltext .= '<br />' . $type->description;
+                $mform->addElement('html', $type->description);
             }
-            $mform->addElement('advcheckbox', $checkboxid, $labeltext, NULL, NULL, [NULL, $type->id]);
-            $mform->setDefault($checkboxid, $type->selected);
-
             $checkboxarray = array();
             $menulinks = $type->menulinks;
 
             foreach ($menulinks as $menulink) {
                 $menulinkname = 'menulink-' . $type->id . '-' . $menulink->id;
-                $checkboxarray[] = $mform->createElement('checkbox', $menulinkname, '', $menulink->label, $menulink->id);
-                $mform->disabledIf($menulinkname, $checkboxid);
+                $checkboxarray[] = $mform->addElement('checkbox', $menulinkname, '', $menulink->label, $menulink->id);
                 if ($menulink->selected) {
                     $mform->setDefault($menulinkname, $menulink->id);
                 }
             }
-            $mform->addGroup($checkboxarray, 'menulinkcheckboxgroup' . $type->id, '', array(''), false);
         }
 
         $mform->addElement('hidden', 'courseid');
@@ -73,4 +67,5 @@ class mod_lti_menuplacement_form extends moodleform {
 
         $this->add_action_buttons();
     }
+
 }

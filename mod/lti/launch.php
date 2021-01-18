@@ -46,6 +46,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_lti\local\lti_message_helper;
+
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
@@ -69,18 +71,16 @@ if ($cmid) {
     if (is_guest($context, $USER) || !isloggedin()) {
         throw new moodle_exception('guestsarenotallowed', 'error');
     }
-} else {
-    //$id is 0 when LTI is launched via menu link.
-    $lti = $DB->get_record('lti_types', ['id' => $ltitypeid]);
-    $lti->typeid = $ltitypeid;
-    $lti->instructorcustomparameters = null;
-    $lti->debuglaunch = false;
-    $lti->course = $courseid;
-    if ($coursenavid != 0) {
-        $lti->toolurl = $DB->get_field('lti_course_nav_messages', 'url', ['id' => $coursenavid]);
-    }
+} else if ($coursenavid) {
+    //$id is 0 when LTI is launched via navigation link.
+    $coursenavmsg = $DB->get_record('lti_course_nav_messages', ['id' => $coursenavid]);
+    $type = $DB->get_record('lti_types', ['id' => $ltitypeid]);
+    $lti = lti_message_helper::to_message($coursenavid, $ltitypeid, $courseid, $coursenavmsg->url, $coursenavmsg->customparameters, 'ContextLaunchRequest');
     $course = get_course($courseid);
     $context = context_course::instance($courseid);
+} else {
+    // TODO FIX THIS
+    throw new moodle_exception('cannotlaunch-nomsgid', 'error');
 }
 
 $typeid = $lti->typeid;
