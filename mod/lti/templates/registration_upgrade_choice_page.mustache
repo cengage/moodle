@@ -1,26 +1,24 @@
-<p>
-There are existing tools attached to the registration's domain. Do you want to update an already installed
-external tool or create a new external tool?</p>
+<p>{{#str}}dynreg_update_text, mod_lti {{/str}}</p>
 <div class="alert alert-warning" role="alert">
-Updating an existing tool will move the tool to Pending state, preventing users to access
-it until the changes have been approved. Don't forget to activate it again once you've reviewed it!</div>
+{{#str}}dynreg_update_warn_dupdomain, mod_lti {{/str}}
+</div>
 <table class="table table-striped">
 <tr>
-<th>Tool name
-<th>Base URL
-<th>LTI Version
+<th>{{#str}}dynreg_update_name, mod_lti {{/str}}
+<th>{{#str}}dynreg_update_url, mod_lti {{/str}}
+<th>{{#str}}dynreg_update_version, mod_lti {{/str}}
 <th>
 {{#tools}}
   <tr>
   <td>{{name}}
   <td>{{baseurl}}
   <td>{{ltiversion}}
-  <td><a href="startltiadvregistration.php?url={{startregurlenc}}&type={{id}}" type="button" class="btn btn-outline-primary">Update</a>
+  <td><a href="startltiadvregistration.php?url={{startregurlenc}}&type={{id}}" type="button" class="btn btn-outline-primary">{{#str}}dynreg_update_btn_update, mod_lti {{/str}}</a>
 {{/tools}}
 </table>
 {{^tools}}
-No tools in context.
+{{#str}}dynreg_update_notools, mod_lti {{/str}}
 {{/tools}}
 <div>
-<a href="start" type="button" class="btn btn-primary">Register as a new external tool</a>
+<a href="start" type="button" class="btn btn-primary">{{#str}}dynreg_update_btn_new, mod_lti {{/str}}</a>
 <div>

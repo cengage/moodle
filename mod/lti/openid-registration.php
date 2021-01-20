@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GE
             //var_dump($tokenres);
             if ($doregister) {
                 $registrationpayload = json_decode(file_get_contents('php://input'), true);
-                $config = registration_helper::registration_to_config($registrationpayload, $type?$type->clientid:$tokenres['clientid']);
+                $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
                 if ($type) {
                     lti_update_type($type, clone $config);
                     $typeid = $type->id;
