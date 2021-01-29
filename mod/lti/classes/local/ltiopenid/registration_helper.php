@@ -241,13 +241,20 @@ class registration_helper {
         return $config;
     }
 
-    private static function add_previous_key_claim(array &$lticonfig, $key, $secret) {
+    /**
+     * Adds to the config the LTI 1.1 key and sign it with the 1.1 secret.
+     * @param array lticonfig to which to add the 1.1 OAuth info.
+     * @param string key - LTI 1.1 OAuth Key
+     * @param string secret - LTI 1.1 OAuth Secret
+     *
+     */
+    private static function add_previous_key_claim(array &$lticonfig, string $key, string $secret) {
         if ($key) {
             $oauthconsumer = [];
             $oauthconsumer['key'] = $key;
             $oauthconsumer['nonce'] = random_string(random_int(10,20));
             $oauthconsumer['sign'] = hash('sha256', $key.$secret.$oauthconsumer['nonce']);
-            $lticonfig['oauth_consumer'] = $oauthconsumer; 
+            $lticonfig['oauth_consumer'] = $oauthconsumer;
         }
     }
 
@@ -256,7 +263,7 @@ class registration_helper {
      *
      * @param object $config Moodle LTI Config.
      * @param int $typeid which is the LTI deployment id.
-     * @param object $type tool instance in case the tool already exists
+     * @param object $type tool instance in case the tool already exists.
      *
      * @return array the Client Registration as an associative array.
      */
@@ -272,10 +279,9 @@ class registration_helper {
         $registrationresponse = [];
         $lticonfigurationresponse = [];
         $ltiversion = $type ? $type->ltiversion : $config->ltiversion;
-        $lticonfigurationresponse['version'] = $ltiversion; 
+        $lticonfigurationresponse['version'] = $ltiversion;
         if ($ltiversion === LTI_VERSION_1P3) {
             $registrationresponse['client_id'] = $type?$type->clientid:$config->clientid;
-            $registrationresponse['token_endpoint_auth_method'] = ['private_key_jwt'];
             $registrationresponse['response_types'] = ['id_token'];
             $registrationresponse['jwks_uri'] = $config->publickeyset;
             $registrationresponse['initiate_login_uri'] = $config->initiatelogin;

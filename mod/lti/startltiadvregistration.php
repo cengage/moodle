@@ -52,7 +52,7 @@ if (!empty($types) && $typeid == -1) {
     echo $output->render($page);
     echo $output->footer();
 } else {
-    $sub = registration_helper::new_clientid(); 
+    $sub = registration_helper::new_clientid();
     $scope = registration_helper::REG_TOKEN_OP_NEW_REG;
     if ($typeid>0) {
         $sub = strval($typeid);

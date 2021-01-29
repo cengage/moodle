@@ -174,9 +174,7 @@ $string['dynreg_update_url'] = 'Base URL';
 $string['dynreg_update_version'] = 'LTI Version';
 $string['dynreg_update_notools'] = 'No tools in context.';
 $string['dynreg_update_btn_update'] = 'Update';
-$string['dynreg_update_btn_new'] = 'Register as a new external tool<';
-
-
+$string['dynreg_update_btn_new'] = 'Register as a new external tool';
 $string['duplicateregurl'] = 'This registration URL is already in use';
 $string['editdescription'] = 'Click here to give this tool a description';
 $string['edittype'] = 'Edit preconfigured tool';

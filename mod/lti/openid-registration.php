@@ -33,7 +33,7 @@ require_once($CFG->dirroot . '/mod/lti/locallib.php');
 $code = 200;
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GET')) {
-    $doregister = $_SERVER['REQUEST_METHOD'] === 'POST'; 
+    $doregister = $_SERVER['REQUEST_METHOD'] === 'POST';
     // Retrieve registration token from Bearer Authorization header.
     $authheader = moodle\mod\lti\OAuthUtil::get_headers() ['Authorization'] ?? '';
     if (!($authheader && substr($authheader, 0, 7) == 'Bearer ')) {
