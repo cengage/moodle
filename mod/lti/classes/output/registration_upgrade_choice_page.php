@@ -53,12 +53,6 @@ class registration_upgrade_choice_page implements renderable, templatable {
         $renderData->startregurlenc = urlencode($this->startregurl);
         $renderData->tools = [];
         foreach ($this->tools as $tool) {
-            /*
-            $renderData->tools[]=[];
-            $renderData->tools['name']=$renderData->tools['name'];
-            $renderData->tools['baseurl']=$renderData->tools['baseurl'];
-            $renderData->tools['ltiversion']=$renderData->tools['ltiversion'];
-            $renderData->tools['typeid']=$renderData->tools['typeid'];*/
             $renderData->tools[] = (object)$tool;
         }
         return $renderData;

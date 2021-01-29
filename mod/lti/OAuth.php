@@ -119,7 +119,13 @@ class OAuthSignatureMethod {
 }
 
 abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
-    abstract function get_name();
+
+    /**
+     * Name of the Algorithm used.
+     *
+     * @return string algorithm name.
+     */
+    abstract function get_name():string;
 
     public function build_signature($request, $consumer, $token) {
         global $oauth_last_computed_signature;
@@ -144,19 +150,34 @@ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
 }
 
 class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod_HMAC {
-    public function get_name() {
+    /**
+     * Name of the Algorithm used.
+     *
+     * @return string algorithm name.
+     */
+    public function get_name(): string {
         return "HMAC-SHA1";
     }
 }
 
 class OAuthSignatureMethod_HMAC_SHA256 extends OAuthSignatureMethod_HMAC {
-    public function get_name() {
+    /**
+     * Name of the Algorithm used.
+     *
+     * @return string algorithm name.
+     */
+    public function get_name(): string {
         return "HMAC-SHA256";
     }
 }
 
 class OAuthSignatureMethod_PLAINTEXT extends OAuthSignatureMethod {
-    public function get_name() {
+    /**
+     * Name of the Algorithm used.
+     *
+     * @return string algorithm name.
+     */
+    public function get_name(): string {
         return "PLAINTEXT";
     }
 
@@ -180,7 +201,12 @@ class OAuthSignatureMethod_PLAINTEXT extends OAuthSignatureMethod {
 }
 
 class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod {
-    public function get_name() {
+    /**
+     * Name of the Algorithm used.
+     *
+     * @return string algorithm name.
+     */
+    public function get_name(): string {
         return "RSA-SHA1";
     }
 
