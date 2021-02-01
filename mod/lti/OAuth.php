@@ -58,6 +58,7 @@
  * This file contains the OAuth 1.0a implementation used for support for LTI 1.1.
  *
  * @package    mod_lti
+ * @copyright moodle
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace moodle\mod\lti;//Using a namespace as the basicLTI module imports classes with the same names
@@ -66,14 +67,14 @@ defined('MOODLE_INTERNAL') || die;
 
 $oauth_last_computed_signature = false;
 
-/** 
+/**
  * Generic exception class
  */
 class OAuthException extends \Exception {
     // pass
 }
 
-/** 
+/**
  * OAuth 1.0 Consumer class
  */
 class OAuthConsumer {
@@ -132,7 +133,7 @@ class OAuthSignatureMethod {
 /**
  * Base class for the HMac based signature methods.
  */
- abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
+abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
 
     /**
      * Name of the Algorithm used.
