@@ -42,9 +42,9 @@ class registration_upgrade_choice_page implements renderable, templatable {
 
     /**
      * Constructor
-     * 
-     * @param array tools array of tools that can be upgraded
-     * @param startregurl tool URL to start the registration process
+     *
+     * @param array $tools array of tools that can be upgraded
+     * @param string $startregurl tool URL to start the registration process
      */
     public function __construct(array $tools, string $startregurl) {
         $this->tools = $tools;

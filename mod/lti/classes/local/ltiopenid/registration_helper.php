@@ -243,10 +243,10 @@ class registration_helper {
 
     /**
      * Adds to the config the LTI 1.1 key and sign it with the 1.1 secret.
-     * 
-     * @param array reference to lticonfig to which to add the 1.1 OAuth info.
-     * @param string key - LTI 1.1 OAuth Key
-     * @param string secret - LTI 1.1 OAuth Secret
+     *
+     * @param array $lticonfig reference to lticonfig to which to add the 1.1 OAuth info.
+     * @param string $key - LTI 1.1 OAuth Key
+     * @param string $secret - LTI 1.1 OAuth Secret
      *
      */
     private static function add_previous_key_claim(array &$lticonfig, string $key, string $secret) {
@@ -403,7 +403,7 @@ class registration_helper {
 
     /**
      * Generates a new client id string.
-     * 
+     *
      * @return string generated client id
      */
     public static function new_clientid():string {
@@ -412,10 +412,10 @@ class registration_helper {
 
     /**
      * Base64 encoded signature for LTI 1.1 migration.
-     * @param string key LTI 1.1 key
-     * @param string salt Salt value
-     * @param string secret LTI 1.1 secret
-     * 
+     * @param string $key LTI 1.1 key
+     * @param string $salt Salt value
+     * @param string $secret LTI 1.1 secret
+     *
      * @return string base64encoded hash
      */
     public static function sign(string $key, string $salt, string $secret): string {
