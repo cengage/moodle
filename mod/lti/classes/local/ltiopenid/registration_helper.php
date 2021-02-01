@@ -243,7 +243,8 @@ class registration_helper {
 
     /**
      * Adds to the config the LTI 1.1 key and sign it with the 1.1 secret.
-     * @param array lticonfig to which to add the 1.1 OAuth info.
+     * 
+     * @param array reference to lticonfig to which to add the 1.1 OAuth info.
      * @param string key - LTI 1.1 OAuth Key
      * @param string secret - LTI 1.1 OAuth Secret
      *
@@ -252,7 +253,7 @@ class registration_helper {
         if ($key) {
             $oauthconsumer = [];
             $oauthconsumer['key'] = $key;
-            $oauthconsumer['nonce'] = random_string(random_int(10,20));
+            $oauthconsumer['nonce'] = random_string(random_int(10, 20));
             $oauthconsumer['sign'] = hash('sha256', $key.$secret.$oauthconsumer['nonce']);
             $lticonfig['oauth_consumer'] = $oauthconsumer;
         }
@@ -269,7 +270,7 @@ class registration_helper {
      */
     public static function config_to_registration(object $config, int $typeid, object $type = null): array {
         $configarray = [];
-        foreach( (array)$config  as $k=>$v) {
+        foreach ((array)$config as $k => $v) {
             if (substr($k, 0, 4) == 'lti_') {
                 $k = substr($k, 4);
             }
@@ -281,7 +282,7 @@ class registration_helper {
         $ltiversion = $type ? $type->ltiversion : $config->ltiversion;
         $lticonfigurationresponse['version'] = $ltiversion;
         if ($ltiversion === LTI_VERSION_1P3) {
-            $registrationresponse['client_id'] = $type?$type->clientid:$config->clientid;
+            $registrationresponse['client_id'] = $type ? $type->clientid : $config->clientid;
             $registrationresponse['response_types'] = ['id_token'];
             $registrationresponse['jwks_uri'] = $config->publickeyset;
             $registrationresponse['initiate_login_uri'] = $config->initiatelogin;
@@ -290,13 +291,13 @@ class registration_helper {
             $registrationresponse['application_type'] = 'web';
             $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
         } else if ($ltiversion === LTI_VERSION_1 && $type) {
-            registration_helper::add_previous_key_claim($lticonfigurationresponse, $config->resourcekey, $config->password);
+            self::add_previous_key_claim($lticonfigurationresponse, $config->resourcekey, $config->password);
         } else if ($ltiversion === LTI_VERSION_2 && $type) {
             $toolproxy = lti_get_tool_proxy($type->toolproxyid);
-            registration_helper::add_previous_key_claim($lticonfigurationresponse, $toolproxy['guid'], $toolproxy['secret']);
+            self::add_previous_key_claim($lticonfigurationresponse, $toolproxy['guid'], $toolproxy['secret']);
         }
         $registrationresponse['client_name'] = $type ? $type->name : $config->typename;
-        $registrationresponse['logo_uri'] = $type ? ($type->secureicon??$type->icon??'') : $config->icon ?? '';
+        $registrationresponse['logo_uri'] = $type ? ($type->secureicon ?? $type->icon ?? '') : $config->icon ?? '';
         $lticonfigurationresponse['deployment_id'] = strval($typeid);
         $lticonfigurationresponse['target_link_uri'] = $type ? $type->baseurl : $config->toolurl ?? '';
         $lticonfigurationresponse['domain'] = $type ? $type->tooldomain : $config->tooldomain ?? '';
@@ -374,7 +375,7 @@ class registration_helper {
             if (!$tool) {
                 throw new registration_exception("Unknown client", 400);
             }
-            $response['clientid'] = $tool->clientid??self::new_clientid();
+            $response['clientid'] = $tool->clientid ?? self::new_clientid();
             $response['type'] = $tool;
         } else {
             throw new registration_exception("Incorrect scope", 403);
@@ -400,10 +401,23 @@ class registration_helper {
         return $scopes;
     }
 
-    public static function new_clientid() {
+    /**
+     * Generates a new client id string.
+     * 
+     * @return string generated client id
+     */
+    public static function new_clientid():string {
         return random_string(15);
     }
 
+    /**
+     * Base64 encoded signature for LTI 1.1 migration.
+     * @param string key LTI 1.1 key
+     * @param string salt Salt value
+     * @param string secret LTI 1.1 secret
+     * 
+     * @return string base64encoded hash
+     */
     public static function sign(string $key, string $salt, string $secret): string {
         return base64_encode(hash_hmac('sha-256', $key.$salt, $secret, true));
     }

@@ -44,6 +44,8 @@ namespace mod_lti\local\ltiopenid;
 use mod_lti\local\ltiopenid\registration_exception;
 use mod_lti\local\ltiopenid\registration_helper;
 
+defined('MOODLE_INTERNAL') || die();
+
 $toolproxy = null;
 /**
  * OpenId LTI Registration library tests

@@ -54,18 +54,28 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * This file contains the OAuth 1.0a implementation used for support for LTI 1.1.
+ *
+ * @package    mod_lti
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 namespace moodle\mod\lti;//Using a namespace as the basicLTI module imports classes with the same names
 
 defined('MOODLE_INTERNAL') || die;
 
 $oauth_last_computed_signature = false;
 
-/* Generic exception class
+/** 
+ * Generic exception class
  */
 class OAuthException extends \Exception {
     // pass
 }
 
+/** 
+ * OAuth 1.0 Consumer class
+ */
 class OAuthConsumer {
     public $key;
     public $secret;
@@ -118,21 +128,25 @@ class OAuthSignatureMethod {
     }
 }
 
-abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
+
+/**
+ * Base class for the HMac based signature methods.
+ */
+ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
 
     /**
      * Name of the Algorithm used.
      *
      * @return string algorithm name.
      */
-    abstract function get_name():string;
+    abstract public function get_name():string;
 
     public function build_signature($request, $consumer, $token) {
         global $oauth_last_computed_signature;
         $oauth_last_computed_signature = false;
 
-        $base_string = $request->get_signature_base_string();
-        $request->base_string = $base_string;
+        $basestring = $request->get_signature_base_string();
+        $request->base_string = $basestring;
 
         $key_parts = array(
             $consumer->secret,
@@ -142,13 +156,16 @@ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
         $key_parts = OAuthUtil::urlencode_rfc3986($key_parts);
         $key = implode('&', $key_parts);
 
-        $computed_signature = base64_encode(hash_hmac(strtolower(substr($this->get_name(), 5)), $base_string, $key, true));
-        $oauth_last_computed_signature = $computed_signature;
-        return $computed_signature;
+        $computedsignature = base64_encode(hash_hmac(strtolower(substr($this->get_name(), 5)), $basestring, $key, true));
+        $oauth_last_computed_signature = $computedsignature;
+        return $computedsignature;
     }
 
 }
 
+/**
+ * Implementation for SHA 1.
+ */
 class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod_HMAC {
     /**
      * Name of the Algorithm used.
@@ -160,6 +177,9 @@ class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod_HMAC {
     }
 }
 
+/**
+ * Implementation for SHA 256.
+ */
 class OAuthSignatureMethod_HMAC_SHA256 extends OAuthSignatureMethod_HMAC {
     /**
      * Name of the Algorithm used.

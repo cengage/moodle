@@ -47,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GE
             if (array_key_exists('type', $tokenres)) {
                 $type = $tokenres['type'];
             }
-            //var_dump($tokenres);
             if ($doregister) {
                 $registrationpayload = json_decode(file_get_contents('php://input'), true);
                 $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
