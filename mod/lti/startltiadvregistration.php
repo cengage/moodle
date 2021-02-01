@@ -54,7 +54,7 @@ if (!empty($types) && $typeid == -1) {
 } else {
     $sub = registration_helper::new_clientid();
     $scope = registration_helper::REG_TOKEN_OP_NEW_REG;
-    if ($typeid>0) {
+    if ($typeid > 0) {
         $sub = strval($typeid);
         $scope = registration_helper::REG_TOKEN_OP_UPDATE_REG;
     }
