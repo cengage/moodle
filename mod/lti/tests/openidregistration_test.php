@@ -440,7 +440,7 @@ EOD;
  *
  * @return mixed Tool Proxy details
  */
-function lti_get_tool_proxy(string $proxyid) : array {
+function lti_get_tool_proxy(int $proxyid) : array {
     global $toolproxy;
     if ($toolproxy['id'] == $proxyid) {
         return $toolproxy;
