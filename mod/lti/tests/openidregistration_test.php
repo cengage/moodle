@@ -436,7 +436,7 @@ EOD;
 /**
  * Returns a tool proxy (mock)
  *
- * @param int $id
+ * @param int $proxyid
  *
  * @return mixed Tool Proxy details
  */
