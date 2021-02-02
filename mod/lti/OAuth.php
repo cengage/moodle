@@ -65,7 +65,7 @@ namespace moodle\mod\lti;//Using a namespace as the basicLTI module imports clas
 
 defined('MOODLE_INTERNAL') || die;
 
-$oauth_last_computed_signature = false;
+$lastcomputedsignature = false;
 
 /**
  * Generic exception class
@@ -143,8 +143,8 @@ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
     abstract public function get_name():string;
 
     public function build_signature($request, $consumer, $token) {
-        global $oauth_last_computed_signature;
-        $oauth_last_computed_signature = false;
+        global $lastcomputedsignature;
+        $lastcomputedsignature = false;
 
         $basestring = $request->get_signature_base_string();
         $request->base_string = $basestring;
@@ -158,7 +158,7 @@ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
         $key = implode('&', $key_parts);
 
         $computedsignature = base64_encode(hash_hmac(strtolower(substr($this->get_name(), 5)), $basestring, $key, true));
-        $oauth_last_computed_signature = $computedsignature;
+        $lastcomputedsignature = $computedsignature;
         return $computedsignature;
     }
 
@@ -596,8 +596,8 @@ class OAuthServer {
      * verify an api call, checks all the parameters
      */
     public function verify_request(&$request) {
-        global $oauth_last_computed_signature;
-        $oauth_last_computed_signature = false;
+        global $lastcomputedsignature;
+        $lastcomputedsignature = false;
         $this->get_version($request);
         $consumer = $this->get_consumer($request);
         $token = $this->get_token($request, $consumer, "access");
@@ -677,8 +677,8 @@ class OAuthServer {
      */
     private function check_signature(&$request, $consumer, $token) {
         // this should probably be in a different method
-        global $oauth_last_computed_signature;
-        $oauth_last_computed_signature = false;
+        global $lastcomputedsignature;
+        $lastcomputedsignature = false;
 
         $timestamp = @ $request->get_parameter('oauth_timestamp');
         $nonce = @ $request->get_parameter('oauth_nonce');
@@ -693,8 +693,8 @@ class OAuthServer {
 
         if (!$valid_sig) {
             $ex_text = "Invalid signature";
-            if ($oauth_last_computed_signature) {
-                $ex_text = $ex_text . " ours= $oauth_last_computed_signature yours=$signature";
+            if ($lastcomputedsignature) {
+                $ex_text = $ex_text . " ours= $lastcomputedsignature yours=$signature";
             }
             throw new OAuthException($ex_text);
         }
