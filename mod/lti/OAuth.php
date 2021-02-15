@@ -140,7 +140,7 @@ abstract class OAuthSignatureMethod_HMAC extends OAuthSignatureMethod {
      *
      * @return string algorithm name.
      */
-    abstract public function get_name():string;
+    abstract public function get_name(): string;
 
     public function build_signature($request, $consumer, $token) {
         global $lastcomputedsignature;
