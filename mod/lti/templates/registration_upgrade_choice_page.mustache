@@ -57,15 +57,30 @@ i
 <th>
 {{#tools}}
   <tr>
-  <td>{{name}}
-  <td>{{baseurl}}
-  <td>{{ltiversion}}
-  <td><a href="startltiadvregistration.php?url={{startregurlenc}}&type={{id}}" class="btn btn-outline-primary">{{#str}}dynreg_update_btn_update, mod_lti {{/str}}</a>
+  <td>{{name}}</td>
+  <td>{{baseurl}}</td>
+  <td>{{ltiversion}}</td>
+  <td><button data-href="startltiadvregistration.php?url={{startregurlenc}}&type={{id}}" class="btn btn-outline-primary">
+      <span class="btn-loader">{{> mod_lti/loader }}</span>
+      {{#str}}dynreg_update_btn_update, mod_lti {{/str}}
+      </button></td>
+  </tr>
 {{/tools}}
 </table>
 {{^tools}}
 {{#str}}dynreg_update_notools, mod_lti {{/str}}
 {{/tools}}
 <div>
-<a href="start" class="btn btn-primary">{{#str}}dynreg_update_btn_new, mod_lti {{/str}}</a>
+  <button data-href="startltiadvregistration.php?url={{startregurlenc}}&type=0" class="btn btn-primary">
+    <span class="btn-loader">{{> mod_lti/loader }}</span>
+    {{#str}}dynreg_update_btn_new, mod_lti {{/str}}
+  </button>
 </div>
+{{#js}}
+    disableAndGo = e => {
+      document.querySelectorAll("button").forEach(e=>e.setAttribute("disabled", true));
+      e.target.querySelector("span.btn-loader").style.display="inline";
+      window.location = e.target.getAttribute("data-href");
+    }
+    document.querySelectorAll("button").forEach(b=>b.onclick=disableAndGo;);
+{{/js}}

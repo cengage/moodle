@@ -406,7 +406,7 @@ class registration_helper {
      *
      * @return string generated client id
      */
-    public static function new_clientid():string {
+    public static function new_clientid(): string {
         return random_string(15);
     }
 
