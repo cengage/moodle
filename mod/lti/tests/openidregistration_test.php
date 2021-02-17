@@ -289,7 +289,8 @@ EOD;
     public function test_config_to_registration() {
         $orig = json_decode($this->registrationfulljson, true);
         $orig['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
-        $reg = registration_helper::get()->config_to_registration(registration_helper::get()->registration_to_config($orig, 'clid'), 12);
+        $reghelper = registration_helper::get();
+        $reg = $reghelper->config_to_registration($reghelper->registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
         $this->assertEquals($orig['initiate_login_uri'], $reg['initiate_login_uri']);
@@ -325,7 +326,8 @@ EOD;
      */
     public function test_config_to_registration_minimal() {
         $orig = json_decode($this->registrationminimaljson, true);
-        $reg = registration_helper::get()->config_to_registration(registration_helper::get()->registration_to_config($orig, 'clid'), 12);
+        $reghelper = registration_helper::get();
+        $reg = $reghelper->config_to_registration($reghelper->registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
         $this->assertEquals($orig['initiate_login_uri'], $reg['initiate_login_uri']);
@@ -401,20 +403,18 @@ EOD;
         $type['ltiversion'] = 'LTI-2p0';
         $type['icon'] = 'https://base.test.url/icon.png';
         $type['toolproxyid'] = 9;
-        //global $toolproxy;
         $toolproxy = [];
         $toolproxy['id'] = 9;
         $toolproxy['guid'] = 'lti2guidtest';
         $toolproxy['secret'] = 'peM7YDx420bo';
 
-        //$reg = registration_helper::get()->config_to_registration((object)$config, $type['id'], (object)$type);
-        $reg_helper = $this->getMockBuilder(registration_helper::class)
-             ->setMethods(['get_tool_proxy'])
-             ->getMock();
+        $reghelper = $this->getMockBuilder(registration_helper::class)
+            ->setMethods(['get_tool_proxy'])
+            ->getMock();
         $map = [[$toolproxy['id'], $toolproxy]];
-        $reg_helper->method('get_tool_proxy')
-             ->will($this->returnValueMap($map));
-        $reg = $reg_helper->config_to_registration((object)$config, $type['id'], (object)$type);
+        $reghelper->method('get_tool_proxy')
+            ->will($this->returnValueMap($map));
+        $reg = $reghelper->config_to_registration((object)$config, $type['id'], (object)$type);
         $this->assertFalse(isset($reg['client_id']));
         $this->assertFalse(isset($reg['initiate_login_uri']));
         $this->assertEquals($type['name'], $reg['client_name']);
