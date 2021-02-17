@@ -43,25 +43,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' or ($_SERVER['REQUEST_METHOD'] === 'GE
 
         // Registers tool.
         try {
-            $tokenres = registration_helper::validate_registration_token(trim(substr($authheader, 7)));
+            $tokenres = registration_helper::get()->validate_registration_token(trim(substr($authheader, 7)));
+            $type = new stdClass();
+            $type->state = LTI_TOOL_STATE_PENDING;
             if (array_key_exists('type', $tokenres)) {
                 $type = $tokenres['type'];
             }
             if ($doregister) {
                 $registrationpayload = json_decode(file_get_contents('php://input'), true);
-                $config = registration_helper::registration_to_config($registrationpayload, $tokenres['clientid']);
-                if ($type) {
+                $config = registration_helper::get()->registration_to_config($registrationpayload, $tokenres['clientid']);
+                if ($type->id) {
                     lti_update_type($type, clone $config);
                     $typeid = $type->id;
                 } else {
                     $typeid = lti_add_type($type, clone $config);
                 }
                 header('Content-Type: application/json; charset=utf-8');
-                $message = json_encode(registration_helper::config_to_registration((object)$config, $typeid));
+                $message = json_encode(registration_helper::get()->config_to_registration((object)$config, $typeid));
             } else if ($type) {
                 $config = lti_get_type_config($type->id);
                 header('Content-Type: application/json; charset=utf-8');
-                $message = json_encode(registration_helper::config_to_registration((object)$config, $type->id, $type));
+                $message = json_encode(registration_helper::get()->config_to_registration((object)$config, $type->id, $type));
             } else {
                 $code = 404;
                 $message = "No registration found.";

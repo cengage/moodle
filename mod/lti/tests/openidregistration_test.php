@@ -44,9 +44,6 @@ namespace mod_lti\local\ltiopenid;
 use mod_lti\local\ltiopenid\registration_exception;
 use mod_lti\local\ltiopenid\registration_helper;
 
-defined('MOODLE_INTERNAL') || die();
-
-$toolproxy = null;
 /**
  * OpenId LTI Registration library tests
  */
@@ -149,7 +146,7 @@ EOD;
     public function test_to_config_full() {
         $registration = json_decode($this->registrationfulljson, true);
         $registration['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
-        $config = registration_helper::registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
         $this->assertEquals('TheClientId', $config->lti_clientid);
@@ -178,7 +175,7 @@ EOD;
      */
     public function test_to_config_minimal() {
         $registration = json_decode($this->registrationminimaljson, true);
-        $config = registration_helper::registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals('JWK_KEYSET', $config->lti_keytype);
         $this->assertEquals(LTI_VERSION_1P3, $config->lti_ltiversion);
         $this->assertEquals('TheClientId', $config->lti_clientid);
@@ -203,7 +200,7 @@ EOD;
      */
     public function test_to_config_minimal_with_deeplinking() {
         $registration = json_decode($this->registrationminimaldljson, true);
-        $config = registration_helper::registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
     }
@@ -216,7 +213,7 @@ EOD;
         $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         unset($registration['initiate_login_uri']);
-        registration_helper::registration_to_config($registration, 'TheClientId');
+        registration_helper::get()->registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -227,7 +224,7 @@ EOD;
         $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         unset($registration['redirect_uris']);
-        registration_helper::registration_to_config($registration, 'TheClientId');
+        registration_helper::get()->registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -238,7 +235,7 @@ EOD;
         $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         $registration['jwks_uri'] = '';
-        registration_helper::registration_to_config($registration, 'TheClientId');
+        registration_helper::get()->registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -250,7 +247,7 @@ EOD;
         $this->expectExceptionCode(400);
         unset($registration['https://purl.imsglobal.org/spec/lti-tool-configuration']['domain']);
         unset($registration['https://purl.imsglobal.org/spec/lti-tool-configuration']['target_link_uri']);
-        registration_helper::registration_to_config($registration, 'TheClientId');
+        registration_helper::get()->registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -261,7 +258,7 @@ EOD;
         $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
         $registration['https://purl.imsglobal.org/spec/lti-tool-configuration']['domain'] = 'not.the.right.domain';
-        registration_helper::registration_to_config($registration, 'TheClientId');
+        registration_helper::get()->registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -272,7 +269,7 @@ EOD;
         unset($registration['https://purl.imsglobal.org/spec/lti-tool-configuration']['domain']);
         $this->expectException(registration_exception::class);
         $this->expectExceptionCode(400);
-        $config = registration_helper::registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
     }
 
     /**
@@ -281,7 +278,7 @@ EOD;
     public function test_validation_domain_targetlinkuri_onlydomain() {
         $registration = json_decode($this->registrationminimaljson, true);
         unset($registration['https://purl.imsglobal.org/spec/lti-tool-configuration']['target_link_uri']);
-        $config = registration_helper::registration_to_config($registration, 'TheClientId');
+        $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals('client.example.org', $config->lti_tooldomain);
         $this->assertEquals('https://client.example.org', $config->lti_toolurl);
     }
@@ -292,7 +289,7 @@ EOD;
     public function test_config_to_registration() {
         $orig = json_decode($this->registrationfulljson, true);
         $orig['scope'] .= ' https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
-        $reg = registration_helper::config_to_registration(registration_helper::registration_to_config($orig, 'clid'), 12);
+        $reg = registration_helper::get()->config_to_registration(registration_helper::get()->registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
         $this->assertEquals($orig['initiate_login_uri'], $reg['initiate_login_uri']);
@@ -328,7 +325,7 @@ EOD;
      */
     public function test_config_to_registration_minimal() {
         $orig = json_decode($this->registrationminimaljson, true);
-        $reg = registration_helper::config_to_registration(registration_helper::registration_to_config($orig, 'clid'), 12);
+        $reg = registration_helper::get()->config_to_registration(registration_helper::get()->registration_to_config($orig, 'clid'), 12);
         $this->assertEquals('clid', $reg['client_id']);
         $this->assertEquals($orig['response_types'], $reg['response_types']);
         $this->assertEquals($orig['initiate_login_uri'], $reg['initiate_login_uri']);
@@ -366,7 +363,7 @@ EOD;
         $type['ltiversion'] = 'LTI-1p0';
         $type['icon'] = 'https://base.test.url/icon.png';
 
-        $reg = registration_helper::config_to_registration((object)$config, $type['id'], (object)$type);
+        $reg = registration_helper::get()->config_to_registration((object)$config, $type['id'], (object)$type);
         $this->assertFalse(isset($reg['client_id']));
         $this->assertFalse(isset($reg['initiate_login_uri']));
         $this->assertEquals($type['name'], $reg['client_name']);
@@ -404,13 +401,20 @@ EOD;
         $type['ltiversion'] = 'LTI-2p0';
         $type['icon'] = 'https://base.test.url/icon.png';
         $type['toolproxyid'] = 9;
-        global $toolproxy;
+        //global $toolproxy;
         $toolproxy = [];
         $toolproxy['id'] = 9;
         $toolproxy['guid'] = 'lti2guidtest';
         $toolproxy['secret'] = 'peM7YDx420bo';
 
-        $reg = registration_helper::config_to_registration((object)$config, $type['id'], (object)$type);
+        //$reg = registration_helper::get()->config_to_registration((object)$config, $type['id'], (object)$type);
+        $reg_helper = $this->getMockBuilder(registration_helper::class)
+             ->setMethods(['get_tool_proxy'])
+             ->getMock();
+        $map = [[$toolproxy['id'], $toolproxy]];
+        $reg_helper->method('get_tool_proxy')
+             ->will($this->returnValueMap($map));
+        $reg = $reg_helper->config_to_registration((object)$config, $type['id'], (object)$type);
         $this->assertFalse(isset($reg['client_id']));
         $this->assertFalse(isset($reg['initiate_login_uri']));
         $this->assertEquals($type['name'], $reg['client_name']);
@@ -430,20 +434,4 @@ EOD;
         $this->assertFalse(in_array('given_name', $lti['claims']));
         $this->assertFalse(in_array('name', $lti['claims']));
     }
-
-}
-
-/**
- * Returns a tool proxy (mock)
- *
- * @param int $proxyid
- *
- * @return mixed Tool Proxy details
- */
-function lti_get_tool_proxy(int $proxyid) : array {
-    global $toolproxy;
-    if ($toolproxy['id'] == $proxyid) {
-        return $toolproxy;
-    }
-    return null;
 }

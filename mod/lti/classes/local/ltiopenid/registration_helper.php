@@ -57,6 +57,15 @@ class registration_helper {
     const REG_TOKEN_OP_UPDATE_REG = 'reg-update';
 
     /**
+     * Get an instance of this helper
+     *
+     * @return object
+     */
+    public static function get() {
+        return new registration_helper();
+    }
+
+    /**
      * Function used to validate parameters.
      *
      * This function is needed because the payload contains nested
@@ -68,7 +77,7 @@ class registration_helper {
      *
      * @return mixed
      */
-    private static function get_parameter(array $payload, string $key, bool $required) {
+    private function get_parameter(array $payload, string $key, bool $required) {
         if (!isset($payload[$key]) || empty($payload[$key])) {
             if ($required) {
                 throw new registration_exception('missing required attribute '.$key, 400);
@@ -91,27 +100,27 @@ class registration_helper {
      *
      * @return object the Moodle LTI config.
      */
-    public static function registration_to_config(array $registrationpayload, string $clientid): object {
-        $responsetypes = self::get_parameter($registrationpayload, 'response_types', true);
-        $initiateloginuri = self::get_parameter($registrationpayload, 'initiate_login_uri', true);
-        $redirecturis = self::get_parameter($registrationpayload, 'redirect_uris', true);
-        $clientname = self::get_parameter($registrationpayload, 'client_name', true);
-        $jwksuri = self::get_parameter($registrationpayload, 'jwks_uri', true);
-        $tokenendpointauthmethod = self::get_parameter($registrationpayload, 'token_endpoint_auth_method', true);
+    public function registration_to_config(array $registrationpayload, string $clientid): object {
+        $responsetypes = $this->get_parameter($registrationpayload, 'response_types', true);
+        $initiateloginuri = $this->get_parameter($registrationpayload, 'initiate_login_uri', true);
+        $redirecturis = $this->get_parameter($registrationpayload, 'redirect_uris', true);
+        $clientname = $this->get_parameter($registrationpayload, 'client_name', true);
+        $jwksuri = $this->get_parameter($registrationpayload, 'jwks_uri', true);
+        $tokenendpointauthmethod = $this->get_parameter($registrationpayload, 'token_endpoint_auth_method', true);
 
-        $applicationtype = self::get_parameter($registrationpayload, 'application_type', false);
-        $logouri = self::get_parameter($registrationpayload, 'logo_uri', false);
+        $applicationtype = $this->get_parameter($registrationpayload, 'application_type', false);
+        $logouri = $this->get_parameter($registrationpayload, 'logo_uri', false);
 
-        $ltitoolconfiguration = self::get_parameter($registrationpayload,
+        $ltitoolconfiguration = $this->get_parameter($registrationpayload,
             'https://purl.imsglobal.org/spec/lti-tool-configuration', true);
 
-        $domain = self::get_parameter($ltitoolconfiguration, 'domain', false);
-        $targetlinkuri = self::get_parameter($ltitoolconfiguration, 'target_link_uri', false);
-        $customparameters = self::get_parameter($ltitoolconfiguration, 'custom_parameters', false);
-        $scopes = explode(" ", self::get_parameter($registrationpayload, 'scope', false) ?? '');
-        $claims = self::get_parameter($ltitoolconfiguration, 'claims', false);
+        $domain = $this->get_parameter($ltitoolconfiguration, 'domain', false);
+        $targetlinkuri = $this->get_parameter($ltitoolconfiguration, 'target_link_uri', false);
+        $customparameters = $this->get_parameter($ltitoolconfiguration, 'custom_parameters', false);
+        $scopes = explode(" ", $this->get_parameter($registrationpayload, 'scope', false) ?? '');
+        $claims = $this->get_parameter($ltitoolconfiguration, 'claims', false);
         $messages = $ltitoolconfiguration['messages'] ?? [];
-        $description = self::get_parameter($ltitoolconfiguration, 'description', false);
+        $description = $this->get_parameter($ltitoolconfiguration, 'description', false);
 
         // Validate domain and target link.
         if (empty($domain)) {
@@ -249,7 +258,7 @@ class registration_helper {
      * @param string $secret - LTI 1.1 OAuth Secret
      *
      */
-    private static function add_previous_key_claim(array &$lticonfig, string $key, string $secret) {
+    private function add_previous_key_claim(array &$lticonfig, string $key, string $secret) {
         if ($key) {
             $oauthconsumer = [];
             $oauthconsumer['key'] = $key;
@@ -268,7 +277,7 @@ class registration_helper {
      *
      * @return array the Client Registration as an associative array.
      */
-    public static function config_to_registration(object $config, int $typeid, object $type = null): array {
+    public function config_to_registration(object $config, int $typeid, object $type = null): array {
         $configarray = [];
         foreach ((array)$config as $k => $v) {
             if (substr($k, 0, 4) == 'lti_') {
@@ -291,10 +300,10 @@ class registration_helper {
             $registrationresponse['application_type'] = 'web';
             $registrationresponse['token_endpoint_auth_method'] = 'private_key_jwt';
         } else if ($ltiversion === LTI_VERSION_1 && $type) {
-            self::add_previous_key_claim($lticonfigurationresponse, $config->resourcekey, $config->password);
+            $this->add_previous_key_claim($lticonfigurationresponse, $config->resourcekey, $config->password);
         } else if ($ltiversion === LTI_VERSION_2 && $type) {
-            $toolproxy = lti_get_tool_proxy($type->toolproxyid);
-            self::add_previous_key_claim($lticonfigurationresponse, $toolproxy['guid'], $toolproxy['secret']);
+            $toolproxy = $this->get_tool_proxy($type->toolproxyid);
+            $this->add_previous_key_claim($lticonfigurationresponse, $toolproxy['guid'], $toolproxy['secret']);
         }
         $registrationresponse['client_name'] = $type ? $type->name : $config->typename;
         $registrationresponse['logo_uri'] = $type ? ($type->secureicon ?? $type->icon ?? '') : $config->icon ?? '';
@@ -357,7 +366,7 @@ class registration_helper {
      *
      * @return array with 2 keys: clientid for the registration, type but only if it's an update
      */
-    public static function validate_registration_token(string $registrationtokenjwt): array {
+    public function validate_registration_token(string $registrationtokenjwt): array {
         global $DB;
         $keys = JWK::parseKeySet(jwks_helper::get_jwks());
         $registrationtoken = JWT::decode($registrationtokenjwt, $keys, ['RS256']);
@@ -375,7 +384,7 @@ class registration_helper {
             if (!$tool) {
                 throw new registration_exception("Unknown client", 400);
             }
-            $response['clientid'] = $tool->clientid ?? self::new_clientid();
+            $response['clientid'] = $tool->clientid ?? $this->new_clientid();
             $response['type'] = $tool;
         } else {
             throw new registration_exception("Incorrect scope", 403);
@@ -388,7 +397,7 @@ class registration_helper {
      *
      * @return array List of scopes
      */
-    public static function lti_get_service_scopes() {
+    public function lti_get_service_scopes() {
 
         $services = lti_get_services();
         $scopes = array();
@@ -406,7 +415,7 @@ class registration_helper {
      *
      * @return string generated client id
      */
-    public static function new_clientid(): string {
+    public function new_clientid(): string {
         return random_string(15);
     }
 
@@ -418,8 +427,18 @@ class registration_helper {
      *
      * @return string base64encoded hash
      */
-    public static function sign(string $key, string $salt, string $secret): string {
+    public function sign(string $key, string $salt, string $secret): string {
         return base64_encode(hash_hmac('sha-256', $key.$salt, $secret, true));
     }
 
+    /**
+     * Returns a tool proxy
+     *
+     * @param int $proxyid
+     *
+     * @return mixed Tool Proxy details
+     */
+    public function get_tool_proxy(int $proxyid) : array {
+        return lti_get_tool_proxy($proxyid);
+    }
 }
