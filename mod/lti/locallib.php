@@ -528,7 +528,7 @@ function lti_get_instance_type(object $instance) : ?object {
  * @return array the endpoint URL and parameters (including the signature)
  * @since  Moodle 3.0
  */
-function lti_get_launch_data($instance, $nonce = '') {
+function lti_get_launch_data($instance, $nonce = '', $ltilaunchid = '') {
     global $PAGE, $CFG, $USER;
 
     $tool = lti_get_instance_type($instance);
@@ -678,7 +678,7 @@ function lti_get_launch_data($instance, $nonce = '') {
         if ($ltiversion !== LTI_VERSION_1P3) {
             $parms = lti_sign_parameters($requestparams, $endpoint, 'POST', $key, $secret);
         } else {
-            $parms = lti_sign_jwt($requestparams, $endpoint, $key, $typeid, $nonce);
+            $parms = lti_sign_jwt($requestparams, $endpoint, $key, $typeid, $nonce, $ltilaunchid);
         }
 
         $endpointurl = new \moodle_url($endpoint);
@@ -3224,7 +3224,7 @@ function lti_sign_parameters($oldparms, $endpoint, $method, $oauthconsumerkey, $
  * @param string $nonce        Nonce value to use
  * @return array|null
  */
-function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce = '') {
+function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce = '', $ltilaunchid = '') {
     global $CFG;
 
     if (empty($typeid)) {
@@ -3266,6 +3266,9 @@ function lti_sign_jwt($parms, $endpoint, $oauthconsumerkey, $typeid = 0, $nonce 
     $payload['aud'] = $oauthconsumerkey;
     $payload[LTI_JWT_CLAIM_PREFIX . '/claim/deployment_id'] = strval($typeid);
     $payload[LTI_JWT_CLAIM_PREFIX . '/claim/target_link_uri'] = $endpoint;
+    if ($ltilaunchid) {
+        $payload[LTI_JWT_CLAIM_PREFIX . '/claim/lti_launch_id'] = $ltilaunchid;
+    }
 
     foreach ($parms as $key => $value) {
         $claim = LTI_JWT_CLAIM_PREFIX;
@@ -3472,13 +3475,13 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $text      Description of content item
  * @return string
  */
-function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
+function lti_initiate_login($courseid, $id, $instance, $config, $ltilaunchid = '', $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '') {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype);
+    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $ltilaunchid);
     $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
-        base64_encode($text);
+        base64_encode($text) . ',' . $ltilaunchid;
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3510,7 +3513,7 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
  * @param string         $messagetype   LTI message type
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $id, $instance, $config, $messagetype) {
+function lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $ltilaunchid) {
     global $USER, $CFG;
 
     if (!empty($instance)) {
@@ -3537,6 +3540,7 @@ function lti_build_login_request($courseid, $id, $instance, $config, $messagetyp
     $params['lti_message_hint'] = $id;
     $params['client_id'] = $config->lti_clientid;
     $params['lti_deployment_id'] = $config->typeid;
+    $params['lti_launch_id'] = $ltilaunchid;
     return $params;
 }
 

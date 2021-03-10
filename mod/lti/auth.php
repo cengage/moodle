@@ -52,7 +52,7 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 if ($ok) {
-    list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
+    list($courseid, $typeid, $id, $titleb64, $textb64, $ltilaunchid) = explode(',', $SESSION->lti_message_hint, 6);
     $ok = ($id !== $ltimessagehint);
     if (!$ok) {
         $error = 'invalid_request';
@@ -103,7 +103,7 @@ if ($ok) {
         require_login($course, true, $cm);
         require_capability('mod/lti:view', $context);
         $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-        list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
+        list($endpoint, $params) = lti_get_launch_data($lti, $nonce, $ltilaunchid);
     } else {
         require_login($course);
         $context = context_course::instance($courseid);

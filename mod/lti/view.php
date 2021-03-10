@@ -54,6 +54,7 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID, or
 $l  = optional_param('l', 0, PARAM_INT);  // lti ID.
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
+$ltilaunchid = bin2hex(openssl_random_pseudo_bytes(16));
 
 if ($l) {  // Two ways to specify the module.
     $lti = $DB->get_record('lti', array('id' => $l), '*', MUST_EXIST);
@@ -67,10 +68,12 @@ if ($l) {  // Two ways to specify the module.
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 $typeid = $lti->typeid;
+$tool = null;
 if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
     $typeid = $tool->id;
 }
 if ($typeid) {
+    $tool = lti_get_type($typeid);
     $toolconfig = lti_get_type_config($typeid);
 } else {
     $toolconfig = array();
@@ -130,19 +133,19 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     unset($SESSION->lti_initiatelogin_status);
     if (!$forceview) {
         echo "<script language=\"javascript\">//<![CDATA[\n";
-        echo "window.open('launch.php?id=" . $cm->id . "&triggerview=0','lti-" . $cm->id . "');";
+        echo "window.open('launch.php?id=" . $cm->id . "&triggerview=0' . '&ltilaunchid=' . $ltilaunchid,'lti-" . $cm->id . "');";
         echo "//]]\n";
         echo "</script>\n";
         echo "<p>".get_string("basiclti_in_new_window", "lti")."</p>\n";
     }
-    $url = new moodle_url('/mod/lti/launch.php', array('id' => $cm->id));
+    $url = new moodle_url('/mod/lti/launch.php', array('id' => $cm->id, 'ltilaunchid' => $ltilaunchid));
     echo html_writer::start_tag('p');
     echo html_writer::link($url, get_string("basiclti_in_new_window_open", "lti"), array('target' => '_blank'));
     echo html_writer::end_tag('p');
 } else {
     $content = '';
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        $content = lti_initiate_login($cm->course, $id, $lti, $config);
+        $content = lti_initiate_login($cm->course, $id, $lti, $config, $ltilaunchid);
     }
 
     // Build the allowed URL, since we know what it will be from $lti->toolurl,
@@ -163,7 +166,8 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
-    $attributes['src'] = 'launch.php?id=' . $cm->id . '&triggerview=0';
+    $attributes['data-ltilaunchid'] = $ltilaunchid;
+    $attributes['src'] = 'launch.php?id=' . $cm->id . '&triggerview=0&ltilaunchid=' . $ltilaunchid;
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .
@@ -201,6 +205,23 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
 ';
 
     echo $resize;
+    
+    if ($tool) {
+        echo "
+        <script type=\"text/javascript\">
+        //<![CDATA[
+            let contentframe = document.getElementById('contentframe');
+            window.addEventListener(\"message\", e=> {
+                if (e.origin === \"https://$tool->tooldomain\" && e.source === contentframe.contentWindow && e.data === 'lti-getltilaunchid') {
+                    e.source.postMessage({ltiLaunchId: contentframe.getAttribute('data-ltilaunchid')}, e.origin);
+                } else {
+                     console.log('mismatch');
+                }
+            });
+        //]]
+        </script>
+        ";
+    }
 }
 
 // Finish the page.
