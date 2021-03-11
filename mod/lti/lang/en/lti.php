@@ -195,8 +195,7 @@ $string['errorinvalidmediatype'] = 'Invalid media type: {$a}';
 $string['errorinvalidresponseformat'] = 'Invalid Content-Item response format.';
 $string['errormisconfig'] = 'Misconfigured tool. Please ask your Moodle administrator to fix the configuration of the tool.';
 $string['errortooltypenotfound'] = 'LTI tool type not found.';
-$string['erroremptymenulinklabel'] = 'Menu links are required to have a label.';
-$string['erroremptymenulinkurl'] = 'Menu links are required to have a URL.';
+$string['erroremptymenulinklabel'] = 'Course navigation links are required to have a label.';
 $string['existing_window'] = 'Existing window';
 $string['extensions'] = 'LTI extension services';
 $string['external_tool_type'] = 'Preconfigured tool';
@@ -389,10 +388,11 @@ along with the consumer key from the tool provider.
 Tools which do not require secure communication from Moodle and do not provide additional services (such as grade reporting)
 may not require a shared secret.';
 $string['pending'] = 'Pending';
-$string['placementaddmenulinkbutton'] = 'Add menu link';
-$string['placementasmenulink'] = 'As menu link';
-$string['placementmenulinklabel'] = 'Menu link label';
-$string['placementmenulinkurl'] = 'Menu link URL';
+$string['placementaddmenulinkbutton'] = 'Add course navigation link';
+$string['placementaddmenulinkbutton_remove'] = 'Remove';
+$string['placementmenulinkheader'] = 'Course navigation links';
+$string['placementmenulinklabel'] = 'Link label';
+$string['placementmenulinkurl'] = 'Link URL';
 $string['pluginadministration'] = 'External tool administration';
 $string['pluginname'] = 'External tool';
 $string['preferheight'] = 'Preferred height';
