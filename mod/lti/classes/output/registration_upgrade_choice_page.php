@@ -59,6 +59,7 @@ class registration_upgrade_choice_page implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         $renderdata = new stdClass();
         $renderdata->startregurlenc = urlencode($this->startregurl);
+        $renderdata->sesskey = sesskey();
         $renderdata->tools = [];
         foreach ($this->tools as $tool) {
             $renderdata->tools[] = (object)$tool;

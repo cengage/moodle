@@ -33,6 +33,7 @@ require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 require_login();
+require_sesskey();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 

@@ -76,11 +76,16 @@ i
     {{#str}}dynreg_update_btn_new, mod_lti {{/str}}
   </button>
 </div>
+<form method="POST" id="startregform">
+  <input type="hidden" name="sesskey" value="{{sesskey}}">
+</form>
 {{#js}}
     disableAndGo = e => {
       document.querySelectorAll("button").forEach(e=>e.setAttribute("disabled", true));
       e.target.querySelector("span.btn-loader").style.display="inline";
-      window.location = e.target.getAttribute("data-href");
+      let form = document.getElementById("startregform");
+      form.action = e.target.getAttribute("data-href");
+      form.submit();
     };
     document.querySelectorAll("button").forEach(b=>b.onclick=disableAndGo);
 {{/js}}
