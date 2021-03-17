@@ -51,10 +51,11 @@ i
 </div>
 <table class="table table-striped">
 <tr>
-<th>{{#str}}dynreg_update_name, mod_lti {{/str}}
-<th>{{#str}}dynreg_update_url, mod_lti {{/str}}
-<th>{{#str}}dynreg_update_version, mod_lti {{/str}}
-<th>
+<th>{{#str}}dynreg_update_name, mod_lti {{/str}}</th>
+<th>{{#str}}dynreg_update_url, mod_lti {{/str}}</th>
+<th>{{#str}}dynreg_update_version, mod_lti {{/str}}</th>
+<th></th>
+</tr>
 {{#tools}}
   <tr>
   <td>{{name}}</td>
@@ -77,7 +78,7 @@ i
   </button>
 </div>
 <form method="POST" id="startregform">
-  <input type="hidden" name="sesskey" value="{{sesskey}}">
+  <input type="hidden" name="sesskey" value="{{sesskey}}" />
 </form>
 {{#js}}
     disableAndGo = e => {
