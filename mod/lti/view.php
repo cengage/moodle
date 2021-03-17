@@ -217,9 +217,23 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
         <script type=\"text/javascript\">
         //<![CDATA[
             let contentframe = document.getElementById('contentframe');
+            let typeid = contentframe.getAttribute('data-typeid');
             window.addEventListener(\"message\", e=> {
-                if (e.origin === \"https://$tool->tooldomain\" && e.source === contentframe.contentWindow && e.data === 'lti-getltilaunchid') {
-                    e.source.postMessage({ltiLaunchId: contentframe.getAttribute('data-ltilaunchid')}, e.origin);
+                if (e.origin === \"https://$tool->tooldomain\" && e.source === contentframe.contentWindow && e.data.subject) {
+                    if ( e.data.subject === 'lti-storeVariable') {
+                        if (!window.ltimemstore) window.ltimemstore = {};
+                        if (!window.ltimemstore[typeid]) window.ltimemstore[typeid] = {};
+                        window.ltimemstore[typeid][e.data.key] = e.data.value;
+                        e.source.postMessage({subject: 'success', message: e.data.messageId}, e.origin);
+                        console.log('storing', e);
+                    } else if (e.data.subject === 'lti-getVariable') {
+                        let val = window.ltimemstore && window.ltimemstore[typeid] ? window.ltimemstore[typeid][e.data.key] : null;
+                        e.source.postMessage({subject: 'success', message: e.data.messageId, key: e.data.key, value:val}, e.origin);
+                        console.log('getting', e);
+                    } else {
+                        e.source.postMessage({subject: 'Unknown command', message: e.data.messageId}, e.origin);
+                        console.log('unknown', e);
+                    }
                 } else {
                      console.log('mismatch');
                 }
