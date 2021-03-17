@@ -20,7 +20,7 @@
     This template provides the layout to display the upgrade choices
     available when registering a tool for which there exists at least
     one other tool with the same domain.
-i
+
     Classes required for JS:
     * none
 
@@ -39,7 +39,8 @@ i
             "id": 222,
             "name": "This is My LTI 1.1 tool",
             "baseurl": "https://mytool.example",
-            "version": "LTI-1p0"
+            "version": "LTI-1p0",
+            "sesskey": "785t9302"
           }
         ]
     }
@@ -64,7 +65,8 @@ i
   <td><button data-href="startltiadvregistration.php?url={{startregurlenc}}&type={{id}}" class="btn btn-outline-primary">
       <span class="btn-loader">{{> mod_lti/loader }}</span>
       {{#str}}dynreg_update_btn_update, mod_lti {{/str}}
-      </button></td>
+      </button>
+  </td>
   </tr>
 {{/tools}}
 </table>
@@ -78,7 +80,7 @@ i
   </button>
 </div>
 <form method="POST" id="startregform">
-  <input type="hidden" name="sesskey" value="{{sesskey}}" />
+  <input type="hidden" name="sesskey" value="{{sesskey}}"/>
 </form>
 {{#js}}
     disableAndGo = e => {
