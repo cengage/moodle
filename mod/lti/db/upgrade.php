@@ -230,6 +230,7 @@ function xmldb_lti_upgrade($oldversion) {
             $table->add_field('label', XMLDB_TYPE_TEXT, null, null, true, null, null, 'typeid');
             $table->add_field('url', XMLDB_TYPE_TEXT, null, null, false, null, null, 'label');
             $table->add_field('customparameters', XMLDB_TYPE_TEXT, null, null, false, null, null, 'url');
+            $table->add_field('allowlearners', XMLDB_TYPE_INTEGER, 1, true, XMLDB_NOTNULL, null, 0, 'customparameters');
 
             // Adding keys to table lti_course_nav_messages.
             $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));

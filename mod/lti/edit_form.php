@@ -243,21 +243,23 @@ class mod_lti_edit_types_form extends moodleform {
         $mform->setAdvanced('lti_secureicon');
         $mform->addHelpButton('lti_secureicon', 'secure_icon_url', 'lti');
 
-        $mform->addElement('header', 'menulink', get_string('placementmenulinkheader', 'lti'));
+        $mform->addElement('header', 'menulink', get_string('placementmenulink_header', 'lti'));
         $repeatarray = array();
         $repeateloptions = array();
 
         $repeatarray[] = $mform->createElement('html', '<div class=\'lti_menulinkpanel\'>');
-        $repeatarray[] = $mform->createElement('text', 'lti_menulinklabel', get_string('placementmenulinklabel', 'lti'));
+        $repeatarray[] = $mform->createElement('text', 'lti_menulinklabel', get_string('placementmenulink_label', 'lti'));
         $repeateloptions['lti_menulinklabel']['type'] = PARAM_TEXT;
         $repeateloptions['lti_menulinklabel']['rule'] = [null, 'required', null, 'client'];
-        $repeatarray[] = $mform->createElement('text', 'lti_menulinkurl', get_string('placementmenulinkurl', 'lti'), [
+        $repeatarray[] = $mform->createElement('text', 'lti_menulinkurl', get_string('placementmenulink_url', 'lti'), [
             'size' => '64'
         ]);
         $repeateloptions['lti_menulinkurl']['type'] = PARAM_URL;
         $repeatarray[] = $mform->createElement('textarea', 'lti_menulinkcustomparameters', get_string('custom', 'lti'), array('rows' => 4, 'cols' => 60));
         $repeateloptions['lti_menulinkcustomparameters']['type'] = PARAM_TEXT; 
-        $repeatarray[] = $mform->createElement('submit', 'lti_removemenulink', 'Delete menu link', [], false);
+        $repeatarray[] = $mform->createElement('advcheckbox', 'lti_menulinkallowlearners', get_string('placementmenulink_allowlearners', 'lti'));
+        $repeateloptions['lti_menulinkallowlearners']['helpbutton'] = ['placementmenulink_allowlearners', 'lti'];
+        $repeatarray[] = $mform->createElement('submit', 'lti_removemenulink',  get_string('placementmenulink_remove', 'lti'), [], false);
         $repeatarray[] = $mform->createElement('html', '</div>');
 
         $numberofmenulinks = 0; 

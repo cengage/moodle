@@ -2633,13 +2633,13 @@ function lti_get_type_type_config($id) {
 
     $type->lti_secureicon = $basicltitype->secureicon;
 
-    $type->lti_asmenulink = $basicltitype->asmenulink;
-
-    $ltimenulinks = $DB->get_records_select('lti_course_nav_messages', 'typeid=?', [$id], null, 'id, label, url');
+    $ltimenulinks = $DB->get_records('lti_course_nav_messages', array('typeid' => $id));
 
     foreach ($ltimenulinks as $record) {
         $type->lti_menulinklabel[] = $record->label;
         $type->lti_menulinkurl[] = $record->url;
+        $type->lti_menulinkcustomparameters[] = $record->customparameters;
+        $type->lti_menulinkallowlearners[] = $record->allowlearners;
     }
 
     if (isset($config['resourcekey'])) {
@@ -2798,11 +2798,6 @@ function lti_prepare_type_for_save($type, $config) {
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
 
-    $type->asmenulink = false;
-    if (isset($config->lti_asmenulink)) {
-        $type->asmenulink = $config->lti_asmenulink;
-    }
-
     foreach($config->lti_menulinklabel??[] as $i => $navlabel) {
         if (empty($navlabel)) {
             continue;
@@ -2811,7 +2806,9 @@ function lti_prepare_type_for_save($type, $config) {
 
         $type->menulinks[] = array (
             "label" => $navlabel,
-            "url" => $config->lti_menulinkurl[$i]??''
+            "url" => $config->lti_menulinkurl[$i]??'',
+            "customparameters" => $config->lti_menulinkcustomparameters[$i]??'', 
+            "allowlearners" => $config->lti_menulinkallowlearners[$i]??0, 
         );
     }
 
@@ -2849,7 +2846,7 @@ function lti_update_type($type, $config) {
             $transaction = $DB->start_delegated_transaction();
 
             $DB->delete_records('lti_course_nav_messages', array('typeid'=> $type->id)) && isset($menulinks);
-
+            // CLAUDE TODO: we cannot delete or we will loose relationships, allow update here!!
             if (isset($menulinks)) {
                 foreach ($menulinks as $key => $value) {
                     $value["typeid"] = $type->id;
