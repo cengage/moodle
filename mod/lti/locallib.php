@@ -2636,6 +2636,7 @@ function lti_get_type_type_config($id) {
     $ltimenulinks = $DB->get_records('lti_course_nav_messages', array('typeid' => $id));
 
     foreach ($ltimenulinks as $record) {
+        $type->lti_menulinkid[] = $record->id;
         $type->lti_menulinklabel[] = $record->label;
         $type->lti_menulinkurl[] = $record->url;
         $type->lti_menulinkcustomparameters[] = $record->customparameters;
@@ -2802,10 +2803,9 @@ function lti_prepare_type_for_save($type, $config) {
         if (empty($navlabel)) {
             continue;
         }
-        // add custom params and role restriction, possibly rename
-
         $type->menulinks[] = array (
             "label" => $navlabel,
+            "id" => $config->lti_menulinkid[$i],
             "url" => $config->lti_menulinkurl[$i]??'',
             "customparameters" => $config->lti_menulinkcustomparameters[$i]??'', 
             "allowlearners" => $config->lti_menulinkallowlearners[$i]??0, 
@@ -2844,13 +2844,33 @@ function lti_update_type($type, $config) {
 
         try {
             $transaction = $DB->start_delegated_transaction();
+            $navids = [];
+            if (isset($menulinks)) {
+                $onlyid = function($n) {return $n['id']??null;};
+                $navids = array_filter(array_map($onlyid, $menulinks));
+            }
+            if (empty($navids)) {
+                // No ids this means no update, so we can delete all the nav items for this tool.
+                $DB->delete_records('lti_course_nav_messages', array('typeid'=> $type->id));
+            } else {
+                // Let's only remove the ones we are not updating.
+                list($notinsql, $notinparams) = $DB->get_in_or_equal($navids, SQL_PARAMS_NAMED, 'param', false);
+                $sql = "typeid = :typeid AND id {$notinsql}";
+                $params = [
+                    'typeid' => $type->id
+                 ];
+                $params += $notinparams;
+                $DB->delete_records_select('lti_course_nav_messages', $sql, $params);
+            }
 
-            $DB->delete_records('lti_course_nav_messages', array('typeid'=> $type->id)) && isset($menulinks);
-            // CLAUDE TODO: we cannot delete or we will loose relationships, allow update here!!
             if (isset($menulinks)) {
                 foreach ($menulinks as $key => $value) {
                     $value["typeid"] = $type->id;
-                    $DB->insert_record('lti_course_nav_messages', $value);
+                    if (empty($value["id"])) {
+                        $DB->insert_record('lti_course_nav_messages', $value);
+                    } else {
+                        $DB->update_record('lti_course_nav_messages', $value);
+                    }
                 }
             }
 
