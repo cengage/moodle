@@ -33,7 +33,6 @@ require_once($CFG->libdir.'/weblib.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 require_login();
-require_sesskey();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 
@@ -43,6 +42,7 @@ $typeid = optional_param('type', -1, PARAM_INT);
 $types = lti_get_tools_by_url($starturl, null);
 
 if (!empty($types) && $typeid == -1) {
+    // There are matching types for the registration domain, let's prompt the user to upgrade.
     $pageurl = new moodle_url('/mod/lti/startltiadvregistration.php');
     $PAGE->set_context($context);
     $PAGE->set_url($pageurl);
@@ -53,9 +53,13 @@ if (!empty($types) && $typeid == -1) {
     echo $output->render($page);
     echo $output->footer();
 } else {
+    // Let's actually start the registration process by launching the tool registration
+    // endpoint with the registration token and the site config url.
+    require_sesskey();
     $sub = registration_helper::get()->new_clientid();
     $scope = registration_helper::REG_TOKEN_OP_NEW_REG;
     if ($typeid > 0) {
+        // In the context of an update, the sub is the id of the type.
         $sub = strval($typeid);
         $scope = registration_helper::REG_TOKEN_OP_UPDATE_REG;
     }
