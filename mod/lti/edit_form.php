@@ -248,6 +248,8 @@ class mod_lti_edit_types_form extends moodleform {
         $repeateloptions = array();
 
         $repeatarray[] = $mform->createElement('html', '<div class=\'lti_menulinkpanel\'>');
+        $repeatarray[] = $mform->createElement('hidden', 'lti_menulinkid');
+        $repeateloptions['lti_menulinkid']['type'] = PARAM_INT;
         $repeatarray[] = $mform->createElement('text', 'lti_menulinklabel', get_string('placementmenulink_label', 'lti'));
         $repeateloptions['lti_menulinklabel']['type'] = PARAM_TEXT;
         $repeateloptions['lti_menulinklabel']['rule'] = [null, 'required', null, 'client'];
