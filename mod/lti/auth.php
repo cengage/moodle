@@ -69,9 +69,9 @@ if ($ok && ($responsetype !== 'id_token')) {
 }
 if ($ok) {
     list($courseid, $typeid, $id, $messagetype, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
-    $ok = ("{$id},{$messagetype}" !== $ltimessagehint);
+    $ok = ("{$id},{$messagetype}" === $ltimessagehint);
     if (!$ok) {
-        $error = 'invalid_request';
+        $error = 'invalid_hint';
     } else {
         $config = lti_get_type_type_config($typeid);
         $ok = ($clientid === $config->lti_clientid);
