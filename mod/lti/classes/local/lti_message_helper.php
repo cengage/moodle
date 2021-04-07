@@ -33,11 +33,12 @@ namespace mod_lti\local;
 class lti_message_helper {
 
     /**
-     * Returns the private key to use to sign outgoing JWT.
+     * Runtime build of LTI message, used when executing an LTI
+     * placement that is not an actual record in the LTI Table.
      *
-     * @return array keys are kid and key in PEM format.
+     * @return object LTI Message object.
      */
-    public static function to_message(int $messageid, int $typeid, int $courseid, 
+    public static function to_message(int $messageid, int $typeid, int $courseid,
                                       string $url, string $customparams, string $messagetype): object {
         $lti = new \StdClass();
         $lti->message_type = $messagetype;

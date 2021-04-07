@@ -35,5 +35,5 @@ abstract class lti_message_type {
     const RESOURCE_LAUNCH = 'LtiResourceLinkLaunchRequest';
     const COURSE_NAV_LAUNCH = 'ContextLaunchRequest';
     const CONTENT_ITEM_LAUNCH = 'ContentItemSelectionRequest';
-    const DEEP_LINKING_LAUNCH = 'LtiDeepLinkingLaunchRequest'; 
+    const DEEP_LINKING_LAUNCH = 'LtiDeepLinkingLaunchRequest';
 };
