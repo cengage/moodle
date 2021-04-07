@@ -56,6 +56,7 @@ use moodle\mod\lti as lti;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
+use mod_lti\local\lti_coursenav_lib;
 use mod_lti\local\ltiopenid\jwks_helper;
 use mod_lti\local\ltiopenid\registration_helper;
 
@@ -2839,46 +2840,35 @@ function lti_update_type($type, $config) {
         $menulinks = $type->menulinks;
         unset($type->menulinks);
     }
+    $transaction = $DB->start_delegated_transaction();
+    try {
+        if ($DB->update_record('lti_types', $type)) {
 
-    if ($DB->update_record('lti_types', $type)) {
+            lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
 
-        try {
-            $transaction = $DB->start_delegated_transaction();
-            $navids = [];
-            if (isset($menulinks)) {
-                $onlyid = function($n) {return $n['id']??null;};
-                $navids = array_filter(array_map($onlyid, $menulinks));
-            }
-            if (empty($navids)) {
-                // No ids this means no update, so we can delete all the nav items for this tool.
-                $DB->delete_records('lti_course_nav_messages', array('typeid'=> $type->id));
-            } else {
-                // Let's only remove the ones we are not updating.
-                list($notinsql, $notinparams) = $DB->get_in_or_equal($navids, SQL_PARAMS_NAMED, 'param', false);
-                $sql = "typeid = :typeid AND id {$notinsql}";
-                $params = [
-                    'typeid' => $type->id
-                 ];
-                $params += $notinparams;
-                $DB->delete_records_select('lti_course_nav_messages', $sql, $params);
-            }
-
-            if (isset($menulinks)) {
-                foreach ($menulinks as $key => $value) {
-                    $value["typeid"] = $type->id;
-                    if (empty($value["id"])) {
-                        $DB->insert_record('lti_course_nav_messages', $value);
-                    } else {
-                        $DB->update_record('lti_course_nav_messages', $value);
-                    }
+            foreach ($config as $key => $value) {
+                if (substr($key, 0, 4) == 'lti_' && !is_null($value)) {
+                    $record = new \StdClass();
+                    $record->typeid = $type->id;
+                    $record->name = substr($key, 4);
+                    $record->value = $value;
+                    lti_update_config($record);
+                }
+                if (substr($key, 0, 11) == 'ltiservice_' && !is_null($value)) {
+                    $record = new \StdClass();
+                    $record->typeid = $type->id;
+                    $record->name = $key;
+                    $record->value = $value;
+                    lti_update_config($record);
                 }
             }
+            require_once($CFG->libdir.'/modinfolib.php');
+            if ($clearcache) {
+                $sql = "SELECT DISTINCT course
+                        FROM {lti}
+                        WHERE typeid = ?";
+            }
 
-            $transaction->allow_commit();
-
-        } catch (Exception $e) {
-            $transaction->rollback($e);
-            throw $e;
         }
 
         foreach ($config as $key => $value) {
@@ -2979,67 +2969,18 @@ function lti_load_course_menu_links(int $courseid, $activeonly=false) {
         $menulink->allowlearners = $record->allowlearners;
         $type->menulinks[$menulink->id] = $menulink;
     }
+                $courses = $DB->get_fieldset_sql($sql, array($type->id));
 
-    return $types;
-}
-
-/**
- * For given course, set course menu links.
- *
- * @param int $courseid
- * @param array $menulinks
- */
-function lti_set_course_menu_links(int $courseid, array $menulinks) {
-    global $DB;
-    $transaction = $DB->start_delegated_transaction();
-    try {
-        $DB->delete_records('lti_course_menu_placements', ['course' => $courseid]);
-
-        $ltitools = lti_organize_menuplacement_form_data($menulinks);
-        foreach ($ltitools as $key => $ltitool) {
-            if ($ltitool->menulinks) {
-                foreach ($ltitool->menulinks as $coursenavid) {
-                    $DB->insert_record('lti_course_menu_placements', (object)[
-                        'typeid' => $ltitool->id,
-                        'course' => $courseid,
-                        'coursenavid' => $coursenavid
-                    ]);
+                foreach ($courses as $courseid) {
+                    rebuild_course_cache($courseid, true);
                 }
-            } else {
-                $DB->insert_record('lti_course_menu_placements', (object)[
-                    'typeid' => $ltitool->id,
-                    'course' => $courseid,
-                    'coursenavid' => NULL
-                ]);
             }
         }
-
         $transaction->allow_commit();
     } catch (Exception $e) {
         $transaction->rollback($e);
+        throw $e;
     }
-}
-
-/**
- * Organize the output data from menuplacement form.
- *
- * @param array $menuitems
- */
-function lti_organize_menuplacement_form_data(array $menuitems) {
-    $ltitools = [];
-    foreach ($menuitems as $keyset => $menuitemid) {
-        $key = explode('-', $keyset);
-        if ($key[0] === 'ltitool' && $menuitemid) {
-            $ltitool = new stdClass();
-            $ltitool->id = $menuitemid;
-            $ltitool->menulinks = [];
-            $ltitools [$ltitool->id]= $ltitool;
-        } else if ($key[0] === 'menulink' && $menuitemid) {
-            $ltitools[$key[1]]->menulinks []= $key[2];
-        }
-    }
-
-    return $ltitools;
 }
 
 function lti_add_type($type, $config) {

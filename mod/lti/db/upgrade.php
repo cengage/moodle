@@ -255,7 +255,6 @@ function xmldb_lti_upgrade($oldversion) {
             $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
             $table->add_key('course', XMLDB_KEY_FOREIGN, array('course'), 'course', array('id'));
             $table->add_key('coursenavid',XMLDB_KEY_FOREIGN, array('typeid'), 'lti_course_nav_messages', array('id'));
-        
             $table->add_index('coursenavuniq', XMLDB_INDEX_UNIQUE, array('course', 'coursenavid'));
             $table->add_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
 

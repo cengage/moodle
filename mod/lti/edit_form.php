@@ -229,7 +229,6 @@ class mod_lti_edit_types_form extends moodleform {
             $mform->disabledIf('lti_toolurl__ContentItemSelectionRequest', null);
         }
 
-        
         $mform->addElement('hidden', 'oldicon');
         $mform->setType('oldicon', PARAM_URL);
 
@@ -258,13 +257,13 @@ class mod_lti_edit_types_form extends moodleform {
         ]);
         $repeateloptions['lti_menulinkurl']['type'] = PARAM_URL;
         $repeatarray[] = $mform->createElement('textarea', 'lti_menulinkcustomparameters', get_string('custom', 'lti'), array('rows' => 4, 'cols' => 60));
-        $repeateloptions['lti_menulinkcustomparameters']['type'] = PARAM_TEXT; 
+        $repeateloptions['lti_menulinkcustomparameters']['type'] = PARAM_TEXT;
         $repeatarray[] = $mform->createElement('advcheckbox', 'lti_menulinkallowlearners', get_string('placementmenulink_allowlearners', 'lti'));
         $repeateloptions['lti_menulinkallowlearners']['helpbutton'] = ['placementmenulink_allowlearners', 'lti'];
         $repeatarray[] = $mform->createElement('submit', 'lti_removemenulink',  get_string('placementmenulink_remove', 'lti'), [], false);
         $repeatarray[] = $mform->createElement('html', '</div>');
 
-        $numberofmenulinks = 0; 
+        $numberofmenulinks = 0;
         if (isset($typeid) && !empty($typeid)) {
             $numberofmenulinks = $DB->count_records('lti_course_nav_messages', array('typeid'=> $typeid));
         }

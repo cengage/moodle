@@ -48,6 +48,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use mod_lti\local\lti_coursenav_lib;
+
 /**
  * List of features supported in URL module
  * @param string $feature FEATURE_xx constant for requested feature
@@ -824,7 +826,7 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
 
     // Only show the "Course apps" node if the user is editing or if there are
     // actual course menu apps to show.
-    $coursemenulinks = lti_load_course_menu_links($course->id, true);
+    $coursemenulinks = lti_coursenav_lib::get()->lti_load_course_menu_links($course->id, true);
     if (empty($coursemenulinks) && !$PAGE->user_is_editing()) {
         return;
     }
