@@ -108,8 +108,8 @@ EOD;
         "jwks_uri": "https://client.example.org/.well-known/jwks.json",
         "token_endpoint_auth_method": "private_key_jwt",
         "https://purl.imsglobal.org/spec/lti-tool-configuration": {
-            "domain": "client.example.org",
-            "target_link_uri": "https://client.example.org/lti"
+            "domain": "www.example.org",
+            "target_link_uri": "https://www.example.org/lti"
         }
     }
 EOD;
@@ -181,6 +181,9 @@ EOD;
         $this->assertEquals('TheClientId', $config->lti_clientid);
         $this->assertEquals('Virtual Garden', $config->lti_typename);
         $this->assertEmpty($config->lti_description);
+        // Special case here where Moodle ignores www for domains.
+        $this->assertEquals('example.org', $config->lti_tooldomain);
+        $this->assertEquals('https://www.example.org/lti', $config->lti_toolurl);
         $this->assertEquals('https://client.example.org/lti/init', $config->lti_initiatelogin);
         $this->assertEquals('https://client.example.org/callback', $config->lti_redirectionuris);
         $this->assertEmpty($config->lti_customparameters);
@@ -279,8 +282,8 @@ EOD;
         $registration = json_decode($this->registrationminimaljson, true);
         unset($registration['https://purl.imsglobal.org/spec/lti-tool-configuration']['target_link_uri']);
         $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
-        $this->assertEquals('client.example.org', $config->lti_tooldomain);
-        $this->assertEquals('https://client.example.org', $config->lti_toolurl);
+        $this->assertEquals('example.org', $config->lti_tooldomain);
+        $this->assertEquals('https://www.example.org', $config->lti_toolurl);
     }
 
     /**

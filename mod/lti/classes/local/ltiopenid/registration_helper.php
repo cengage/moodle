@@ -126,7 +126,10 @@ class registration_helper {
         if (empty($domain)) {
             throw new registration_exception('missing_domain', 400);
         }
+
         $targetlinkuri = $targetlinkuri ?: 'https://'.$domain;
+        // Stripping www as this is ignored for domain matching.
+        $domain = lti_get_domain_from_url($domain);
         if ($domain !== lti_get_domain_from_url($targetlinkuri)) {
             throw new registration_exception('domain_targetlinkuri_mismatch', 400);
         }
