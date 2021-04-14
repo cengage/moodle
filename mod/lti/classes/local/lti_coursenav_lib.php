@@ -170,7 +170,7 @@ class lti_coursenav_lib
         }
         if (empty($navids)) {
             // No ids this means no update, so we can delete all the nav items for this tool.
-            $DB->delete_records('lti_course_nav_messages', array('typeid'=> $type->id));
+            $DB->delete_records('lti_course_nav_messages', array('typeid'=> $typeid));
         } else {
             // Let's only remove the ones we are not updating.
             list($notinsql, $notinparams) = $DB->get_in_or_equal($navids, SQL_PARAMS_NAMED, 'param', false);
