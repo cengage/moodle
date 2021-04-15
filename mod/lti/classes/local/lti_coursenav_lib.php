@@ -48,6 +48,11 @@ class lti_coursenav_lib
         return new lti_coursenav_lib();
     }
 
+    public function load_coursenav_messages(int $typeid) {
+        global $DB;
+        return $DB->get_records('lti_course_nav_messages', array('typeid' => $typeid));
+    }
+
     /**
      * Returns LTI tools that can be placed in the course menu.
      *
@@ -55,7 +60,7 @@ class lti_coursenav_lib
      * @param boolean $activeonly
      * @return array
      */
-    function lti_load_course_menu_links(int $courseid, $activeonly=false) {
+    public function load_coursenav_links(int $courseid, $activeonly=false) {
         global $DB;
 
         $join = '';
@@ -108,7 +113,7 @@ class lti_coursenav_lib
      * @param int $courseid
      * @param array $menulinks
      */
-    function lti_set_course_menu_links(int $courseid, array $menulinks) {
+    public function set_coursenav_links(int $courseid, array $menulinks) {
         global $DB;
         $transaction = $DB->start_delegated_transaction();
         try {
@@ -144,7 +149,7 @@ class lti_coursenav_lib
      *
      * @param array $menuitems
      */
-    function lti_organize_menuplacement_form_data(array $menuitems) {
+    public function lti_organize_menuplacement_form_data(array $menuitems) {
         $ltitools = [];
         foreach ($menuitems as $keyset => $menuitemid) {
             $key = explode('-', $keyset);
@@ -161,7 +166,7 @@ class lti_coursenav_lib
         return $ltitools;
     }
 
-    function update_type_coursenavs($typeid, $menulinks) {
+    public function update_type_coursenavs($typeid, $menulinks) {
         global $DB;
         $navids = [];
         if (isset($menulinks)) {
