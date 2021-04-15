@@ -2634,7 +2634,7 @@ function lti_get_type_type_config($id) {
 
     $type->lti_secureicon = $basicltitype->secureicon;
 
-    $ltimenulinks = $DB->get_records('lti_course_nav_messages', array('typeid' => $id));
+    $ltimenulinks = lti_coursenav_lib::get()->load_coursenav_messages($id);
 
     foreach ($ltimenulinks as $record) {
         $type->lti_menulinkid[] = $record->id;

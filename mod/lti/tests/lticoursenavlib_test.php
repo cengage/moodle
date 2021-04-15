@@ -53,18 +53,45 @@ require_once($CFG->dirroot . '/mod/lti/tests/lti_test_helper.php');
 class mod_lti_coursenav_lib_testcase extends advanced_testcase {
 
     /**
-     * Test default orgid is host if not specified in config (tool installed in earlier version of Moodle).
+     * Test creation, update and deletion of nav messages (used in form post when editing tool).
      */
-    public function test_update_coursenavs_insert() {
+    public function test_update_coursenavs() {
         global $DB;
         $this->resetAfterTest();
         $config = new stdClass();
         $config->lti_organizationid = '';
         $type = create_type($config);
         $menulinks = [
-            "link"=>["label"=> "menulink"]
+            "link"=>["label"=> "menulink1"]
         ];
         lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_messages($type->id);
+        $this->assertEquals(1, count($coursenavs));
+        $newlink = array_values($coursenavs)[0];
+        $this->assertEquals("menulink1", $newlink->label);
+        $newandupdated = [
+            "link1"=>["label"=> "menulink1_updated", "id"=>$newlink->id],
+            "link2"=>["label"=> "menulink2", "url"=>"https://somewhere", "allowlearners"=>"1"]
+        ];
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $newandupdated);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_messages($type->id);
+        $this->assertEquals(2, count($coursenavs));
+        $this->assertEquals("menulink1_updated", $coursenavs[$newlink->id]->label);
+        $link2check = function($n) {return $n->label=="menulink2";};
+        $link2a = array_filter($coursenavs, $link2check); 
+        $this->assertEquals(1, count($link2a));
+        $link2 = array_values($link2a)[0];
+        $this->assertEquals("https://somewhere", $link2->url);
+        $this->assertEquals('1', $link2->allowlearners);
+        $updatedanddeleted = [
+            "link2"=>["label"=> "menulink2", "url"=>"https://somewhere2", "allowlearners"=>"0", "id"=>$link2->id]
+        ];
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $updatedanddeleted);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_messages($type->id);
+        $this->assertEquals(1, count($coursenavs));
+        $link2updated = $coursenavs[$link2->id];
+        $this->assertEquals("https://somewhere2", $link2updated->url);
+        $this->assertEquals('0', $link2updated->allowlearners);
     }
 
 }
