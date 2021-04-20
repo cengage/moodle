@@ -2823,6 +2823,14 @@ function lti_update_type($type, $config) {
                 lti_update_config($record);
             }
         }
+        if (isset($type->toolproxyid) && $type->ltiversion === LTI_VERSION_1P3) {
+            // We need to remove the tool proxy for this tool to function under 1.3.
+            $toolproxyid = $type->toolproxyid;
+            $DB->delete_records('lti_tool_settings', array('toolproxyid' => $toolproxyid));
+            $DB->delete_records('lti_tool_proxies', array('id' => $toolproxyid));
+            $type->toolproxyid = null;
+            $DB->update_record('lti_types', $type);
+        }
         require_once($CFG->libdir.'/modinfolib.php');
         if ($clearcache) {
             $sql = "SELECT DISTINCT course
