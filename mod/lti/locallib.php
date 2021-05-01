@@ -2806,7 +2806,7 @@ function lti_prepare_type_for_save($type, $config) {
         }
         $type->menulinks[] = array (
             "label" => $navlabel,
-            "id" => $config->lti_menulinkid[$i],
+            "id" => $config->lti_menulinkid[$i]??'',
             "url" => $config->lti_menulinkurl[$i]??'',
             "customparameters" => $config->lti_menulinkcustomparameters[$i]??'', 
             "allowlearners" => $config->lti_menulinkallowlearners[$i]??0, 
@@ -2840,36 +2840,9 @@ function lti_update_type($type, $config) {
         $menulinks = $type->menulinks;
         unset($type->menulinks);
     }
-    $transaction = $DB->start_delegated_transaction();
-    try {
-        if ($DB->update_record('lti_types', $type)) {
+    if ($DB->update_record('lti_types', $type)) {
 
-            lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
-
-            foreach ($config as $key => $value) {
-                if (substr($key, 0, 4) == 'lti_' && !is_null($value)) {
-                    $record = new \StdClass();
-                    $record->typeid = $type->id;
-                    $record->name = substr($key, 4);
-                    $record->value = $value;
-                    lti_update_config($record);
-                }
-                if (substr($key, 0, 11) == 'ltiservice_' && !is_null($value)) {
-                    $record = new \StdClass();
-                    $record->typeid = $type->id;
-                    $record->name = $key;
-                    $record->value = $value;
-                    lti_update_config($record);
-                }
-            }
-            require_once($CFG->libdir.'/modinfolib.php');
-            if ($clearcache) {
-                $sql = "SELECT DISTINCT course
-                        FROM {lti}
-                        WHERE typeid = ?";
-            }
-
-        }
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
 
         foreach ($config as $key => $value) {
             if (substr($key, 0, 4) == 'lti_' && !is_null($value)) {
@@ -2915,8 +2888,9 @@ function lti_update_type($type, $config) {
             foreach ($courseids as $courseid) {
                 rebuild_course_cache($courseid, false, true);
             }
-        }
+
     }
+
 }
 
 /**
@@ -2969,18 +2943,6 @@ function lti_load_course_menu_links(int $courseid, $activeonly=false) {
         $menulink->allowlearners = $record->allowlearners;
         $type->menulinks[$menulink->id] = $menulink;
     }
-                $courses = $DB->get_fieldset_sql($sql, array($type->id));
-
-                foreach ($courses as $courseid) {
-                    rebuild_course_cache($courseid, true);
-                }
-            }
-        }
-        $transaction->allow_commit();
-    } catch (Exception $e) {
-        $transaction->rollback($e);
-        throw $e;
-    }
 }
 
 function lti_add_type($type, $config) {
@@ -3021,6 +2983,7 @@ function lti_add_type($type, $config) {
     $id = $DB->insert_record('lti_types', $type);
 
     if ($id) {
+        $type->id = $id;
         if (isset($menulinks)) {
             foreach ($menulinks as $key => $value) {
                 $value['typeid'] = $id;
