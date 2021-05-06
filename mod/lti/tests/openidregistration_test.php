@@ -408,7 +408,7 @@ EOD;
         $this->assertFalse(in_array('name', $lti['claims']));
     }
 
-        /**
+    /**
      * Test the transformation from lti config to OpenId LTI Client Registration response with Course Navigation.
      */
     public function test_config_to_registration_with_coursenavs() {
@@ -424,6 +424,25 @@ EOD;
         $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
         $navs = array_filter($lti['messages'], function($m) {return $m['type'] === 'ContextLaunchRequest';});
         $this->assertEquals(2, sizeof($navs));
+    }
+
+    /**
+     * Test an update to tool will try to preserve course navs identifiers.
+     */
+    public function test_registration_to_config_with_coursenavs_update() {
+        $type = new \stdClass();
+        $orig = json_decode($this->registrationcoursenavjson, true);
+        $reghelper = registration_helper::get();
+        $config = $reghelper->registration_to_config($orig, 'clid');
+        lti_prepare_type_for_save($type, $config);
+        $type->menulinks[0]['id']=4792;
+        $type->menulinks[0]['label']='Label change treated as new nav';
+        $type->menulinks[1]['id']=4793;
+        $config = $reghelper->registration_to_config($orig, 'clid', $type);
+        $type = new \stdClass();
+        lti_prepare_type_for_save($type, $config);
+        $this->assertEmpty($type->menulinks[0]['id']);
+        $this->assertEquals(4793, $type->menulinks[1]['id']);
     }
 
     /**
