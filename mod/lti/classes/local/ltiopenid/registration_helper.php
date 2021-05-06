@@ -98,10 +98,11 @@ class registration_helper {
      *
      * @param array $registrationpayload the registration data received from the tool.
      * @param string $clientid the clientid to be issued for that tool.
+     * @param object $type this registration will update if this in an update case.
      *
      * @return object the Moodle LTI config.
      */
-    public function registration_to_config(array $registrationpayload, string $clientid): object {
+    public function registration_to_config(array $registrationpayload, string $clientid, object $type = null): object {
         $customparamstotext = function($cp) {
             $paramssarray = [];
             foreach ($cp as $key => $value) {
@@ -199,6 +200,15 @@ class registration_helper {
                     } else {
                         $config->lti_menulinkallowlearners[] = '1'; 
                     }
+                    $id = null;
+                    if (isset($type) && isset($type->menulinks)) {
+                        $matchinglinks = array_values(array_filter($type->menulinks, 
+                            function($ml) use ($value) {return strtolower($ml['label'])==strtolower($value['label']);}));
+                        if (count($matchinglinks) === 1) {
+                            $id = $matchinglinks[0]['id'];
+                        }
+                    }
+                    $config->lti_menulinkid[] = $id;
                 } 
             }
         }
