@@ -94,4 +94,35 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $this->assertEquals('0', $link2updated->allowlearners);
     }
 
+    public function test_course_placements() {
+        $this->resetAfterTest();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $type = create_type($config);
+        $menulinks = [
+            "link1"=>["label"=> "menulink1"],
+            "link2"=>["label"=> "menulink2", "url"=>"https://somewhere", "allowlearners"=>"1"]
+        ];
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
+        self::setUser($this->getDataGenerator()->create_user());
+        $course = $this->getDataGenerator()->create_course();
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
+        // New course has no actual placements of the tool's course navs.
+        $this->assertTrue(empty($coursenavs));
+        $coursenavsaddible = lti_coursenav_lib::get()->load_coursenav_links($course->id, false);
+        $this->assertEquals(1, count($coursenavsaddible));
+        $this->assertEquals(2, count($coursenavsaddible[$type->id]->menulinks));
+        $coursenavsvals = array_values($coursenavsaddible[$type->id]->menulinks);
+        // Now adding those 2 links to the course
+        $fakeform = [];
+        $fakeform["menulink-{$type->id}-{$coursenavsvals[0]->id}"] = "1";
+        lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
+        $this->assertEquals(1, count($coursenavs[$type->id]->menulinks));
+        $fakeform["menulink-{$type->id}-{$coursenavsvals[1]->id}"] = "1";
+        lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
+        $this->assertEquals(2, count($coursenavs[$type->id]->menulinks));
+    }
+
 }

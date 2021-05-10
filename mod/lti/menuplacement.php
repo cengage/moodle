@@ -54,7 +54,7 @@ if ($form->is_cancelled()) {
 }
 
 if ($fromform = $form->get_data()) {
-    lti_coursenav_lib::get()->set_coursenav_links($courseid, (array) $fromform);
+    lti_coursenav_lib::get()->set_coursenav_links_from_form_data($courseid, (array) $fromform);
     redirect($redirect, get_string('changessaved', 'mod_lti'), null,
             \core\output\notification::NOTIFY_SUCCESS);
 }
