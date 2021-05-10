@@ -111,33 +111,23 @@ class lti_coursenav_lib
      * For given course, set course menu links.
      *
      * @param int $courseid
-     * @param array $menulinks
+     * @param array $menulinkspertype
      */
-    public function set_coursenav_links(int $courseid, array $menulinks) {
+    public function set_coursenav_links(int $courseid, array $menulinkspertype) {
         global $DB;
         $transaction = $DB->start_delegated_transaction();
         try {
             $DB->delete_records('lti_course_menu_placements', ['course' => $courseid]);
 
-            $ltitools = $this->lti_organize_menuplacement_form_data($menulinks);
-            foreach ($ltitools as $key => $ltitool) {
-                if ($ltitool->menulinks) {
-                    foreach ($ltitool->menulinks as $coursenavid) {
-                        $DB->insert_record('lti_course_menu_placements', (object)[
-                            'typeid' => $ltitool->id,
-                            'course' => $courseid,
-                            'coursenavid' => $coursenavid
-                        ]);
-                    }
-                } else {
+            foreach ($menulinkspertype as $typeid => $links) {
+                foreach ($links as $coursenavid) {
                     $DB->insert_record('lti_course_menu_placements', (object)[
-                        'typeid' => $ltitool->id,
+                        'typeid' => $typeid,
                         'course' => $courseid,
-                        'coursenavid' => NULL
+                        'coursenavid' => $coursenavid
                     ]);
-                }
+                } 
             }
-
             $transaction->allow_commit();
         } catch (Exception $e) {
             $transaction->rollback($e);
@@ -149,21 +139,16 @@ class lti_coursenav_lib
      *
      * @param array $menuitems
      */
-    public function lti_organize_menuplacement_form_data(array $menuitems) {
-        $ltitools = [];
+    public function set_coursenav_links_from_form_data(int $courseid, array $menuitems) {
+        $linkspertool = [];
         foreach ($menuitems as $keyset => $menuitemid) {
             $key = explode('-', $keyset);
-            if ($key[0] === 'ltitool' && $menuitemid) {
-                $ltitool = new stdClass();
-                $ltitool->id = $menuitemid;
-                $ltitool->menulinks = [];
-                $ltitools [$ltitool->id]= $ltitool;
-            } else if ($key[0] === 'menulink' && $menuitemid) {
-                $ltitools[$key[1]]->menulinks []= $key[2];
+            if ($key[0] === 'menulink' && $menuitemid === '1') {
+                $linkspertool[$key[1]][]= $key[2];
             }
         }
-
-        return $ltitools;
+        $this->set_coursenav_links($courseid, $linkspertool);
+        return $linkspertool;
     }
 
     public function update_type_coursenavs($typeid, $menulinks) {
