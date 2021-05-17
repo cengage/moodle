@@ -45,6 +45,7 @@
  * @author     Chris Scribner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+use mod_lti\local\lti_message_type;
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
@@ -54,13 +55,12 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID, or
 $l  = optional_param('l', 0, PARAM_INT);  // lti ID.
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
-$ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
 $courseid = optional_param('course', 0, PARAM_INT);
 $coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 
 $cm = null;
 $pageparams = array();
-if ($ltitypeid && $courseid) {
+if ($coursenavid && $courseid) {
     $lti = $DB->get_record('lti_types', ['id' => $ltitypeid]);
     $lti->typeid = $ltitypeid;
     $lti->showtitlelaunch = false;
@@ -138,6 +138,17 @@ if (!$lti->showtitlelaunch) {
 if (!$lti->showdescriptionlaunch) {
     $header['description'] = '';
 }
+if ($cm) {
+    // Display any activity information (eg completion requirements / dates).
+    $cminfo = cm_info::create($cm);
+    $completiondetails = \core_completion\cm_completion_details::get_instance($cminfo, $USER->id);
+    $activitydates = \core\activity_dates::get_dates_for_module($cminfo, $USER->id);
+    echo $OUTPUT->activity_information($cminfo, $completiondetails, $activitydates);
+
+    if ($lti->showdescriptionlaunch && $lti->intro) {
+        echo $OUTPUT->box(format_module_intro('lti', $lti, $cm->id), 'generalbox description', 'intro');
+    }
+}
 $activityheader->set_attrs($header ?? []);
 
 // Print the page header.
@@ -174,7 +185,9 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
 } else {
     $content = '';
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        if (isset($cm->course) && !empty($cm->course)) {
+        if ($coursenavid) {
+            $content = lti_initiate_login($courseid, $coursenavid, $lti, $config, lti_message_type::COURSE_NAV_LAUNCH);
+        } else if (isset($cm->course) && !empty($cm->course)) {
             $content = lti_initiate_login($cm->course, $id, $lti, $config);
         } else {
             $content = lti_initiate_login($courseid, $id, $lti, $config);

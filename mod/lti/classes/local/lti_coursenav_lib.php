@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 use stdClass;
+use mod_lti\local\lti_message_helper;
+use mod_lti\local\lti_message_type;
 
 /**
  * This class exposes functions for LTI Dynamic Registration.
@@ -58,14 +60,19 @@ class lti_coursenav_lib
      *
      * @param int $courseid
      * @param boolean $activeonly
+     * @param boolean $learner true if to include only links visible to learners.
      * @return array
      */
-    public function load_coursenav_links(int $courseid, $activeonly=false) {
+    public function load_coursenav_links(int $courseid, $activeonly=false, $learner=false) {
         global $DB;
 
         $join = '';
         if (!$activeonly) {
             $join = ' LEFT ';
+        }
+        $filter = '';
+        if ($activeonly && $learner) {
+            $filter = ' where allowlearners=1 ';
         }
         $records = $DB->get_recordset_sql(
             "SELECT l.id as typeid,
@@ -79,6 +86,7 @@ class lti_coursenav_lib
             FROM {lti_course_nav_messages} AS nav 
             JOIN {lti_types} AS l ON nav.typeid=l.id
         $join JOIN {lti_course_menu_placements} AS lc ON (lc.coursenavid=nav.id AND lc.course=?)
+        $filter
         ORDER BY l.name, nav.label", [$courseid]
         );
 
@@ -182,5 +190,12 @@ class lti_coursenav_lib
                 }
             }
         }
+    }
+
+    public function get_lti_message($courseid, $coursenavid) {
+        // add checks here! user role and course association
+        global $DB;
+        $coursenav = $DB->get_record('lti_course_nav_messages', array('id' => $coursenavid), '*', MUST_EXIST);
+        return lti_message_helper::to_message($coursenav->id, $coursenav->typeid, $courseid, $coursenav->url, $coursenav->customparams, lti_message_type::COURSE_NAV_LAUNCH);
     }
 }

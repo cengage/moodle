@@ -826,7 +826,8 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
 
     // Only show the "Course apps" node if the user is editing or if there are
     // actual course menu apps to show.
-    $coursemenulinks = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
+    $learner = !has_capability('moodle/course:manageactivities', $coursecontext);
+    $coursemenulinks = lti_coursenav_lib::get()->load_coursenav_links($course->id, true, $learner);
     if (empty($coursemenulinks) && !$PAGE->user_is_editing()) {
         return;
     }
@@ -868,10 +869,9 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
             $selectedmenuitem = true;
 
             $node = navigation_node::create(
-                $type->name . ' - ' . $menulink->label,
+                $menulink->label,
                 new moodle_url('/mod/lti/view.php', [
                     'course' => $course->id,
-                    'ltitypeid' => $type->id,
                     'coursenavid' => $menulink->id
                 ]),
                 navigation_node::TYPE_RESOURCE,
@@ -883,21 +883,5 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
             $coursenode->add_node($node);
         }
         
-        // If no menu labels selected, display selected LTI tool.
-        if (!$selectedmenuitem) {
-            $node = navigation_node::create(
-                $type->name,
-                new moodle_url('/mod/lti/view.php', [
-                    'course' => $course->id,
-                    'ltitypeid' => $type->id,
-                ]),
-                navigation_node::TYPE_RESOURCE,
-                null,
-                'ltimenu-'.$type->id
-            );
-
-            $node->set_parent($appsnode);
-            $coursenode->add_node($node);
-        }
     }
 }

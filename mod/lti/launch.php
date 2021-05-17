@@ -46,7 +46,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_lti\local\lti_message_helper;
+use mod_lti\local\lti_coursenav_lib;
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
@@ -55,7 +55,6 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
 $courseid = optional_param('courseid', 0, PARAM_INT);
-$ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);
 $coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 $cm = null;
 
@@ -70,9 +69,7 @@ if ($id) {
     }
 } else if ($coursenavid) {
     //$id is 0 when LTI is launched via navigation link.
-    $coursenavmsg = $DB->get_record('lti_course_nav_messages', ['id' => $coursenavid]);
-    $type = $DB->get_record('lti_types', ['id' => $ltitypeid]);
-    $lti = lti_message_helper::to_message($coursenavid, $ltitypeid, $courseid, $coursenavmsg->url, $coursenavmsg->customparameters, 'ContextLaunchRequest');
+    $lti = lti_coursenav_lib::get()->get_lti_message($courseid, $coursenavid);
     $course = get_course($courseid);
     $context = context_course::instance($courseid);
 } else {
@@ -88,7 +85,7 @@ if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
         if (!isset($SESSION->lti_initiatelogin_status)) {
-            echo lti_initiate_login($course->id, $id, $lti, $config, $lti->message_type ?? 'basic-lti-launch-request');
+            echo lti_initiate_login($course->id, $coursenavid??$id, $lti, $config, $lti->message_type ?? 'basic-lti-launch-request');
             exit;
         } else {
             unset($SESSION->lti_initiatelogin_status);

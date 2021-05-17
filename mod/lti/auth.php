@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_lti\local\lti_message_helper;
+use mod_lti\local\lti_coursenav_lib;
 use mod_lti\local\lti_message_type;
 
 require_once(__DIR__ . '/../../config.php');
@@ -126,8 +126,7 @@ if ($ok) {
             list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
         } else if ($messagetype === lti_message_type::COURSE_NAV_LAUNCH) {
             require_login($course);
-            $coursenavmsg = $DB->get_record('lti_course_nav_messages', ['id' => $id]);
-            $lti = lti_message_helper::to_message($coursenavmsg->id, $coursenavmsg->typeid, $course->id, $coursenavmsg->url, $coursenavmsg->customparams, $messagetype);
+            $lti = lti_coursenav_lib::get()->get_lti_message($course->id, $id);
             list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
              // TODO: should we bother checking for association with the course?
         } else {

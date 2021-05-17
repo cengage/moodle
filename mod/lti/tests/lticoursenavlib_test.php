@@ -113,7 +113,7 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $this->assertEquals(1, count($coursenavsaddible));
         $this->assertEquals(2, count($coursenavsaddible[$type->id]->menulinks));
         $coursenavsvals = array_values($coursenavsaddible[$type->id]->menulinks);
-        // Now adding those 2 links to the course
+        // Now adding those 2 links to the course.
         $fakeform = [];
         $fakeform["menulink-{$type->id}-{$coursenavsvals[0]->id}"] = "1";
         lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
@@ -123,6 +123,11 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
         $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
         $this->assertEquals(2, count($coursenavs[$type->id]->menulinks));
+        $coursenavslearner = lti_coursenav_lib::get()->load_coursenav_links($course->id, true, true);
+        $this->assertEquals(1, count($coursenavslearner[$type->id]->menulinks));
+        $this->assertEquals($type->name, $coursenavslearner[$type->id]->menulinks[0]->typename);
+        $this->assertEquals('menulink2', $coursenavslearner[$type->id]->menulinks[0]->label);
+        $this->assertTrue($coursenavslearner[$type->id]->menulinks[0]->id > 0);
     }
 
 }
