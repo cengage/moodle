@@ -396,6 +396,7 @@ $string['placementmenulink_remove'] = 'Remove';
 $string['placementmenulink_header'] = 'Course navigation links';
 $string['placementmenulink_label'] = 'Link label';
 $string['placementmenulink_url'] = 'Link URL';
+$string['placementmenulink_nolearners'] = 'Not visible to Learners';
 $string['pluginadministration'] = 'External tool administration';
 $string['pluginname'] = 'External tool';
 $string['preferheight'] = 'Preferred height';

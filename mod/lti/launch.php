@@ -46,7 +46,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_lti\local\lti_message_helper;
+use mod_lti\local\lti_coursenav_lib;
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
@@ -73,9 +73,7 @@ if ($cmid) {
     }
 } else if ($coursenavid) {
     //$id is 0 when LTI is launched via navigation link.
-    $coursenavmsg = $DB->get_record('lti_course_nav_messages', ['id' => $coursenavid]);
-    $type = $DB->get_record('lti_types', ['id' => $ltitypeid]);
-    $lti = lti_message_helper::to_message($coursenavid, $ltitypeid, $courseid, $coursenavmsg->url, $coursenavmsg->customparameters, 'ContextLaunchRequest');
+    $lti = lti_coursenav_lib::get()->get_lti_message($courseid, $coursenavid);
     $course = get_course($courseid);
     $context = context_course::instance($courseid);
 } else {

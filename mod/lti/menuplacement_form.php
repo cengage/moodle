@@ -54,7 +54,11 @@ class mod_lti_menuplacement_form extends moodleform {
 
             foreach ($menulinks as $menulink) {
                 $menulinkname = 'menulink-' . $type->id . '-' . $menulink->id;
-                $checkboxarray[] = $mform->addElement('checkbox', $menulinkname, '', $menulink->label, $menulink->id);
+                $label = $menulink->label;
+                if (!$menulink->allowlearners) {
+                    $label .= ' ('.get_string('placementmenulink_nolearners', 'lti').')';
+                }
+                $checkboxarray[] = $mform->addElement('checkbox', $menulinkname, '', $label, $menulink->id);
                 if ($menulink->selected) {
                     $mform->setDefault($menulinkname, $menulink->id);
                 }

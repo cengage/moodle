@@ -39,7 +39,7 @@ class lti_message_helper {
      * @return object LTI Message object.
      */
     public static function to_message(int $messageid, int $typeid, int $courseid,
-                                      string $url, string $customparams, string $messagetype): object {
+                                      ?string $url, ?string $customparams, string $messagetype): object {
         $lti = new \StdClass();
         $lti->message_type = $messagetype;
         $lti->typeid = $typeid;
