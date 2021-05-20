@@ -842,19 +842,7 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
         $courseappsurl = new \moodle_url('/course/view.php', array('id' => $course->id));
     }
 
-    $appsnode = navigation_node::create(
-        get_string('courseapps', 'mod_lti'),
-        $courseappsurl, // We have to add a URL for node to appear.
-        navigation_node::TYPE_CATEGORY,
-        null,
-        'courseapps',
-        new pix_icon('icon', get_string('courseapps', 'mod_lti'), 'mod_lti')
-    );
-
-    $appsnode->make_inactive();
-    $appsnode = new flat_navigation_node($appsnode, 0);
-    $appsnode->set_showdivider(true, get_string('courseapps', 'mod_lti'));
-    $appsnode = $coursenode->add_node($appsnode);
+    $icon = new pix_icon('e/anchor', get_string('courseapps', 'mod_lti'));
 
     foreach ($coursemenulinks as $type) {
 
@@ -876,12 +864,29 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
                 ]),
                 navigation_node::TYPE_RESOURCE,
                 null,
-                'ltimenu-'.$type->id.'-'.$menulink->id
+                'ltimenu-'.$type->id.'-'.$menulink->id,
+                $icon
             );
 
-            $node->set_parent($appsnode);
+            $node->set_parent($coursenode);
             $coursenode->add_node($node);
         }
         
+    }
+    
+    if ($PAGE->user_is_editing()) {
+        $appsnode = navigation_node::create(
+            get_string('courseapps', 'mod_lti'),
+            $courseappsurl, // We have to add a URL for node to appear.
+        navigation_node::TYPE_CATEGORY,
+            null,
+            'courseapps',
+            $icon
+        );
+
+        $appsnode->make_inactive();
+        $appsnode = new flat_navigation_node($appsnode, 0);
+        $appsnode->set_showdivider(true, get_string('courseapps', 'mod_lti'));
+        $appsnode = $coursenode->add_node($appsnode);
     }
 }
