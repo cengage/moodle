@@ -70,9 +70,9 @@ class lti_coursenav_lib
         if (!$activeonly) {
             $join = ' LEFT ';
         }
-        $filter = '';
+        $filter = ' where l.state=1 ';
         if ($activeonly && $learner) {
-            $filter = ' where allowlearners=1 ';
+            $filter = $filter.'and allowlearners=1 ';
         }
         $records = $DB->get_recordset_sql(
             "SELECT l.id as typeid,
@@ -111,6 +111,9 @@ class lti_coursenav_lib
             $menulink->allowlearners = $record->allowlearners;
             $type->menulinks[$menulink->id] = $menulink;
         }
+        debugging('join:'.$join);
+        var_dump($types);
+
 
         return $types;
     }

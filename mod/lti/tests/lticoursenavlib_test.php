@@ -109,7 +109,7 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
         // New course has no actual placements of the tool's course navs.
         $this->assertTrue(empty($coursenavs));
-        $coursenavsaddible = lti_coursenav_lib::get()->load_coursenav_links($course->id, false);
+        $coursenavsaddible = lti_coursenav_lib::get()->load_coursenav_links($course->id);
         $this->assertEquals(1, count($coursenavsaddible));
         $this->assertEquals(2, count($coursenavsaddible[$type->id]->menulinks));
         $coursenavsvals = array_values($coursenavsaddible[$type->id]->menulinks);
@@ -125,9 +125,11 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $this->assertEquals(2, count($coursenavs[$type->id]->menulinks));
         $coursenavslearner = lti_coursenav_lib::get()->load_coursenav_links($course->id, true, true);
         $this->assertEquals(1, count($coursenavslearner[$type->id]->menulinks));
-        $this->assertEquals($type->name, $coursenavslearner[$type->id]->menulinks[0]->typename);
-        $this->assertEquals('menulink2', $coursenavslearner[$type->id]->menulinks[0]->label);
-        $this->assertTrue($coursenavslearner[$type->id]->menulinks[0]->id > 0);
+        $coursenavsvals = array_values($coursenavslearner[$type->id]->menulinks);
+        var_dump($coursenavsvals);
+        $this->assertEquals($type->name, $coursenavslearner[$type->id]->name);
+        $this->assertEquals('menulink2', $coursenavsvals[0]->label);
+        $this->assertTrue($coursenavsvals[0]->id > 0);
     }
 
 }

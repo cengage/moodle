@@ -195,7 +195,7 @@ class registration_helper {
                     if (isset($value['roles'])) {
                         $config->lti_menulinkallowlearners[] =
                         empty(array_filter($value['roles'], function ($role) {
-                            return str_contains($role, 'learner');
+                            return stripos($role, 'learner') !== false;
                         }))?"0":"1";
                     } else {
                         $config->lti_menulinkallowlearners[] = '1'; 

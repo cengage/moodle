@@ -2601,6 +2601,7 @@ function lti_delete_type($id) {
 
     $DB->delete_records('lti_types', array('id' => $id));
     $DB->delete_records('lti_types_config', array('typeid' => $id));
+    $DB->delete_records('lti_course_nav_messages', array('typeid' => $id));
 }
 
 function lti_set_state_for_type($id, $state) {
@@ -2863,7 +2864,7 @@ function lti_prepare_type_for_save($type, $config) {
         }
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
-
+    $type->menulinks = [];
     foreach($config->lti_menulinklabel??[] as $i => $navlabel) {
         if (empty($navlabel)) {
             continue;
@@ -2891,7 +2892,9 @@ function lti_prepare_type_for_save($type, $config) {
 function lti_update_type($type, $config) {
     global $DB, $CFG;
 
-    lti_prepare_type_for_save($type, $config);
+    if (isset($config)) {
+        lti_prepare_type_for_save($type, $config);
+    }
 
     if (lti_request_is_using_ssl() && !empty($type->secureicon)) {
         $clearcache = !isset($config->oldicon) || ($config->oldicon !== $type->secureicon);
@@ -2900,13 +2903,12 @@ function lti_update_type($type, $config) {
     }
     unset($config->oldicon);
 
-    if (isset($type->menulinks)) {
-        $menulinks = $type->menulinks;
-        unset($type->menulinks);
-    }
     if ($DB->update_record('lti_types', $type)) {
 
-        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
+        if (isset($type->menulinks)) {
+            lti_coursenav_lib::get()->update_type_coursenavs($type->id, $type->menulinks);
+            unset($type->menulinks);
+        }
 
         foreach ($config as $key => $value) {
             if (substr($key, 0, 4) == 'lti_' && !is_null($value)) {
