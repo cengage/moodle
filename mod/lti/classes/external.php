@@ -875,7 +875,7 @@ class mod_lti_external extends external_api {
             }
         }
 
-        lti_update_type($type, new stdClass());
+        lti_update_type($type);
 
         return serialise_tool_type($type);
     }
