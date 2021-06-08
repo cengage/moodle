@@ -1060,7 +1060,7 @@ class locallib_test extends mod_lti_testcase {
         $typeconfig = lti_get_type_config($typeid);
 
         $course = $this->getDataGenerator()->create_course();
-        $lti = lti_message_helper::to_message(38291, $typeid, $course->id, 'https://test.example/coursenav', '', lti_message_type::COURSE_NAV_LAUNCH);
+        $lti = lti_message_helper::to_message($type, 38291, $typeid, $course->id, 'https://test.example/coursenav', '', lti_message_type::COURSE_NAV_LAUNCH);
 
         $message = lti_build_standard_message($lti, '2', LTI_VERSION_1);
 
@@ -1070,6 +1070,8 @@ class locallib_test extends mod_lti_testcase {
         $this->assertEquals('2', $message['tool_consumer_instance_guid']);
         $this->assertEquals('PHPUnit test site', $message['tool_consumer_instance_description']);
     }
+
+    // add test here for url and blending of custom params
 
     /**
      * Test lti_build_standard_message().

@@ -68,7 +68,7 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 if ($ok) {
-    list($courseid, $typeid, $id, $messagetype, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
+    list($courseid, $typeid, $id, $messagetype, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 6);
     $ok = ("{$id},{$messagetype}" === $ltimessagehint);
     if (!$ok) {
         $error = 'invalid_hint';

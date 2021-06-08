@@ -46,6 +46,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 use mod_lti\local\lti_message_type;
+use mod_lti\local\lti_coursenav_lib;
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/completionlib.php');
@@ -61,14 +62,11 @@ $coursenavid = optional_param('coursenavid', 0, PARAM_INT);
 $cm = null;
 $pageparams = array();
 if ($coursenavid && $courseid) {
-    $lti = $DB->get_record('lti_types', ['id' => $ltitypeid]);
-    $lti->typeid = $ltitypeid;
-    $lti->showtitlelaunch = false;
-    $lti->showdescriptionlaunch = false;
+    $lti = lti_coursenav_lib::get()->get_lti_message($courseid, $coursenavid);
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     $context = context_course::instance($courseid);
-    $pageparams = array('ltitypeid' => $ltitypeid, 'courseid' => $courseid, 'coursenavid' => $coursenavid);
-    $launchparam = 'ltitypeid=' . $ltitypeid . '&courseid=' . $courseid . '&coursenavid=' . $coursenavid;
+    $pageparams = array('courseid' => $courseid, 'coursenavid' => $coursenavid);
+    $launchparam = 'courseid=' . $courseid . '&coursenavid=' . $coursenavid;
 
     if (is_guest($context, $USER) || !isloggedin()) {
         throw new moodle_exception('guestsarenotallowed', 'error');
@@ -212,7 +210,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
-    $attributes['src'] = 'launch.php?id=' . $launchparam . '&triggerview=0';
+    $attributes['src'] = 'launch.php?' . $launchparam . '&triggerview=0';
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .

@@ -52,6 +52,7 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
+
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
 $courseid = optional_param('courseid', 0, PARAM_INT);
@@ -77,6 +78,9 @@ if ($id) {
     throw new moodle_exception('cannotlaunch-nomsgid', 'error');
 }
 
+require_login($course, true, $cm);
+require_capability('mod/lti:view', $context);
+
 $typeid = $lti->typeid;
 if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
     $typeid = $tool->id;
@@ -85,16 +89,13 @@ if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
         if (!isset($SESSION->lti_initiatelogin_status)) {
-            echo lti_initiate_login($course->id, $coursenavid??$id, $lti, $config, $lti->message_type ?? 'basic-lti-launch-request');
+            echo lti_initiate_login($course->id, $id>0?$id:$coursenavid, $lti, $config, $lti->message_type ?? 'basic-lti-launch-request');
             exit;
         } else {
             unset($SESSION->lti_initiatelogin_status);
         }
     }
 }
-
-require_login($course, true, $cm);
-require_capability('mod/lti:view', $context);
 
 // Completion and trigger events.
 if ($cm) {
