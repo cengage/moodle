@@ -74,11 +74,16 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 if ($ok) {
+<<<<<<< HEAD
     $launchid = $ltimessagehint->launchid;
     list($courseid, $typeid, $id, $messagetype, $foruserid, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 7);
     unset($SESSION->$launchid);
     $config = lti_get_type_type_config($typeid);
     $ok = ($clientid === $config->lti_clientid);
+=======
+    list($courseid, $typeid, $id, $messagetype, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 6);
+    $ok = ("{$id},{$messagetype}" === $ltimessagehint);
+>>>>>>> ca0f2e5ae47 (course nav: fixing launches)
     if (!$ok) {
         $error = 'unauthorized_client';
     }

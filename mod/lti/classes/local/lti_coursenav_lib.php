@@ -111,10 +111,6 @@ class lti_coursenav_lib
             $menulink->allowlearners = $record->allowlearners;
             $type->menulinks[$menulink->id] = $menulink;
         }
-        debugging('join:'.$join);
-        var_dump($types);
-
-
         return $types;
     }
 
@@ -199,6 +195,7 @@ class lti_coursenav_lib
         // add checks here! user role and course association
         global $DB;
         $coursenav = $DB->get_record('lti_course_nav_messages', array('id' => $coursenavid), '*', MUST_EXIST);
-        return lti_message_helper::to_message($coursenav->id, $coursenav->typeid, $courseid, $coursenav->url, $coursenav->customparams, lti_message_type::COURSE_NAV_LAUNCH);
+        $type =  $DB->get_record('lti_types', array('id' => $coursenav->typeid));
+        return lti_message_helper::to_message($type, $coursenav->id, $coursenav->label, $courseid, $coursenav->url, $coursenav->customparameters, lti_message_type::COURSE_NAV_LAUNCH);
     }
 }
