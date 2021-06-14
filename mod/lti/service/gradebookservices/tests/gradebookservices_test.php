@@ -274,6 +274,15 @@ class gradebookservices_test extends \advanced_testcase {
         $this->assertFalse(gradebookservices::is_user_gradable_in_course($course->id, $user2->id));
     }
 
+    /** 
+     * Check the timestamp ISO 8601 support
+     */
+    public function test_timestamp_check() {
+        $this->assertTrue(gradebookservices::validate_iso8601_date("2021-06-10T09:39:20+00:00"));
+        $this->assertFalse(gradebookservices::validate_iso8601_date("2021-6-10T09:39:20+00:00"));
+        $this->assertTrue(gradebookservices::validate_iso8601_date("2017-04-16T18:54:36.736Z")); 
+    }
+
     /**
      * Asserts a matching gradebookservices record exist with the matching tag and resourceid.
      *

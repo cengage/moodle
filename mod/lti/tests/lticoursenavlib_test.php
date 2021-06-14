@@ -94,6 +94,9 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $this->assertEquals('0', $link2updated->allowlearners);
     }
 
+    /**
+     * Tests the course placements based on active filter, user role and tool state
+     */
     public function test_course_placements() {
         $this->resetAfterTest();
         $config = new stdClass();
@@ -123,13 +126,22 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
         $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id, true);
         $this->assertEquals(2, count($coursenavs[$type->id]->menulinks));
+        // Learner should only see the learner placement
         $coursenavslearner = lti_coursenav_lib::get()->load_coursenav_links($course->id, true, true);
         $this->assertEquals(1, count($coursenavslearner[$type->id]->menulinks));
         $coursenavsvals = array_values($coursenavslearner[$type->id]->menulinks);
-        var_dump($coursenavsvals);
         $this->assertEquals($type->name, $coursenavslearner[$type->id]->name);
         $this->assertEquals('menulink2', $coursenavsvals[0]->label);
         $this->assertTrue($coursenavsvals[0]->id > 0);
+        // if the tool is disabled then no link should be available
+        $type->state = 2; //pending
+        update_type($type);
+        $coursenavsaddible = lti_coursenav_lib::get()->load_coursenav_links($course->id);
+        $this->assertTrue(empty($coursenavsaddible));
+        $type->state = 1; //enabled
+        update_type($type);
+        $coursenavsaddible = lti_coursenav_lib::get()->load_coursenav_links($course->id);
+        $this->assertFalse(empty($coursenavsaddible));
     }
 
 }
