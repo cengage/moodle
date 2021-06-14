@@ -2825,7 +2825,7 @@ function lti_prepare_type_for_save($type, $config) {
     unset ($config->lti_secureicon);
 }
 
-function lti_update_type($type, $config) {
+function lti_update_type($type, $config = null) {
     global $DB, $CFG;
 
     if (isset($config)) {
@@ -2845,21 +2845,22 @@ function lti_update_type($type, $config) {
             lti_coursenav_lib::get()->update_type_coursenavs($type->id, $type->menulinks);
             unset($type->menulinks);
         }
-
-        foreach ($config as $key => $value) {
-            if (substr($key, 0, 4) == 'lti_' && !is_null($value)) {
-                $record = new \StdClass();
-                $record->typeid = $type->id;
-                $record->name = substr($key, 4);
-                $record->value = $value;
-                lti_update_config($record);
-            }
-            if (substr($key, 0, 11) == 'ltiservice_' && !is_null($value)) {
-                $record = new \StdClass();
-                $record->typeid = $type->id;
-                $record->name = $key;
-                $record->value = $value;
-                lti_update_config($record);
+        if (isset($config)) {
+            foreach ($config as $key => $value) {
+                if (substr($key, 0, 4) == 'lti_' && !is_null($value)) {
+                    $record = new \StdClass();
+                    $record->typeid = $type->id;
+                    $record->name = substr($key, 4);
+                    $record->value = $value;
+                    lti_update_config($record);
+                }
+                if (substr($key, 0, 11) == 'ltiservice_' && !is_null($value)) {
+                    $record = new \StdClass();
+                    $record->typeid = $type->id;
+                    $record->name = $key;
+                    $record->value = $value;
+                    lti_update_config($record);
+                }
             }
         }
         if (isset($type->toolproxyid) && $type->ltiversion === LTI_VERSION_1P3) {

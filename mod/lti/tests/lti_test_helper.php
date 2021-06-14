@@ -48,7 +48,7 @@
      *
      * @return object tool.
      */
-    function create_type(object $config) {
+    function create_type(object $config): object {
         global $CFG;
         require_once($CFG->dirroot . '/mod/lti/locallib.php');
         $type = new stdClass();
@@ -65,4 +65,17 @@
         $mergedconfig = (object) array_merge( (array) $configbase, (array) $config);
         $typeid = lti_add_type($type, $mergedconfig);
         return lti_get_type($typeid);
+    }
+
+    /**
+     * Create an LTI Tool.
+     *
+     * @param object $config tool config.
+     *
+     * @return object tool.
+     */
+    function update_type(object $type) {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+        lti_update_type($type);
     }
