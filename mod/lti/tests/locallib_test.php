@@ -1060,7 +1060,7 @@ class locallib_test extends mod_lti_testcase {
         $typeconfig = lti_get_type_config($typeid);
 
         $course = $this->getDataGenerator()->create_course();
-        $lti = lti_message_helper::to_message($type, 38291, $typeid, $course->id, 'https://test.example/coursenav', '', lti_message_type::COURSE_NAV_LAUNCH);
+        $lti = lti_message_helper::to_message($type, $typpeconfig, 38291, 'coursenav', $course->id, 'https://test.example/coursenav', '', lti_message_type::COURSE_NAV_LAUNCH);
 
         $message = lti_build_standard_message($lti, '2', LTI_VERSION_1);
 
@@ -1705,13 +1705,14 @@ MwIDAQAB
         $USER->id = 123456789;
 
         $course   = $this->getDataGenerator()->create_course();
-
+        $type = new stdClass();
+        $tyype->id = 333;
         $config = new stdClass();
         $config->lti_clientid = 'some-client-id';
         $config->typeid = 333;
         $config->lti_toolurl = 'https://some-lti-tool.url';
 
-        $instance = lti_message_helper::to_message(12, $config->typeid, $course->id, '', '', 'ContextLaunchRequest' );
+        $instance = lti_message_helper::to_message($type, (array) $config, 12345, 'coursenav', $course->id, '', '', 'ContextLaunchRequest' );
 
         $request = lti_build_login_request($course->id, $instance->id, $instance, $config, $instance->message_type);
 

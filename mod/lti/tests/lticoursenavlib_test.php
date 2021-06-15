@@ -78,7 +78,7 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $this->assertEquals(2, count($coursenavs));
         $this->assertEquals("menulink1_updated", $coursenavs[$newlink->id]->label);
         $link2check = function($n) {return $n->label=="menulink2";};
-        $link2a = array_filter($coursenavs, $link2check); 
+        $link2a = array_filter($coursenavs, $link2check);
         $this->assertEquals(1, count($link2a));
         $link2 = array_values($link2a)[0];
         $this->assertEquals("https://somewhere", $link2->url);
@@ -144,4 +144,80 @@ class mod_lti_coursenav_lib_testcase extends advanced_testcase {
         $this->assertFalse(empty($coursenavsaddible));
     }
 
+    /**
+     * Checks get message constructs the expected transient LTI instance for the launch with
+     * blending tool and message level custom params.
+     */
+    public function test_get_message_mixed_params() {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $config->lti_customparameters = 't1=1';
+        $type = create_type($config);
+        $menulinks = [
+            "link2"=>["label"=> "menulink", "url"=>"https://somewhere", "allowlearners"=>"1", "customparameters"=>"lp1=1\nlp2=2"]
+        ];
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id);
+        $coursenavsvals = array_values($coursenavs[$type->id]->menulinks);
+        $fakeform = [];
+        $fakeform["menulink-{$type->id}-{$coursenavsvals[0]->id}"] = "1";
+        lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
+        $message = lti_coursenav_lib::get()->get_lti_message($course->id, $coursenavsvals[0]->id);
+        $this->assertEquals("ContextLaunchRequest", $message->message_type);
+        $this->assertEquals("https://somewhere", $message->toolurl);
+        $this->assertEquals("t1=1\nlp1=1\nlp2=2", $message->instructorcustomparameters);
+    }
+
+    /**
+     * Checks get message constructs the expected transient LTI instance for the launch with
+     * only tool level params and no link url.
+     */
+    public function test_get_message_tool_params() {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $type = create_type($config);
+        $menulinks = [
+            "link2"=>["label"=> "menulink", "allowlearners"=>"1", "customparameters"=>"k=v"]
+        ];
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id);
+        $coursenavsvals = array_values($coursenavs[$type->id]->menulinks);
+        $fakeform = [];
+        $fakeform["menulink-{$type->id}-{$coursenavsvals[0]->id}"] = "1";
+        lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
+        $message = lti_coursenav_lib::get()->get_lti_message($course->id, $coursenavsvals[0]->id);
+        $this->assertEquals("ContextLaunchRequest", $message->message_type);
+        $this->assertEquals($type->baseurl, $message->toolurl);
+        $this->assertEquals("k=v", $message->instructorcustomparameters);
+    }
+
+    /**
+     * Checks get message constructs the expected transient LTI instance for the launch with
+     * only message level params and no link url.
+     */
+    public function test_get_message_message_params() {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $config = new stdClass();
+        $config->lti_organizationid = '';
+        $config->lti_customparameters = 't1=1';
+        $type = create_type($config);
+        $menulinks = [
+            "link2"=>["label"=> "menulink", "allowlearners"=>"1", "customparameters"=>""]
+        ];
+        lti_coursenav_lib::get()->update_type_coursenavs($type->id, $menulinks);
+        $coursenavs = lti_coursenav_lib::get()->load_coursenav_links($course->id);
+        $coursenavsvals = array_values($coursenavs[$type->id]->menulinks);
+        $fakeform = [];
+        $fakeform["menulink-{$type->id}-{$coursenavsvals[0]->id}"] = "1";
+        lti_coursenav_lib::get()->set_coursenav_links_from_form_data($course->id, $fakeform);
+        $message = lti_coursenav_lib::get()->get_lti_message($course->id, $coursenavsvals[0]->id);
+        $this->assertEquals("ContextLaunchRequest", $message->message_type);
+        $this->assertEquals($type->baseurl, $message->toolurl);
+        $this->assertEquals("t1=1", $message->instructorcustomparameters);
+    }
 }

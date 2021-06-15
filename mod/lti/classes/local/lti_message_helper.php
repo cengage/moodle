@@ -36,18 +36,34 @@ class lti_message_helper {
      * Runtime build of LTI message, used when executing an LTI
      * placement that is not an actual record in the LTI Table.
      *
+     * @param object $type tool type
+     * @param array $config type's config
+     * @param int $messageid message id
+     * @param string $name name of the link
+     * @param int $courseid
+     * @param string $url if not present the tool url will be used
+     * @param string $customparameters this message custom parameteres, added to the tool's custom parameters
+     * @param string $messagetype message type
+     *
      * @return object LTI Message object.
      */
-    public static function to_message(object $type, int $messageid, string $name, int $courseid,
-                                      ?string $url, ?string $customparams, string $messagetype): object {
+    public static function to_message(object $type, array $config, int $messageid, string $name, int $courseid,
+                                      ?string $url, ?string $customparameters, string $messagetype): object {
         $lti = new \StdClass();
         $lti->message_type = $messagetype;
         $lti->typeid = $type->id;
         $lti->name = $name;
         $lti->id = $messageid;
-        $lti->toolurl = $url ?? $type->toolurl;
-        // blend custom param with type here
-        $lti->instructorcustomparameters = $customparameters ?? '';
+        $lti->toolurl = $url ?? $type->baseurl;
+        if (isset($config['customparameters']) && $config['customparameters']) {
+            if (isset($customparameters) && $customparameters) {
+                $lti->instructorcustomparameters = $config['customparameters']."\n".$customparameters;
+            } else {
+                $lti->instructorcustomparameters = $config['customparameters'];
+            }
+        } else {
+            $lti->instructorcustomparameters = $customparameters ?? '';
+        }
         $lti->debuglaunch = false;
         $lti->course = $courseid;
         $lti->showtitlelaunch = false;
