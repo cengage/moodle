@@ -83,7 +83,7 @@ class lti_coursenav_lib
                     nav.allowlearners,
                     lc.course,
                     lc.coursenavid
-            FROM {lti_course_nav_messages} AS nav 
+            FROM {lti_course_nav_messages} AS nav
             JOIN {lti_types} AS l ON nav.typeid=l.id
         $join JOIN {lti_course_menu_placements} AS lc ON (lc.coursenavid=nav.id AND lc.course=?)
         $filter
@@ -133,7 +133,7 @@ class lti_coursenav_lib
                         'course' => $courseid,
                         'coursenavid' => $coursenavid
                     ]);
-                } 
+                }
             }
             $transaction->allow_commit();
         } catch (Exception $e) {
@@ -196,6 +196,7 @@ class lti_coursenav_lib
         global $DB;
         $coursenav = $DB->get_record('lti_course_nav_messages', array('id' => $coursenavid), '*', MUST_EXIST);
         $type =  $DB->get_record('lti_types', array('id' => $coursenav->typeid));
-        return lti_message_helper::to_message($type, $coursenav->id, $coursenav->label, $courseid, $coursenav->url, $coursenav->customparameters, lti_message_type::COURSE_NAV_LAUNCH);
+        $config = lti_get_type_config($type->id);
+        return lti_message_helper::to_message($type, $config, $coursenav->id, $coursenav->label, $courseid, $coursenav->url, $coursenav->customparameters, lti_message_type::COURSE_NAV_LAUNCH);
     }
 }
