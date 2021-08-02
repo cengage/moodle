@@ -188,7 +188,7 @@ function xmldb_lti_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2021052501, 'lti');
     }
 
-    if ($oldversion < 2020061502) {
+    if ($oldversion < 2021052502) {
 
         // Create lti_course_nav_messages table.
         $ltimenutablename = 'lti_course_nav_messages';
@@ -219,14 +219,13 @@ function xmldb_lti_upgrade($oldversion) {
 
             // Adding keys to table lti_course_menu_placements.
             $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-            $table->add_key('course', XMLDB_KEY_FOREIGN, array('course'), 'course', array('id'));
-            $table->add_key('coursenavid',XMLDB_KEY_FOREIGN, array('typeid'), 'lti_course_nav_messages', array('id'));
+            $table->add_key('coursenavid',XMLDB_KEY_FOREIGN, array('coursenavid'), 'lti_course_nav_messages', array('id'));
             $table->add_index('coursenavuniq', XMLDB_INDEX_UNIQUE, array('course', 'coursenavid'));
             $table->add_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
 
             $dbman->create_table($table);
         }
-        upgrade_mod_savepoint(true, 2020061502, 'lti');
+        upgrade_mod_savepoint(true, 2021052502, 'lti');
     }
 
     return true;
