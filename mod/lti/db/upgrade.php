@@ -115,7 +115,11 @@ function xmldb_lti_upgrade($oldversion) {
     
     // Automatically generated Moodle v4.1.0 release upgrade line.
     // Put any upgrade step following this.
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> b523e1e8abb (MDL-67559 course nav fix upgrade script)
     if ($oldversion < 2022050400) {
         // Create lti_course_nav_messages table.
         $ltimenutablename = 'lti_course_nav_messages';
@@ -151,8 +155,7 @@ function xmldb_lti_upgrade($oldversion) {
 
             // Adding keys to table lti_course_menu_placements.
             $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-            $table->add_key('course', XMLDB_KEY_FOREIGN, array('course'), 'course', array('id'));
-            $table->add_key('coursenavid',XMLDB_KEY_FOREIGN, array('typeid'), 'lti_course_nav_messages', array('id'));
+            $table->add_key('coursenavid',XMLDB_KEY_FOREIGN, array('coursenavid'), 'lti_course_nav_messages', array('id'));
             $table->add_index('coursenavuniq', XMLDB_INDEX_UNIQUE, array('course', 'coursenavid'));
             $table->add_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
 

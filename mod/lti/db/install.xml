@@ -185,7 +185,6 @@
         </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id" COMMENT="The course for which the setting exists"/>
         <KEY NAME="coursenavid" TYPE="foreign" FIELDS="coursenavid" REFTABLE="lti_course_nav_messages" REFFIELDS="id" COMMENT="The course navigation message referenced"/>
       </KEYS>
       <INDEXES>
