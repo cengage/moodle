@@ -2896,58 +2896,6 @@ function lti_update_type($type, $config = null) {
 
 }
 
-/**
- * Returns LTI tools that can be placed in the course menu.
- *
- * @param int $courseid
- * @param boolean $activeonly
- * @return array
- */
-function lti_load_course_menu_links(int $courseid, $activeonly=false) {
-    global $DB;
-
-    $join = '';
-    if (!$activeonly) {
-        $join = ' LEFT ';
-    }
-    $records = $DB->get_recordset_sql(
-        "SELECT l.id as typeid,
-                l.name as typename,
-                l.description as typedesc,
-                nav.id,
-                nav.label,
-                nav.allowlearners,
-                lc.course,
-                lc.coursenavid
-           FROM {lti_course_nav_messages} AS nav 
-           JOIN {lti_types} AS l ON nav.typeid=l.id
-     $join JOIN {lti_course_menu_placements} AS lc ON (lc.coursenavid=nav.id AND lc.course=?)
-       ORDER BY l.name, nav.label", [$courseid]
-    );
-
-    $types = [];
-    foreach ($records as $record) {
-        if (!array_key_exists($record->typeid, $types)) {
-            $type = new stdClass();
-            $type->id = $record->typeid;
-            $type->name = $record->typename;
-            $type->description = trim($record->typedesc);
-            $type->selected = $record->course == $courseid;
-            $type->menulinks = [];
-            $types[$type->id] = $type;
-        }
-        $type = $types[$record->typeid];
-        $type->selected = $record->course == $courseid || $type->selected;
-        $menulink = new stdClass();
-        $menulink->id = $record->id;
-        $menulink->typeid = $record->typeid;
-        $menulink->label = $record->label;
-        $menulink->selected = $record->course == $courseid;
-        $menulink->allowlearners = $record->allowlearners;
-        $type->menulinks[$menulink->id] = $menulink;
-    }
-}
-
 function lti_add_type($type, $config) {
     global $USER, $SITE, $DB;
 
