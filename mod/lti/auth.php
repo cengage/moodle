@@ -43,15 +43,17 @@ $responsetype = optional_param('response_type', '', PARAM_TEXT);
 $clientid = optional_param('client_id', '', PARAM_TEXT);
 $redirecturi = optional_param('redirect_uri', '', PARAM_URL);
 $loginhint = optional_param('login_hint', '', PARAM_TEXT);
-$ltimessagehint = optional_param('lti_message_hint', 0, PARAM_INT);
+$ltimessagehintenc = optional_param('lti_message_hint', '', PARAM_TEXT);
 $state = optional_param('state', '', PARAM_TEXT);
 $responsemode = optional_param('response_mode', '', PARAM_TEXT);
 $nonce = optional_param('nonce', '', PARAM_TEXT);
 $prompt = optional_param('prompt', '', PARAM_TEXT);
 
 $ok = !empty($scope) && !empty($responsetype) && !empty($clientid) &&
-      !empty($redirecturi) && !empty($loginhint) &&
+      !empty($redirecturi) && !empty($loginhint) && !empty($ltimessagehintenc) &&
       !empty($nonce) && !empty($SESSION->lti_message_hint);
+
+$ltimessagehint = json_decode($ltimessagehintenc);
 
 if (!$ok) {
     $error = 'invalid_request';
@@ -66,9 +68,9 @@ if ($ok && ($responsetype !== 'id_token')) {
 }
 if ($ok) {
     list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
-    $ok = ($id !== $ltimessagehint);
+    $ok = !$id || ($id === $ltimessagehint->id);
     if (!$ok) {
-        $error = 'invalid_request';
+        $error = "invalid_request";
     } else {
         $config = lti_get_type_type_config($typeid);
         $ok = ($clientid === $config->lti_clientid);
@@ -131,6 +133,9 @@ if ($ok) {
             'id' => $typeid,
             'sesskey' => sesskey()
         ];
+        if (isset($ltimessagehint->callback)) {
+            $returnurlparams['callback'] = $ltimessagehint->callback;
+        }
         $returnurl = new \moodle_url('/mod/lti/contentitem_return.php', $returnurlparams);
         // Prepare the request.
         $title = base64_decode($titleb64);

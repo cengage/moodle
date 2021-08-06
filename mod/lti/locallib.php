@@ -2823,39 +2823,12 @@ function lti_prepare_type_for_save($type, $config) {
         }
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
-
-<<<<<<< HEAD
-=======
-    $type->asmenulink = false;
     $type->asrichtexteditorplugin = false;
-
-    if (isset($config->lti_asmenulink)) {
-        $type->asmenulink = $config->lti_asmenulink;
-    }
-
     if (isset($config->lti_asrichtexteditorplugin)) {
         $type->asrichtexteditorplugin = $config->lti_asrichtexteditorplugin;
     }
-
-    $menulinkscount = isset($config->lti_menulinklabel) ? count($config->lti_menulinklabel) : 0;
-    for ($i = 0; $i < $menulinkscount; $i++) {
-
-        $menulinklabel = $config->lti_menulinklabel[$i];
-        $menulinkurl = $config->lti_menulinkurl[$i];
-
-        if (empty($menulinklabel) && empty($menulinkurl)) {
-            continue;
-        }
-
-        $type->menulinks[] = array (
-            "label" => $menulinklabel,
-            "url" => $menulinkurl
-        );
-    }
-
     $type->richtexteditorurl = isset($config->lti_richtexteditorurl) ? $config->lti_richtexteditorurl : '';
 
->>>>>>> 226e8b1321d... LTI Integration Point for HTML Editor
     $type->timemodified = time();
 
     unset ($config->lti_typename);
@@ -2928,8 +2901,6 @@ function lti_update_type($type, $config) {
     }
 }
 
-<<<<<<< HEAD
-=======
 /**
  * Get all types that can be placed in a specific placement.
  *
@@ -2942,138 +2913,12 @@ function lti_load_type_by_placement (string $placementname) {
     global $DB;
 
     $queryfield = [
-        'menulink' => 'asmenulink',
         'richtexteditorplugin' => 'asrichtexteditorplugin',
     ][$placementname];
 
     return $DB->get_records('lti_types', [$queryfield => 1], 'name');
 }
 
-/**
- * Returns LTI tools that can be placed in the course menu.
- *
- * @param int $courseid
- * @param boolean $activeonly
- * @return array
- */
-function lti_load_course_menu_links(int $courseid, $activeonly=false) {
-    global $DB;
-
-    $join = '';
-    if (!$activeonly) {
-        $join = ' LEFT ';
-    }
-    $records = $DB->get_recordset_sql(
-        "SELECT l.id,
-                l.name,
-                l.description,
-                lc.course,
-                lc.menulinkid
-           FROM {lti_types} AS l
-     $join JOIN {lti_course_menu_placements} AS lc ON (lc.typeid=l.id AND lc.course=?)
-          WHERE l.asmenulink=1
-       ORDER BY l.name", [$courseid]
-    );
-
-    $types = [];
-    foreach ($records as $record) {
-        if (!array_key_exists($record->id, $types)) {
-            $type = new stdClass();
-            $type->id = $record->id;
-            $type->name = $record->name;
-            $type->description = trim($record->description);
-            $type->selected = $record->course != null;
-
-            $type->menulinks = [];
-            $linkrecords = $DB->get_recordset_sql(
-                "SELECT id,
-                        typeid,
-                        label
-                   FROM {lti_menu_links}
-                  WHERE typeid=?
-               ORDER BY id", [$type->id]
-            );
-            foreach ($linkrecords as $linkrecord) {
-                $menulink = new stdClass();
-                $menulink->id = $linkrecord->id;
-                $menulink->typeid = $linkrecord->typeid;
-                $menulink->label = $linkrecord->label;
-                $menulink->selected = false;
-
-                $type->menulinks[$menulink->id] = $menulink;
-            }
-
-            $types[$type->id] = $type;
-        }
-
-        if ($record->menulinkid) {
-            $types[$record->id]->menulinks[$record->menulinkid]->selected = true;
-        }
-    }
-
-    return $types;
-}
-
-/**
- * For given course, set course menu links.
- *
- * @param int $courseid
- * @param array $menulinks
- */
-function lti_set_course_menu_links(int $courseid, array $menulinks) {
-    global $DB;
-    $transaction = $DB->start_delegated_transaction();
-    try {
-        $DB->delete_records('lti_course_menu_placements', ['course' => $courseid]);
-
-        $ltitools = lti_organize_menuplacement_form_data($menulinks);
-        foreach ($ltitools as $key => $ltitool) {
-            if ($ltitool->menulinks) {
-                foreach ($ltitool->menulinks as $menulinkid) {
-                    $DB->insert_record('lti_course_menu_placements', (object)[
-                        'typeid' => $ltitool->id,
-                        'course' => $courseid,
-                        'menulinkid' => $menulinkid
-                    ]);
-                }
-            } else {
-                $DB->insert_record('lti_course_menu_placements', (object)[
-                    'typeid' => $ltitool->id,
-                    'course' => $courseid,
-                    'menulinkid' => null
-                ]);
-            }
-        }
-
-        $transaction->allow_commit();
-    } catch (Exception $e) {
-        $transaction->rollback($e);
-    }
-}
-
-/**
- * Organize the output data from menuplacement form.
- *
- * @param array $menuitems
- */
-function lti_organize_menuplacement_form_data(array $menuitems) {
-    $ltitools = [];
-    foreach ($menuitems as $keyset => $menuitemid) {
-        $key = explode('-', $keyset);
-        if ($key[0] === 'ltitool' && $menuitemid) {
-            $ltitool = new stdClass();
-            $ltitool->id = $menuitemid;
-            $ltitool->menulinks = [];
-            $ltitools [$ltitool->id] = $ltitool;
-        } else if ($key[0] === 'menulink' && $menuitemid) {
-            $ltitools[$key[1]]->menulinks [] = $key[2];
-        }
-    }
-
-    return $ltitools;
-}
-
->>>>>>> 226e8b1321d... LTI Integration Point for HTML Editor
 function lti_add_type($type, $config) {
     global $USER, $SITE, $DB;
 
@@ -3771,13 +3616,14 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $messagetype   LTI message type
  * @param string         $title     Title of content item
  * @param string         $text      Description of content item
+ * @param string         $hint      Associative Array of data to add to hint
  * @return string
  */
 function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
-        $text = '') {
+        $text = '', $hint = []) {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype);
+    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint);
     $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
         base64_encode($text);
 
@@ -3809,9 +3655,10 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
+ * @param array          $hint associative array that will be used as LTI hint
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $id, $instance, $config, $messagetype) {
+function lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint=[]) {
     global $USER, $CFG;
 
     if (!empty($instance)) {
@@ -3830,12 +3677,17 @@ function lti_build_login_request($courseid, $id, $instance, $config, $messagetyp
     } else if (!strstr($endpoint, '://')) {
         $endpoint = 'http://' . $endpoint;
     }
-
+    $ltihint = [
+        'id'=>$id
+    ];
+    if (!empty($hint)) {
+        $ltihint = array_merge($ltihint, $hint);
+    }
     $params = array();
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;
     $params['login_hint'] = $USER->id;
-    $params['lti_message_hint'] = $id;
+    $params['lti_message_hint'] = json_encode($ltihint);
     $params['client_id'] = $config->lti_clientid;
     $params['lti_deployment_id'] = $config->typeid;
     return $params;

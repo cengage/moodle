@@ -78,8 +78,9 @@ require_capability('moodle/course:manageactivities', $context);
 require_capability('mod/lti:addcoursetool', $context);
 
 $redirecturl = null;
-$returndata = null;
-if (empty($errormsg) && !empty($items)) {
+$returndata = $items;
+$callback = optional_param('callback', '', PARAM_TEXT);
+if (empty($errormsg) && !empty($items) && !$callback) {
     try {
         $returndata = lti_tool_configuration_from_content_item($id, $messagetype, $version, $consumerkey, $items);
     } catch (moodle_exception $e) {
@@ -90,7 +91,7 @@ if (empty($errormsg) && !empty($items)) {
 echo $OUTPUT->header();
 
 // Call JS module to redirect the user to the course page or close the dialogue on error/cancel.
-$PAGE->requires->js_call_amd('mod_lti/contentitem_return', 'init', [$returndata]);
+$PAGE->requires->js_call_amd('mod_lti/contentitem_return', 'init', [$returndata, $callback]);
 
 echo $OUTPUT->footer();
 
