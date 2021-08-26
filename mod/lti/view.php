@@ -216,28 +216,26 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
         echo "
         <script type=\"text/javascript\">
         //<![CDATA[
-            let contentframe = document.getElementById('contentframe');
+            (()=>{let contentframe = document.getElementById('contentframe');
             let typeid = contentframe.getAttribute('data-typeid');
+            let ltimemstore = {};
             window.addEventListener(\"message\", e=> {
-                if (e.origin === \"https://$tool->tooldomain\" && e.source === contentframe.contentWindow && e.data.subject) {
-                    if ( e.data.subject === 'lti-storeVariable') {
-                        if (!window.ltimemstore) window.ltimemstore = {};
-                        if (!window.ltimemstore[typeid]) window.ltimemstore[typeid] = {};
-                        window.ltimemstore[typeid][e.data.key] = e.data.value;
-                        e.source.postMessage({subject: 'success', message: e.data.messageId}, e.origin);
-                        console.log('storing', e);
-                    } else if (e.data.subject === 'lti-getVariable') {
-                        let val = window.ltimemstore && window.ltimemstore[typeid] ? window.ltimemstore[typeid][e.data.key] : null;
-                        e.source.postMessage({subject: 'success', message: e.data.messageId, key: e.data.key, value:val}, e.origin);
-                        console.log('getting', e);
+                if (e.source === contentframe.contentWindow && e.data.subject) {
+                    if ( e.data.subject === 'org.imsglobal.lti.put_data') {
+                        if (!ltimemstore[e.origin]) ltimemstore[e.origin] = {};
+                        ltimemstore[e.origin][e.data.key] = e.data.value;
+                        e.source.postMessage({subject: 'org.imsglobal.lti.put_data.response', message_id: e.data.message_id}, e.origin);
+                    } else if (e.data.subject === 'org.imsglobal.lti.get_data') {
+                        let val = (ltimemstore && ltimemstore[e.origin]) ? ltimemstore[e.origin][e.data.key] : null;
+                        e.source.postMessage({subject: 'org.imsglobal.lti.get_data.response', message_id: e.data.message_id, key: e.data.key, value:val}, e.origin);
                     } else {
-                        e.source.postMessage({subject: 'Unknown command', message: e.data.messageId}, e.origin);
-                        console.log('unknown', e);
+                        e.source.postMessage({subject: 'org.imsglobal.lti.get_data.response', message: e.data.messageId, error: 'bad_request'}, e.origin);
                     }
                 } else {
-                     console.log('mismatch');
+                    e.source.postMessage({subject: 'org.imsglobal.lti.get_data.response', message: e.data.message_id, error: 'bad_request'}, e.origin);
                 }
             });
+        })()
         //]]
         </script>
         ";
