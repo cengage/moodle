@@ -31,6 +31,7 @@ require_once(dirname(__FILE__) . '/../../../../../config.php');
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
+// course cannot be hard-coded, from cookie?
 $courseid  = required_param('course', PARAM_INT);
 $resourcelinkid = required_param('resourcelinkid', PARAM_ALPHANUMEXT);
 $ltitypeid = required_param('ltitypeid', PARAM_INT);
@@ -48,7 +49,7 @@ require_capability('mod/lti:view', $context);
 
 $lti = new stdClass();
 
-$lti->id = $resourcelinkid;
+$lti->resource_link_id = $resourcelinkid;
 $lti->typeid = $ltitypeid;
 $lti->launchcontainer = LTI_LAUNCH_CONTAINER_WINDOW;
 $lti->toolurl = $contenturl;
@@ -62,4 +63,4 @@ if ($customdata) {
     }
 }
 
-lti_launch_tool($lti, 'richtexteditor');
+lti_initiate_launch_tool($course, $lti, 'richtexteditor');

@@ -732,6 +732,17 @@ function lti_launch_tool($instance, $placement = '') {
     echo $content;
 }
 
+function lti_initiate_launch_tool($course, $instance, $placement = '') {
+    // should do domain matching if type does not match domain or no such type
+    $config = lti_get_type_type_config($instance->typeid);
+    if ($config->lti_ltiversion === LTI_VERSION_1P3) {
+        $content = lti_initiate_login($course->id, null, $instance, $config);
+    } else {
+        $content = lti_launch_tool($instance, $placement);
+    }
+    echo $content;
+}
+
 /**
  * Prepares an LTI registration request message
  *
@@ -1643,7 +1654,7 @@ function lti_convert_content_items($param) {
                 switch ($item->type) {
                     case 'ltiResourceLink':
                         $newitem->{'@type'} = 'LtiLinkItem';
-                        $newitem->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+                        $newitem->mediaType = 'application/vnd.ims.lti.v1.ltilink';
                         break;
                     case 'link':
                     case 'rich':

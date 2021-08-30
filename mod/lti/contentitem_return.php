@@ -80,9 +80,13 @@ require_capability('mod/lti:addcoursetool', $context);
 $redirecturl = null;
 $returndata = $items;
 $callback = optional_param('callback', '', PARAM_TEXT);
-if (empty($errormsg) && !empty($items) && !$callback) {
+if (empty($errormsg) && !empty($items)) {
     try {
-        $returndata = lti_tool_configuration_from_content_item($id, $messagetype, $version, $consumerkey, $items);
+        if ($callback) {
+            $returndata = json_decode($items);
+        } else {
+            $returndata = lti_tool_configuration_from_content_item($id, $messagetype, $version, $consumerkey, $items);
+        }
     } catch (moodle_exception $e) {
         $errormsg = $e->getMessage();
     }
