@@ -633,7 +633,7 @@ function lti_get_launch_data($instance, $nonce = '', $placement = '') {
     $launchcontainer = lti_get_launch_container($instance, $typeconfig);
     $returnurlparams = array('course' => $course->id,
         'launch_container' => $launchcontainer,
-        'instanceid' => $instance->id,
+        'instanceid' => isset($instance->id)?$instance->id:'',
         'sesskey' => sesskey());
 
     // Add the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns.
@@ -1017,10 +1017,7 @@ function lti_build_standard_message($instance, $orgid, $ltiversion, $messagetype
     $requestparams = array();
 
     if ($instance) {
-        $requestparams['resource_link_id'] = $instance->id;
-        if (property_exists($instance, 'resource_link_id') and !empty($instance->resource_link_id)) {
-            $requestparams['resource_link_id'] = $instance->resource_link_id;
-        }
+        $requestparams['resource_link_id'] = isset($instance->resource_link_id) ? $instance->resource_link_id : $instance->id;
     }
 
     $requestparams['launch_presentation_locale'] = current_language();
@@ -3633,6 +3630,7 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
 function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '', $hint = []) {
     global $SESSION;
+    //debugging($instance);
 
     $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint);
     $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
@@ -3670,7 +3668,7 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
  * @return array Login request parameters
  */
 function lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint=[]) {
-    global $USER, $CFG;
+    global $USER, $CFG, $SESSION;
 
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
@@ -3688,9 +3686,14 @@ function lti_build_login_request($courseid, $id, $instance, $config, $messagetyp
     } else if (!strstr($endpoint, '://')) {
         $endpoint = 'http://' . $endpoint;
     }
-    $ltihint = [
-        'id'=>$id
-    ];
+    $ltihint = [];
+    if ($id) {
+        $ltihint['id'] = $id;
+    } else if (!empty($instance)) {
+        $ltilaunch = 'ltilaunch'.$instance->resource_link_id;
+        $SESSION->$ltilaunch = $instance;
+        $ltihint['ltilaunch'] = $ltilaunch;
+    }
     if (!empty($hint)) {
         $ltihint = array_merge($ltihint, $hint);
     }

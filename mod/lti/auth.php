@@ -24,7 +24,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
-global $_POST, $_SERVER;
+global $_POST, $_SERVER, $SESSION;
 
 if (!isloggedin() && empty($_POST['repost'])) {
     header_remove("Set-Cookie");
@@ -122,6 +122,10 @@ if ($ok) {
         $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
         $lti->cmid = $cm->id;
         list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
+    } else if (isset($ltimessagehint->ltilaunch)) {
+        $ltilaunch = $ltimessagehint->ltilaunch;
+        $instance = $SESSION->$ltilaunch;;
+        list($endpoint, $params) = lti_get_launch_data($instance, $nonce); 
     } else {
         require_login($course);
         $context = context_course::instance($courseid);

@@ -22,44 +22,35 @@
  * resource_link_id without checking the database for it.
  *
  * @package    atto_lti
- * @copyright  2020 The Regents of the University of California
- * @author     David Shepard
+ * @copyright  2021 Cengage/Claude Vervoort
+ * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(__FILE__) . '/../../../../../config.php');
-require_once($CFG->dirroot.'/mod/lti/lib.php');
-require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-$courseid  = required_param('course', PARAM_INT);
 $resourcelinkid = required_param('resourcelinkid', PARAM_ALPHANUMEXT);
 $ltitypeid = required_param('ltitypeid', PARAM_INT);
-$contenturl = optional_param('contenturl', '', PARAM_URL);
-$customdata = optional_param('custom', '', PARAM_RAW_TRIMMED);
+$contenturl = required_param('contenturl', PARAM_URL);
+$custom = optional_param('custom', '', PARAM_RAW_TRIMMED);
 
-$course = get_course($courseid);
-$context = context_course::instance($courseid);
-
-// Make sure $ltitypeid is valid.
-$ltitype = $DB->get_record('lti_types', ['id' => $ltitypeid], '*', MUST_EXIST);
-
-require_login($course);
-require_capability('mod/lti:view', $context);
-
-$lti = new stdClass();
-
-$lti->resource_link_id = $courseid.'-'.$resourcelinkid;
-$lti->typeid = $ltitypeid;
-$lti->launchcontainer = LTI_LAUNCH_CONTAINER_WINDOW;
-$lti->toolurl = $contenturl;
-$lti->custom = new stdClass();
-$lti->instructorcustomparameters = [];
-$lti->debuglaunch = false;
-if ($customdata) {
-    $decoded = json_decode($customdata, true);
-    foreach ($decoded as $key => $value) {
-        $lti->custom->$key = $value;
-    }
-}
-
-lti_initiate_launch_tool($course, $lti, 'richtexteditor');
+echo "
+<!DOCTYPE html>
+<html>
+    <body>
+        <form action='/lib/editor/atto/plugins/lti/view.php' method='POST' id='form'>
+            <input type='hidden' name='course' id='course'>
+            <input type='hidden' name='resourcelinkid' value='$resourcelinkid'>
+            <input type='hidden' name='contenturl' value='$contenturl'>
+            <input type='hidden' name='ltitypeid' value='$ltitypeid'>
+            <input type='hidden' name='custom' value='$custom'>
+        </form>
+        <script type='text/javascript'>
+            if (window.parent.lti && window.parent.lti.course) {
+                document.getElementById('course').value = window.parent.lti.course;
+            }
+            document.getElementById('form').submit();
+        </script>
+    </body>
+</html>
+";
