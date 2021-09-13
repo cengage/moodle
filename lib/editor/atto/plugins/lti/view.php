@@ -62,4 +62,4 @@ if ($customdata) {
     }
 }
 
-lti_initiate_launch_tool($course, $lti, 'richtexteditor');
+lti_initiate_launch_tool($course, $lti, LTI_PLACEMENT_RICHTEXTEDITOR);

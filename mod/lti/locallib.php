@@ -101,6 +101,8 @@ define('LTI_JWK_KEYSET', 'JWK_KEYSET');
 define('LTI_DEFAULT_ORGID_SITEID', 'SITEID');
 define('LTI_DEFAULT_ORGID_SITEHOST', 'SITEHOST');
 
+define('LTI_PLACEMENT_RICHTEXTEDITOR', 'richtexteditor');
+
 define('LTI_ACCESS_TOKEN_LIFE', 3600);
 
 // Standard prefix for JWT claims.
@@ -668,7 +670,7 @@ function lti_get_launch_data($instance, $nonce = '', $placement = '') {
         $services = lti_get_services();
         foreach ($services as $service) {
             $serviceparameters = $service->get_launch_parameters('basic-lti-launch-request',
-                    $course->id, $USER->id , $typeid, $instance->id);
+                    $course->id, $USER->id , $typeid, $instance->id??null);
             foreach ($serviceparameters as $paramkey => $paramvalue) {
                 $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $requestparams, $paramvalue,
                     $islti2);
@@ -734,7 +736,11 @@ function lti_launch_tool($instance, $placement = '') {
 
 function lti_initiate_launch_tool($course, $instance, $placement = '') {
     // should do domain matching if type does not match domain or no such type
+
     $config = lti_get_type_type_config($instance->typeid);
+    if ($placement === LTI_PLACEMENT_RICHTEXTEDITOR  && !$config->lti_asrichtexteditorplugin) {
+        throw new moodle_exception('errortoolnosupportforrichtext', 'mod_lti');
+    }
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
         $content = lti_initiate_login($course->id, null, $instance, $config);
     } else {
@@ -1132,8 +1138,8 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     if (!is_array($presentationtargets)) {
         throw new coding_exception('The list of accepted presentation targets should be in an array');
     }
-    if (!in_array($placement, ['', 'menulink', 'richtexteditor'])) {
-        throw new Moodle_Exception("Invalid placement type: $placement");
+    if (!in_array($placement, ['', 'menulink', LTI_PLACEMENT_RICHTEXTEDITOR])) {
+        throw new moodle_exception("Invalid placement type: $placement");
     }
     // Check title. If empty, use the tool's name.
     if (empty($title)) {
@@ -1261,7 +1267,6 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
         }
         $requestparams['accept_media_types'] = implode(',', $mediatypes);
     } else {
-        // Only LTI links are currently supported.
         $requestparams['accept_types'] = 'ltiResourceLink';
     }
 
@@ -1660,6 +1665,10 @@ function lti_convert_content_items($param) {
                         break;
                     case 'file':
                         $newitem->{'@type'} = 'FileItem';
+                        break;
+                    case 'image':
+                        $newitem->{'@type'} = 'FileItem';
+                        $newitem->mediaType = 'image/*';
                         break;
                 }
                 unset($newitem->type);

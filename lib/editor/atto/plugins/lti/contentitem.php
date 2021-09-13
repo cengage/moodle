@@ -60,8 +60,8 @@ $returnurl = new \moodle_url('/lib/editor/atto/plugins/lti/contentitem_return.ph
 
 // Prepare the request.
 $request = lti_build_content_item_selection_request(
-    $id, $course, $returnurl, '', '', [], [],
-    false, false, false, false, false, '', 'richtexteditor'
+    $id, $course, $returnurl, '', '', ['application/vnd.ims.lti.v1.ltilink', 'image/*', 'audio/*', 'video/*'], [],
+    false, false, false, false, false, '', LTI_PLACEMENT_RICHTEXTEDITOR
 );
 
 // Get the launch HTML.

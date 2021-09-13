@@ -191,6 +191,7 @@ $string['errorinvalidmediatype'] = 'Invalid media type: {$a}';
 $string['errorinvalidresponseformat'] = 'Invalid Content-Item response format.';
 $string['errormisconfig'] = 'Misconfigured tool. Please ask your Moodle administrator to fix the configuration of the tool.';
 $string['errortooltypenotfound'] = 'LTI tool type not found.';
+$string['errortoolnosupportforrichtext'] = 'LTI Tool does not allow launches from text editor.';
 $string['existing_window'] = 'Existing window';
 $string['extensions'] = 'LTI extension services';
 $string['external_tool_type'] = 'Preconfigured tool';
