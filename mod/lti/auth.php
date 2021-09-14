@@ -51,10 +51,10 @@ $prompt = optional_param('prompt', '', PARAM_TEXT);
 
 $ok = !empty($scope) && !empty($responsetype) && !empty($clientid) &&
       !empty($redirecturi) && !empty($loginhint) && !empty($ltimessagehintenc) &&
-      !empty($nonce) && !empty($SESSION->lti_message_hint);
+      !empty($nonce);
 
 $ltimessagehint = json_decode($ltimessagehintenc);
-
+$ok = $ok && isset($ltimessagehint->launchid);
 if (!$ok) {
     $error = 'invalid_request';
 }
@@ -66,9 +66,12 @@ if ($ok && ($responsetype !== 'id_token')) {
     $ok = false;
     $error = 'unsupported_response_type';
 }
+$launchid = $ltimessagehint->launchid;
+$ltilaunch = $launchid.'instance';
 if ($ok) {
-    list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
-    $ok = !$id || ($id === $ltimessagehint->id);
+    list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 5);
+    unset($SESSION->$launchid);
+    $ok = !$id || ($id == $ltimessagehint->id);
     if (!$ok) {
         $error = "invalid_request";
     } else {
@@ -122,9 +125,10 @@ if ($ok) {
         $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
         $lti->cmid = $cm->id;
         list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
-    } else if (isset($ltimessagehint->ltilaunch)) {
-        $ltilaunch = $ltimessagehint->ltilaunch;
-        $instance = $SESSION->$ltilaunch;;
+    } else if (isset($SESSION->$ltilaunch)) {
+        require_login($course);
+        $instance = $SESSION->$ltilaunch;
+        unset($SESSION->$ltilaunch);
         list($endpoint, $params) = lti_get_launch_data($instance, $nonce); 
     } else {
         require_login($course);
@@ -158,7 +162,6 @@ if ($ok) {
 if (isset($state)) {
     $params['state'] = $state;
 }
-unset($SESSION->lti_message_hint);
 $r = '<form action="' . $redirecturi . "\" name=\"ltiAuthForm\" id=\"ltiAuthForm\" " .
      "method=\"post\" enctype=\"application/x-www-form-urlencoded\">\n";
 if (!empty($params)) {

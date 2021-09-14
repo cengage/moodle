@@ -473,6 +473,9 @@ class locallib_test extends mod_lti_testcase {
     }
 
     /**
+     * Test 
+     */
+    /**
      * Test for lti_build_content_item_selection_request() with invalid presentation targets parameter.
      */
     public function test_lti_build_content_item_selection_request_invalid_presentationtargets() {
@@ -511,46 +514,65 @@ class locallib_test extends mod_lti_testcase {
                 'baseurl' => 'https://example.com/i/am/?where=here',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 1,
             ],
             (object) [
                 'name' => 'There',
                 'baseurl' => 'https://example.com/i/am/?where=there',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 2,
             ],
             (object) [
                 'name' => 'Not here',
                 'baseurl' => 'https://example.com/i/am/?where=not/here',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 3,
             ],
             (object) [
                 'name' => 'Here',
                 'baseurl' => 'https://example.com/i/am/',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 4,
             ],
             (object) [
                 'name' => 'Here',
                 'baseurl' => 'https://example.com/i/was',
                 'tooldomain' => 'example.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 5,
             ],
             (object) [
                 'name' => 'Here',
                 'baseurl' => 'https://badexample.com/i/am/?where=here',
                 'tooldomain' => 'badexample.com',
                 'state' => LTI_TOOL_STATE_CONFIGURED,
-                'course' => SITEID
+                'course' => SITEID,
+                'id' => 6,
+            ],
+            (object) [
+                'name' => 'Type wins!',
+                'baseurl' => 'https://example.com/type/wins',
+                'tooldomain' => 'example.com',
+                'state' => LTI_TOOL_STATE_CONFIGURED,
+                'course' => SITEID,
+                'id' => 7,
             ],
         ];
 
         $data = [
+            [
+                'url' => $tools[0]->baseurl,
+                'expected' => $tools[6],
+                'typeid' => $tools[6]->id,
+            ],
             [
                 'url' => $tools[0]->baseurl,
                 'expected' => $tools[0],
@@ -593,7 +615,7 @@ class locallib_test extends mod_lti_testcase {
         // of the array contains the URL to test, the expected tool, and
         // the complete list of tools.
         return array_map(function($data) use ($tools) {
-            return [$data['url'], $data['expected'], $tools];
+            return [$data['url'], $data['expected'], $tools, isset($data['typeid'])?$data['typeid']:null];
         }, $data);
     }
 
@@ -605,8 +627,8 @@ class locallib_test extends mod_lti_testcase {
      * @param object $expected The expected tool matching the URL.
      * @param array $tools The pool of tools to match the URL with.
      */
-    public function test_lti_get_best_tool_by_url($url, $expected, $tools) {
-        $actual = lti_get_best_tool_by_url($url, $tools, null);
+    public function test_lti_get_best_tool_by_url($url, $expected, $tools, $typeid) {
+        $actual = lti_get_best_tool_by_url($url, $tools, null, $typeid);
         $this->assertSame($expected, $actual);
     }
 
@@ -1264,7 +1286,7 @@ MwIDAQAB
         $objgraph->placementAdvice = new \stdClass();
         $objgraph->placementAdvice->presentationDocumentTarget = 'iframe';
         $objgraph->{$strtype} = 'LtiLinkItem';
-        $objgraph->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+        $objgraph->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
         $objgraph2 = new \stdClass();
         $objgraph2->url = 'http://example.com/messages/launch2';
@@ -1275,7 +1297,7 @@ MwIDAQAB
         $objgraph2->placementAdvice->displayHeight = 200;
         $objgraph2->placementAdvice->displayWidth = 300;
         $objgraph2->{$strtype} = 'LtiLinkItem';
-        $objgraph2->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+        $objgraph2->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
         $objgraph3 = new \stdClass();
         $objgraph3->url = 'http://example.com/messages/launch3';
@@ -1286,7 +1308,7 @@ MwIDAQAB
         $objgraph3->placementAdvice->displayHeight = 400;
         $objgraph3->placementAdvice->windowTarget = 'test-win';
         $objgraph3->{$strtype} = 'LtiLinkItem';
-        $objgraph3->mediaType = 'application\/vnd.ims.lti.v1.ltilink';
+        $objgraph3->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
         $expected = new \stdClass();
         $expected->{$strcontext} = 'http://purl.imsglobal.org/ctx/lti/v1/ContentItem';
@@ -1654,7 +1676,9 @@ MwIDAQAB
         $this->assertEquals($CFG->wwwroot, $request['iss']);
         $this->assertEquals('http://some-lti-tool-url', $request['target_link_uri']);
         $this->assertEquals(123456789, $request['login_hint']);
-        $this->assertEquals($instance->id, $request['lti_message_hint']);
+        $hint = json_decode($request['lti_message_hint']);
+        $this->assertEquals($instance->id, $hint->id);
+        $this->assertEquals(preg_match('/^ltilaunch[0-9]+$/', $hint->launchid), 1);
         $this->assertEquals('some-client-id', $request['client_id']);
         $this->assertEquals('some-type-id', $request['lti_deployment_id']);
     }

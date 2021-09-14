@@ -735,9 +735,13 @@ function lti_launch_tool($instance, $placement = '') {
 }
 
 function lti_initiate_launch_tool($course, $instance, $placement = '') {
-    // should do domain matching if type does not match domain or no such type
+    // the typeid may no longer be valid so the real driver is the URL to launch.
+    $type = lti_get_tool_by_url_match($instance->toolurl, null, LTI_TOOL_STATE_CONFIGURED, $instance->typeid);
+    if (!$type) {
+        throw new moodle_exception('errornomatch', 'mod_lti');
+    }
+    $config = lti_get_type_type_config($type->id);
 
-    $config = lti_get_type_type_config($instance->typeid);
     if ($placement === LTI_PLACEMENT_RICHTEXTEDITOR  && !$config->lti_asrichtexteditorplugin) {
         throw new moodle_exception('errortoolnosupportforrichtext', 'mod_lti');
     }
@@ -1123,7 +1127,7 @@ function lti_build_custom_parameters($toolproxy, $tool, $instance, $params, $cus
  * @throws coding_exception For invalid media type and presentation target parameters.
  */
 function lti_build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '', $mediatypes = [],
-                                                  $presentationtargets = [], $autocreate = false, $multiple = false,
+                                                  $presentationtargets = [], $autocreate = false, $multiple = true,
                                                   $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '', $placement = '') {
     global $USER;
 
@@ -1220,11 +1224,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
 
     // Get standard request parameters and merge to the request parameters.
     $orgid = lti_get_organizationid($typeconfig);
-    $requesttype = 'ContentItemSelectionRequest';
-    if (!$typeconfig['contentitem']) {
-        $requesttype = 'basic-lti-launch-request';
-    }
-    $standardparams = lti_build_standard_message(null, $orgid, $tool->ltiversion, $requesttype);
+    $standardparams = lti_build_standard_message(null, $orgid, $tool->ltiversion, 'ContentItemSelectionRequest');
     $requestparams = array_merge($requestparams, $standardparams);
 
     // Get custom request parameters and merge to the request parameters.
@@ -2445,10 +2445,9 @@ function lti_get_domain_from_url($url) {
     }
 }
 
-function lti_get_tool_by_url_match($url, $courseid = null, $state = LTI_TOOL_STATE_CONFIGURED) {
+function lti_get_tool_by_url_match($url, $courseid = null, $state = LTI_TOOL_STATE_CONFIGURED, $typeid = null) {
     $possibletools = lti_get_tools_by_url($url, $state, $courseid);
-
-    return lti_get_best_tool_by_url($url, $possibletools, $courseid);
+    return lti_get_best_tool_by_url($url, $possibletools, $courseid, $typeid = null);
 }
 
 function lti_get_url_thumbprint($url) {
@@ -2482,9 +2481,16 @@ function lti_get_url_thumbprint($url) {
     return $urllower;
 }
 
-function lti_get_best_tool_by_url($url, $tools, $courseid = null) {
+function lti_get_best_tool_by_url($url, $tools, $courseid = null, $typeid = null) {
     if (count($tools) === 0) {
         return null;
+    }
+    if ($typeid) {
+        foreach($tools as $tool) {
+            if ($tool->id === $typeid) {
+                return $tool;
+            }
+        }
     }
 
     $urllower = lti_get_url_thumbprint($url);
@@ -3639,11 +3645,8 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
 function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '', $hint = []) {
     global $SESSION;
-    //debugging($instance);
-
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint);
-    $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
-        base64_encode($text);
+    
+    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint, $title, $text);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3676,9 +3679,9 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
  * @param array          $hint associative array that will be used as LTI hint
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint=[]) {
+function lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint=[], $title='', $text='') {
     global $USER, $CFG, $SESSION;
-
+    $launchid = 'ltilaunch'.rand();
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
     } else {
@@ -3695,17 +3698,20 @@ function lti_build_login_request($courseid, $id, $instance, $config, $messagetyp
     } else if (!strstr($endpoint, '://')) {
         $endpoint = 'http://' . $endpoint;
     }
-    $ltihint = [];
+    $ltihint = [
+        'launchid' => $launchid
+    ];
     if ($id) {
         $ltihint['id'] = $id;
     } else if (!empty($instance)) {
-        $ltilaunch = 'ltilaunch'.$instance->resource_link_id;
+        $ltilaunch = $launchid.'instance';
         $SESSION->$ltilaunch = $instance;
-        $ltihint['ltilaunch'] = $ltilaunch;
     }
     if (!empty($hint)) {
         $ltihint = array_merge($ltihint, $hint);
     }
+    $SESSION->$launchid = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
+        base64_encode($text);
     $params = array();
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;
