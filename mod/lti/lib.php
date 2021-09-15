@@ -835,7 +835,7 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
             $courseappsurl,
             navigation_node::TYPE_SETTING,
             null,
-            'ltimenu-'.$type->id.'-'.$menulink->id,
+            'ltimenu-managelti',
             $icon
         );
     }
