@@ -167,6 +167,13 @@ function lti_get_jwt_claim_mapping() {
             'isarray' => false,
             'type' => 'boolean'
         ],
+        'accept_lineitems' => [
+            'suffix' => 'dl',
+            'group' => 'deep_linking_settings',
+            'claim' => 'accept_lineitems',
+            'isarray' => false,
+            'type' => 'boolean'
+        ],
         'auto_create' => [
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
@@ -1285,6 +1292,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     $requestparams['accept_copy_advice'] = $copyadvice === true ? 'true' : 'false';
     $requestparams['accept_multiple'] = $multiple === true ? 'true' : 'false';
     $requestparams['accept_unsigned'] = $unsigned === true ? 'true' : 'false';
+    $requestparams['accept_lineitems'] = LTI_PLACEMENT_RICHTEXTEDITOR === $placement?'false':'true';
     $requestparams['auto_create'] = $autocreate === true ? 'true' : 'false';
     $requestparams['can_confirm'] = $canconfirm === true ? 'true' : 'false';
     $requestparams['content_item_return_url'] = $returnurl->out(false);
@@ -3645,7 +3653,7 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
 function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '', $hint = []) {
     global $SESSION;
-    
+
     $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint, $title, $text);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
