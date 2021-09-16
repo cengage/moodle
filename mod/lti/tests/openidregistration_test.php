@@ -87,6 +87,13 @@ class openidregistration_test extends \advanced_testcase {
                     "target_link_uri": "https://client.example.org/lti/dl",
                     "label": "Add a virtual garden",
                     "label#ja": "バーチャルガーデンを追加する"
+                },
+                {
+                    "type": "LtiDeepLinkingRequest",
+                    "target_link_uri": "https://client.example.org/lti/dlrt",
+                    "label": "Add a virtual garden in my rich text editor",
+                    "label#ja": "バーチャルガーデンを追加する",
+                    "placements": ["RichTextEditor"]
                 }
             ]
         }
@@ -168,6 +175,8 @@ EOD;
         $this->assertEquals(LTI_SETTING_ALWAYS, $config->lti_sendemailaddr);
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEquals('https://client.example.org/lti/dl', $config->lti_toolurl_ContentItemSelectionRequest);
+        $this->assertEquals(1, $config->lti_asrichtexteditorplugin);
+        $this->assertEquals("https://client.example.org/lti/dlrt", $config->lti_richtexteditorurl);
     }
 
     /**
@@ -195,6 +204,7 @@ EOD;
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendname);
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendemailaddr);
         $this->assertEquals(0, $config->lti_contentitem);
+        $this->assertEquals(0, $config->lti_asrichtexteditorplugin);
     }
 
     /**
@@ -206,6 +216,7 @@ EOD;
         $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
+        $this->assertEquals(0, $config->lti_asrichtexteditorplugin);
     }
 
     /**
@@ -316,6 +327,11 @@ EOD;
         $dlmsg = $lti['messages'][0];
         $this->assertEquals($dlmsgorig['type'], $dlmsg['type']);
         $this->assertEquals($dlmsgorig['target_link_uri'], $dlmsg['target_link_uri']);
+        $dlrtmsgorig = $ltiorig['messages'][1];
+        $dlrtmsg = $lti['messages'][1];
+        $this->assertEquals($dlrtmsgorig['type'], $dlrtmsg['type']);
+        $this->assertEquals($dlrtmsgorig['target_link_uri'], $dlrtmsg['target_link_uri']);
+        $this->assertEquals($dlrtmsgorig['placements'], $dlrtmsg['placements']);
         $this->assertTrue(in_array('iss', $lti['claims']));
         $this->assertTrue(in_array('sub', $lti['claims']));
         $this->assertTrue(in_array('email', $lti['claims']));

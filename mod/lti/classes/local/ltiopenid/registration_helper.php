@@ -166,13 +166,28 @@ class registration_helper {
         $config->lti_icon = $logouri;
         $config->lti_coursevisible = LTI_COURSEVISIBLE_PRECONFIGURED;
         $config->lti_contentitem = 0;
+        $config->lti_asrichtexteditorplugin = 0;
+        $config->lti_richtexteditorurl = ""; 
         // Sets Content Item.
         if (!empty($messages)) {
             $messagesresponse = [];
             foreach ($messages as $value) {
                 if ($value['type'] === 'LtiDeepLinkingRequest') {
-                    $config->lti_contentitem = 1;
-                    $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'] ?? '';
+                    $contentarea = true;
+                    $richtexteditor = false;
+                    if (isset($value['placements'])) {
+                        $contentarea = in_array('ContentArea', $value['placements']);
+                        $richtexteditor = in_array('RichTextEditor', $value['placements']);
+                    }
+                    if ($contentarea) {
+                        $config->lti_contentitem = 1;
+                        $config->lti_toolurl_ContentItemSelectionRequest = $value['target_link_uri'] ?? '';
+
+                    }
+                    if ($richtexteditor) {
+                        $config->lti_asrichtexteditorplugin = 1;
+                        $config->lti_richtexteditorurl = $value['target_link_uri'] ?? '';
+                    }
                     array_push($messagesresponse, $value);
                 }
             }
@@ -315,13 +330,23 @@ class registration_helper {
         $lticonfigurationresponse['target_link_uri'] = $type ? $type->baseurl : $config->toolurl ?? '';
         $lticonfigurationresponse['domain'] = $type ? $type->tooldomain : $config->tooldomain ?? '';
         $lticonfigurationresponse['description'] = $type ? $type->description ?? '' : $config->description ?? '';
+        $lticonfigurationresponse['messages'] = [];
         if ($config->contentitem ?? 0 == 1) {
             $contentitemmessage = [];
             $contentitemmessage['type'] = 'LtiDeepLinkingRequest';
             if (isset($config->toolurl_ContentItemSelectionRequest)) {
                 $contentitemmessage['target_link_uri'] = $config->toolurl_ContentItemSelectionRequest;
             }
-            $lticonfigurationresponse['messages'] = [$contentitemmessage];
+            $lticonfigurationresponse['messages'][] = $contentitemmessage;
+        }
+        if ($config->asrichtexteditorplugin ?? 0 == 1) {
+            $contentitemmessage = [];
+            $contentitemmessage['type'] = 'LtiDeepLinkingRequest';
+            if (isset($config->richtexteditorurl)) {
+                $contentitemmessage['target_link_uri'] = $config->richtexteditorurl;
+            }
+            $contentitemmessage['placements'] = ['RichTextEditor']; 
+            $lticonfigurationresponse['messages'][] = $contentitemmessage;
         }
         if (isset($config->customparameters) && !empty($config->customparameters)) {
             $params = [];
