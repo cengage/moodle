@@ -34,6 +34,8 @@ $ltitypeid = required_param('ltitypeid', PARAM_INT);
 $contenturl = required_param('contenturl', PARAM_URL);
 $custom = optional_param('custom', '', PARAM_RAW_TRIMMED);
 
+require_login();
+
 echo "
 <!DOCTYPE html>
 <html>

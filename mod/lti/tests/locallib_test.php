@@ -473,7 +473,7 @@ class locallib_test extends mod_lti_testcase {
     }
 
     /**
-     * Test 
+     * Test
      */
     /**
      * Test for lti_build_content_item_selection_request() with invalid presentation targets parameter.
@@ -615,7 +615,7 @@ class locallib_test extends mod_lti_testcase {
         // of the array contains the URL to test, the expected tool, and
         // the complete list of tools.
         return array_map(function($data) use ($tools) {
-            return [$data['url'], $data['expected'], $tools, isset($data['typeid'])?$data['typeid']:null];
+            return [$data['url'], $data['expected'], $tools, isset($data['typeid']) ? $data['typeid'] : null];
         }, $data);
     }
 

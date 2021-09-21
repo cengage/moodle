@@ -234,7 +234,7 @@ class mod_lti_edit_types_form extends moodleform {
             'size' => '64'
         ]);
         $mform->setType('lti_richtexteditorurl', PARAM_URL);
-        
+
         $mform->addElement('hidden', 'oldicon');
         $mform->setType('oldicon', PARAM_URL);
 

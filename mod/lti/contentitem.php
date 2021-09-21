@@ -38,7 +38,7 @@ $config = lti_get_type_type_config($id);
 if ($config->lti_ltiversion === LTI_VERSION_1P3) {
     if (!isset($SESSION->lti_initiatelogin_status)) {
         echo lti_initiate_login($courseid, 0, null, $config, 'ContentItemSelectionRequest',
-            $title, $text, ['callback'=>$callback, 'placement'=>$placement]);
+            $title, $text, ['callback' => $callback, 'placement' => $placement]);
         exit;
     } else {
         unset($SESSION->lti_initiatelogin_status);

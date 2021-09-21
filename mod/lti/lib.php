@@ -799,6 +799,10 @@ function mod_lti_core_calendar_provide_event_action(calendar_event $event,
     );
 }
 
+/**
+ * Inject in page the current course so that embedded LTI launch in Atto Rich Text
+ * can know the current context.
+ */
 function mod_lti_before_standard_html_head() {
     global $COURSE;
     return '<script type="text/javascript">window.lti={course:'.$COURSE->id.'}</script>';

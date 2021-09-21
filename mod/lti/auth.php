@@ -129,7 +129,7 @@ if ($ok) {
         require_login($course);
         $instance = $SESSION->$ltilaunch;
         unset($SESSION->$ltilaunch);
-        list($endpoint, $params) = lti_get_launch_data($instance, $nonce); 
+        list($endpoint, $params) = lti_get_launch_data($instance, $nonce);
     } else {
         require_login($course);
         $context = context_course::instance($courseid);
@@ -149,7 +149,8 @@ if ($ok) {
         $title = base64_decode($titleb64);
         $text = base64_decode($textb64);
         $request = lti_build_content_item_selection_request($typeid, $course, $returnurl, $title, $text,
-                                                            [], [], false, true, false, false, false, $nonce, $ltimessagehint->placement??'');
+                                                            [], [], false, true, false, false, false, 
+                                                            $nonce, $ltimessagehint->placement ?? '');
         $endpoint = $request->url;
         $params = $request->params;
     }

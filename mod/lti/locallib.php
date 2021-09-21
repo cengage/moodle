@@ -642,7 +642,7 @@ function lti_get_launch_data($instance, $nonce = '', $placement = '') {
     $launchcontainer = lti_get_launch_container($instance, $typeconfig);
     $returnurlparams = array('course' => $course->id,
         'launch_container' => $launchcontainer,
-        'instanceid' => isset($instance->id)?$instance->id:'',
+        'instanceid' => isset($instance->id) ? $instance->id : '',
         'sesskey' => sesskey());
 
     // Add the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns.
@@ -677,7 +677,7 @@ function lti_get_launch_data($instance, $nonce = '', $placement = '') {
         $services = lti_get_services();
         foreach ($services as $service) {
             $serviceparameters = $service->get_launch_parameters('basic-lti-launch-request',
-                    $course->id, $USER->id , $typeid, $instance->id??null);
+                    $course->id, $USER->id , $typeid, $instance->id ?? null);
             foreach ($serviceparameters as $paramkey => $paramvalue) {
                 $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $requestparams, $paramvalue,
                     $islti2);
@@ -741,8 +741,16 @@ function lti_launch_tool($instance, $placement = '') {
     echo $content;
 }
 
+/**
+ * Initiates an LTI Launch from a transient lti instance (i.e. not a record in LTI table.)
+ * This will echo the LTI launch HTML.
+ *
+ * @param stdClass $course the course being launched from
+ * @param stdClass $instance the LTI launch instance
+ * @param string $placement the placement from where this launch is happening.
+ */
 function lti_initiate_launch_tool($course, $instance, $placement = '') {
-    // the typeid may no longer be valid so the real driver is the URL to launch.
+    // The typeid may no longer be valid so the real driver is the URL to launch.
     $type = lti_get_tool_by_url_match($instance->toolurl, null, LTI_TOOL_STATE_CONFIGURED, $instance->typeid);
     if (!$type) {
         throw new moodle_exception('errornomatch', 'mod_lti');
@@ -1135,7 +1143,8 @@ function lti_build_custom_parameters($toolproxy, $tool, $instance, $params, $cus
  */
 function lti_build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '', $mediatypes = [],
                                                   $presentationtargets = [], $autocreate = false, $multiple = true,
-                                                  $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '', $placement = '') {
+                                                  $unsigned = false, $canconfirm = false, $copyadvice = false,
+                                                  $nonce = '', $placement = '') {
     global $USER;
 
     $tool = lti_get_type($id);
@@ -1292,7 +1301,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     $requestparams['accept_copy_advice'] = $copyadvice === true ? 'true' : 'false';
     $requestparams['accept_multiple'] = $multiple === true ? 'true' : 'false';
     $requestparams['accept_unsigned'] = $unsigned === true ? 'true' : 'false';
-    $requestparams['accept_lineitems'] = LTI_PLACEMENT_RICHTEXTEDITOR === $placement?'false':'true';
+    $requestparams['accept_lineitems'] = LTI_PLACEMENT_RICHTEXTEDITOR === $placement ? 'false' : 'true';
     $requestparams['auto_create'] = $autocreate === true ? 'true' : 'false';
     $requestparams['can_confirm'] = $canconfirm === true ? 'true' : 'false';
     $requestparams['content_item_return_url'] = $returnurl->out(false);
@@ -2445,6 +2454,12 @@ function lti_get_configured_types($courseid, $sectionreturn = 0) {
     return $types;
 }
 
+/**
+ * Get the domain from the URL.
+ *
+ * @param string $url the url to extract the domain from
+ * @return string the domain
+ */
 function lti_get_domain_from_url($url) {
     $matches = array();
 
@@ -2453,6 +2468,16 @@ function lti_get_domain_from_url($url) {
     }
 }
 
+/**
+ * Get the best tool that matches the URL. If a typeid is provided,
+ * a tool matching that typeid will be considered first.
+ *
+ * @param string $url the url to extract the domain from
+ * @param number $courseid current course
+ * @param string $state the state the tool must be in to be considered
+ * @param number $typeid tool to use if it matches the domain
+ * @return stdClass the tool that best matches the URL
+ */
 function lti_get_tool_by_url_match($url, $courseid = null, $state = LTI_TOOL_STATE_CONFIGURED, $typeid = null) {
     $possibletools = lti_get_tools_by_url($url, $state, $courseid);
     return lti_get_best_tool_by_url($url, $possibletools, $courseid, $typeid = null);
@@ -2489,12 +2514,23 @@ function lti_get_url_thumbprint($url) {
     return $urllower;
 }
 
+/**
+ * Get the best tool that matches the URL. If a typeid is provided,
+ * a tool matching that typeid will be considered first.
+ *
+ * @param string $url the url to extract the domain from
+ * @param array $tools possible tools to check the conditions against
+ * @param number $courseid current course
+ * @param string $state the state the tool must be in to be considered
+ * @param number $typeid tool to use if it matches the domain
+ * @return stdClass the tool that best matches the URL
+ */
 function lti_get_best_tool_by_url($url, $tools, $courseid = null, $typeid = null) {
     if (count($tools) === 0) {
         return null;
     }
     if ($typeid) {
-        foreach($tools as $tool) {
+        foreach ($tools as $tool) {
             if ($tool->id === $typeid) {
                 return $tool;
             }

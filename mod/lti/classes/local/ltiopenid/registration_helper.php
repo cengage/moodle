@@ -167,7 +167,7 @@ class registration_helper {
         $config->lti_coursevisible = LTI_COURSEVISIBLE_PRECONFIGURED;
         $config->lti_contentitem = 0;
         $config->lti_asrichtexteditorplugin = 0;
-        $config->lti_richtexteditorurl = ""; 
+        $config->lti_richtexteditorurl = "";
         // Sets Content Item.
         if (!empty($messages)) {
             $messagesresponse = [];
@@ -345,7 +345,7 @@ class registration_helper {
             if (isset($config->richtexteditorurl)) {
                 $contentitemmessage['target_link_uri'] = $config->richtexteditorurl;
             }
-            $contentitemmessage['placements'] = ['RichTextEditor']; 
+            $contentitemmessage['placements'] = ['RichTextEditor'];
             $lticonfigurationresponse['messages'][] = $contentitemmessage;
         }
         if (isset($config->customparameters) && !empty($config->customparameters)) {
