@@ -2521,7 +2521,6 @@ function lti_get_url_thumbprint($url) {
  * @param string $url the url to extract the domain from
  * @param array $tools possible tools to check the conditions against
  * @param number $courseid current course
- * @param string $state the state the tool must be in to be considered
  * @param number $typeid tool to use if it matches the domain
  * @return stdClass the tool that best matches the URL
  */
