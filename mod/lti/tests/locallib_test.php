@@ -670,6 +670,13 @@ class locallib_test extends mod_lti_testcase {
                 'isarray' => false,
                 'type' => 'boolean'
             ],
+            'accept_lineitems' => [
+                'suffix' => 'dl',
+                'group' => 'deep_linking_settings',
+                'claim' => 'accept_lineitems',
+                'isarray' => false,
+                'type' => 'boolean'
+            ],
             'accept_presentation_document_targets' => [
                 'suffix' => 'dl',
                 'group' => 'deep_linking_settings',
