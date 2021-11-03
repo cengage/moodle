@@ -670,10 +670,10 @@ class locallib_test extends mod_lti_testcase {
                 'isarray' => false,
                 'type' => 'boolean'
             ],
-            'accept_lineitems' => [
+            'accept_lineitem' => [
                 'suffix' => 'dl',
                 'group' => 'deep_linking_settings',
-                'claim' => 'accept_lineitems',
+                'claim' => 'accept_lineitem',
                 'isarray' => false,
                 'type' => 'boolean'
             ],

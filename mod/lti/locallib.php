@@ -167,10 +167,10 @@ function lti_get_jwt_claim_mapping() {
             'isarray' => false,
             'type' => 'boolean'
         ],
-        'accept_lineitems' => [
+        'accept_lineitem' => [
             'suffix' => 'dl',
             'group' => 'deep_linking_settings',
-            'claim' => 'accept_lineitems',
+            'claim' => 'accept_lineitem',
             'isarray' => false,
             'type' => 'boolean'
         ],
@@ -1301,7 +1301,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     $requestparams['accept_copy_advice'] = $copyadvice === true ? 'true' : 'false';
     $requestparams['accept_multiple'] = $multiple === true ? 'true' : 'false';
     $requestparams['accept_unsigned'] = $unsigned === true ? 'true' : 'false';
-    $requestparams['accept_lineitems'] = LTI_PLACEMENT_RICHTEXTEDITOR === $placement ? 'false' : 'true';
+    $requestparams['accept_lineitem'] = LTI_PLACEMENT_RICHTEXTEDITOR === $placement ? 'false' : 'true';
     $requestparams['auto_create'] = $autocreate === true ? 'true' : 'false';
     $requestparams['can_confirm'] = $canconfirm === true ? 'true' : 'false';
     $requestparams['content_item_return_url'] = $returnurl->out(false);
