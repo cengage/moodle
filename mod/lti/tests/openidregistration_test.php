@@ -148,6 +148,33 @@ EOD;
 EOD;
 
     /**
+     * @var string A minimalist with deep linking client registration for both ContentArea and RichText.
+     */
+    private $registrationminimaldlrtjson = <<<EOD
+    {
+        "application_type": "web",
+        "response_types": ["id_token"],
+        "grant_types": ["implict", "client_credentials"],
+        "initiate_login_uri": "https://client.example.org/lti/init",
+        "redirect_uris":
+        ["https://client.example.org/callback"],
+        "client_name": "Virtual Garden",
+        "jwks_uri": "https://client.example.org/.well-known/jwks.json",
+        "token_endpoint_auth_method": "private_key_jwt",
+        "https://purl.imsglobal.org/spec/lti-tool-configuration": {
+            "domain": "client.example.org",
+            "target_link_uri": "https://client.example.org/lti",
+            "messages": [
+                {
+                    "type": "LtiDeepLinkingRequest",
+                    "placements": ["ContentArea", "RichTextEditor"]
+                }
+            ]
+        }
+    }
+EOD;
+
+    /**
      * Test the mapping from Registration JSON to LTI Config for a has-it-all tool registration.
      */
     public function test_to_config_full() {
@@ -327,6 +354,7 @@ EOD;
         $dlmsg = $lti['messages'][0];
         $this->assertEquals($dlmsgorig['type'], $dlmsg['type']);
         $this->assertEquals($dlmsgorig['target_link_uri'], $dlmsg['target_link_uri']);
+        $this->assertEquals(['ContentArea'], $dlmsg['placements']);
         $dlrtmsgorig = $ltiorig['messages'][1];
         $dlrtmsg = $lti['messages'][1];
         $this->assertEquals($dlrtmsgorig['type'], $dlrtmsg['type']);
@@ -338,6 +366,19 @@ EOD;
         $this->assertTrue(in_array('family_name', $lti['claims']));
         $this->assertTrue(in_array('given_name', $lti['claims']));
         $this->assertTrue(in_array('name', $lti['claims']));
+    }
+
+    /**
+     * Test the transformation from lti config to OpenId LTI Client Registration response
+     * respects the deep linking placements.
+     */
+    public function test_config_to_registration_minimal_dlplacements() {
+        $orig = json_decode($this->registrationminimaldlrtjson, true);
+        $reghelper = registration_helper::get();
+        $reg = $reghelper->config_to_registration($reghelper->registration_to_config($orig, 'clid'), 12);
+        $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $this->assertEquals(['ContentArea'], $lti['messages'][0]['placements']);
+        $this->assertEquals(['RichTextEditor'], $lti['messages'][1]['placements']);
     }
 
     /**

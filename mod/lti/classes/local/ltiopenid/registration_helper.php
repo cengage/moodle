@@ -175,7 +175,7 @@ class registration_helper {
                 if ($value['type'] === 'LtiDeepLinkingRequest') {
                     $contentarea = true;
                     $richtexteditor = false;
-                    if (isset($value['placements'])) {
+                    if (isset($value['placements']) && !empty($value['placements'])) {
                         $contentarea = in_array('ContentArea', $value['placements']);
                         $richtexteditor = in_array('RichTextEditor', $value['placements']);
                     }
@@ -336,6 +336,7 @@ class registration_helper {
             $contentitemmessage['type'] = 'LtiDeepLinkingRequest';
             if (isset($config->toolurl_ContentItemSelectionRequest)) {
                 $contentitemmessage['target_link_uri'] = $config->toolurl_ContentItemSelectionRequest;
+                $contentitemmessage['placements'] = ['ContentArea'];
             }
             $lticonfigurationresponse['messages'][] = $contentitemmessage;
         }
