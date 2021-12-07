@@ -47,11 +47,15 @@ echo "
             <input type='hidden' name='ltitypeid' value='$ltitypeid'>
             <input type='hidden' name='custom' value='$custom'>
         </form>
+        <span id='nocourse' style='visibility:hidden'>Sorry, the launch to the external tool failed. Try clicking on the link again.</span>
         <script type='text/javascript'>
-            if (window.parent.lti && window.parent.lti.course) {
+            var parentWin = window.parent || window.opener;
+            if (parentWin.lti && parentWin.lti.course) {
                 document.getElementById('course').value = window.parent.lti.course;
+                document.getElementById('form').submit();
+            } else {
+                document.getElementById('nocourse').style.visibility='visible';
             }
-            document.getElementById('form').submit();
         </script>
     </body>
 </html>
