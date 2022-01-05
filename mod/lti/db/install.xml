@@ -32,12 +32,16 @@
         <FIELD NAME="servicesalt" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="icon" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="secureicon" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="permid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Permanent GUID, unique in a given course, preserved on copy/backup"/>
+        <FIELD NAME="placement" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Placement of the course, null means activity"/>
+        <FIELD NAME="lastaccess" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Last access timestamp"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+        <INDEX NAME="unqcoursepermid" UNIQUE="true" FIELDS="course,permid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="lti_tool_proxies" COMMENT="LTI tool proxy registrations">
@@ -163,6 +167,21 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="token" UNIQUE="true" FIELDS="token"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="lti_embed" COMMENT="LTI links that are embedded in Atto Editors">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="embedid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Id used to identify this link, preserved on copy"/>
+        <FIELD NAME="instance" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Basic LTI type id"/>
+        <FIELD NAME="lastaccess" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="last access timestamp"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="instance" TYPE="foreign" FIELDS="instance" REFTABLE="lti" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ltiembedid" UNIQUE="false" FIELDS="embedid"/>
       </INDEXES>
     </TABLE>
   </TABLES>
