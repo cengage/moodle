@@ -1597,6 +1597,51 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
 }
 
 /**
+ * Processes the tool's response to the Deep Linking request and adds the LTI Links, returning information about the items
+ * with the link created when the item is an LTI link.
+ *
+ * @param int $typeid The tool type ID.
+ * @param string $contentitemsjson The JSON string for the content_items parameter.
+ * @return stdClass The array of module information objects.
+ * @throws moodle_exception
+ * @throws lti\OAuthException
+ */
+function lti_add_links_from_content_item(int $typeid, $courseid, string $contentitemsjson, string $placement) {
+    $tool = lti_get_type($typeid);
+    // Validate parameters.
+    if (!$tool) {
+        throw new moodle_exception('errortooltypenotfound', 'mod_lti');
+    }
+    $typeconfig = lti_get_type_type_config($tool->id);
+
+    $items = json_decode($contentitemsjson);
+    if (empty($items)) {
+        throw new moodle_exception('errorinvaliddata', 'mod_lti', '', $contentitemsjson);
+    }
+    if (!isset($items->{'@graph'}) || !is_array($items->{'@graph'})) {
+        throw new moodle_exception('errorinvalidresponseformat', 'mod_lti');
+    }
+
+    $config = new stdClass();
+    $config->items = [];
+    $items = $items->{'@graph'};
+    foreach ($items as $item) {
+        if ($item->{'@type'} == 'LtiLinkItem') {
+            $ltilink = content_item_to_form($tool, $typeconfig, $item);
+            $ltilink->typeid = $typeid;
+            $ltilink->permid = $typeid.'-'.round(microtime(true) * 1000);
+            $ltilink->placement = $placement;
+            $ltilink->id = lti_add_instance($ltilink, null);
+            $ltilink->course = $courseid;
+            $item->ltilink = $ltilink;
+        }
+        $config->items[] = $item;
+    }
+    return $config;
+}
+
+
+/**
  * Processes the tool provider's response to the ContentItemSelectionRequest and builds the configuration data from the
  * selected content item. This configuration data can be then used when adding a tool into the course.
  *

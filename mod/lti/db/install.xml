@@ -32,8 +32,8 @@
         <FIELD NAME="servicesalt" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="icon" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="secureicon" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="permid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Permanent GUID, unique in a given course, preserved on copy/backup"/>
-        <FIELD NAME="placement" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Placement of the course, null means activity"/>
+        <FIELD NAME="permid" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="Permanent GUID, preserved on copy/backup"/>
+        <FIELD NAME="placement" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="Placement of the course, null means activity"/>
         <FIELD NAME="lastaccess" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Last access timestamp"/>
       </FIELDS>
       <KEYS>

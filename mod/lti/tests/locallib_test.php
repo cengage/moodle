@@ -502,6 +502,62 @@ class locallib_test extends mod_lti_testcase {
         lti_build_content_item_selection_request($typeid, $course, $returnurl, '', '', [], $targets);
     }
 
+    public function test_lti_add_links_from_content_item() {
+        global $DB;
+        $contentitemstr = '{"@graph" : [
+            { "@type" : "ContentItem",
+              "@id" : ":item1",
+              "url" : "http://www.imsglobal.org",
+              "title" : "The IMS Global website",
+              "mediaType" : "text/html"
+            },
+            { "@type" : "LtiLinkItem",
+              "@id" : ":item2",
+              "icon" : {
+                "@id" : "http://tool.provider.com/icons/small.png",
+                "width" : 50,
+                "height" : 50
+              },
+              "thumbnail" : {
+                "@id" : "http://tool.provider.com/images/thumb.jpg",
+                "width" : 100,
+                "height" : 150
+              },
+              "title" : "Link1",
+              "text" : "link1 description",
+              "mediaType" : "application/vnd.ims.lti.v1.ltilink",
+              "custom" : {
+                "level" : "novice",
+                "mode" : "interactive"
+              },
+              "url": "https://test/link1",
+              "placementAdvice" : {
+                "presentationDocumentTarget" : "iframe"
+              }
+            }, { "@type" : "LtiLinkItem",
+              "@id" : ":item3",
+              "title" : "Link2",
+              "mediaType" : "application/vnd.ims.lti.v1.ltilink",
+              "placementAdvice" : {
+                "presentationDocumentTarget" : "window"
+              }
+            }]}';
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type(new stdClass());
+        $response = lti_add_links_from_content_item($type->id, $course->id, $contentitemstr, "testlinks");
+        $this->assertEquals(count($response->items), 3);
+        $lti1 = $response->items[1]->ltilink;
+        $this->assertEquals($lti1->name, 'Link1');
+        $this->assertEquals($lti1->toolurl, 'https://test/link1');
+        $lines = explode("\n", $lti1->instructorcustomparameters);
+        $this->assertTrue(in_array('level=novice', $lines));
+        $this->assertTrue(in_array('mode=interactive', $lines));
+        $lti2 = $response->items[2]->ltilink;
+        $this->assertEquals($lti2->name, 'Link2');
+    }
+
     /**
      * Provider for test_lti_get_best_tool_by_url.
      *
@@ -2009,7 +2065,7 @@ MwIDAQAB
         $configbase->lti_acceptgrades = LTI_SETTING_NEVER;
         $configbase->lti_sendname = LTI_SETTING_NEVER;
         $configbase->lti_sendemailaddr = LTI_SETTING_NEVER;
-        $mergedconfig = (object) array_merge( (array) $configbase, (array) $config);
+        $mergedconfig = (object) array_merge((array) $configbase, (array) $config);
         $typeid = lti_add_type($type, $mergedconfig);
         return lti_get_type($typeid);
     }
@@ -2053,3 +2109,4 @@ MwIDAQAB
         return ['proxies' => $proxies, 'types' => $types];
     }
 }
+

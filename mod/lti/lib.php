@@ -125,8 +125,10 @@ function lti_add_instance($lti, $mform) {
         $service->instance_added( $lti );
     }
 
-    $completiontimeexpected = !empty($lti->completionexpected) ? $lti->completionexpected : null;
-    \core_completion\api::update_completion_date_event($lti->coursemodule, 'lti', $lti->id, $completiontimeexpected);
+    if (isset($lti->coursemodule)) {
+        $completiontimeexpected = !empty($lti->completionexpected) ? $lti->completionexpected : null;
+        \core_completion\api::update_completion_date_event($lti->coursemodule, 'lti', $lti->id, $completiontimeexpected);
+    }
 
     return $lti->id;
 }
