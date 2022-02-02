@@ -3721,7 +3721,6 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * Generate the form for initiating a login request for an LTI 1.3 message
  *
  * @param int            $courseid  Course ID
- * @param int            $id        LTI instance ID
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
@@ -3730,11 +3729,11 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $hint      Associative Array of data to add to hint
  * @return string
  */
-function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
+function lti_initiate_login($courseid, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '', $hint = []) {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint, $title, $text);
+    $params = lti_build_login_request($courseid, $instance, $config, $messagetype, $hint, $title, $text);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3760,25 +3759,30 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
  * Prepares an LTI 1.3 login request
  *
  * @param int            $courseid  Course ID
- * @param int            $id        LTI instance ID
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
  * @param array          $hint associative array that will be used as LTI hint
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $hint=[], $title='', $text='') {
+function lti_build_login_request($courseid, $instance, $config, $messagetype, $hint=[], $title='', $text='') {
     global $USER, $CFG, $SESSION;
-    $launchid = 'ltilaunch'.rand();
+    $ltihint = [];
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
+        $launchid = 'ltilaunch'.$instance->id.'_'.rand();
+        $ltihint['id'] = $instance->id;
+        $SESSION->$launchid = "{$courseid},{$config->typeid},{$instance->id},,";
     } else {
         $endpoint = $config->lti_toolurl;
         if (($messagetype === 'ContentItemSelectionRequest') && !empty($config->lti_toolurl_ContentItemSelectionRequest)) {
             $endpoint = $config->lti_toolurl_ContentItemSelectionRequest;
         }
+        $launchid = "ltilaunch_$messagetype".rand();
+        $SESSION->$launchid = "{$courseid},{$config->typeid},," . base64_encode($title) . ',' . base64_encode($text);
     }
     $endpoint = trim($endpoint);
+    $ltihint['launchid'] = $launchid;
 
     // If SSL is forced make sure https is on the normal launch URL.
     if (isset($config->lti_forcessl) && ($config->lti_forcessl == '1')) {
@@ -3786,20 +3790,9 @@ function lti_build_login_request($courseid, $id, $instance, $config, $messagetyp
     } else if (!strstr($endpoint, '://')) {
         $endpoint = 'http://' . $endpoint;
     }
-    $ltihint = [
-        'launchid' => $launchid
-    ];
-    if ($id) {
-        $ltihint['id'] = $id;
-    } else if (!empty($instance)) {
-        $ltilaunch = $launchid.'instance';
-        $SESSION->$ltilaunch = $instance;
-    }
     if (!empty($hint)) {
         $ltihint = array_merge($ltihint, $hint);
     }
-    $SESSION->$launchid = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
-        base64_encode($text);
     $params = array();
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;

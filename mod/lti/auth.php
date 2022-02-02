@@ -67,13 +67,13 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 $launchid = $ltimessagehint->launchid;
-$ltilaunch = $launchid.'instance';
 if ($ok) {
     list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 5);
     unset($SESSION->$launchid);
     $ok = !$id || ($id == $ltimessagehint->id);
     if (!$ok) {
-        $error = "invalid_request";
+        $error = 'invalid_request';
+        $desc = 'Hint doesn\'t match Session state';
     } else {
         $config = lti_get_type_type_config($typeid);
         $ok = ($clientid === $config->lti_clientid);
@@ -118,18 +118,18 @@ if ($ok && !empty($prompt) && ($prompt !== 'none')) {
 if ($ok) {
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     if ($id) {
-        $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        require_login($course, true, $cm);
-        require_capability('mod/lti:view', $context);
-        $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-        $lti->cmid = $cm->id;
+        $lti = $DB->get_record('lti', array('id' => $id), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('lti', $id);
+        if ($cm) {
+            $lti->cmid = $cm->id;
+            $context = context_module::instance($cm->id);
+            require_login($course, true, $cm);
+            require_capability('mod/lti:view', $context);
+        } else {
+            $context = context_course::instance($course->id);
+            require_login($course);
+        }
         list($endpoint, $params) = lti_get_launch_data($lti, $nonce);
-    } else if (isset($SESSION->$ltilaunch)) {
-        require_login($course);
-        $instance = $SESSION->$ltilaunch;
-        unset($SESSION->$ltilaunch);
-        list($endpoint, $params) = lti_get_launch_data($instance, $nonce);
     } else {
         require_login($course);
         $context = context_course::instance($courseid);
