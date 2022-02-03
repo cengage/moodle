@@ -1601,12 +1601,15 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
  * with the link created when the item is an LTI link.
  *
  * @param int $typeid The tool type ID.
+ * @param int $courseid The course ID.
  * @param string $contentitemsjson The JSON string for the content_items parameter.
  * @return stdClass The array of module information objects.
  * @throws moodle_exception
  * @throws lti\OAuthException
  */
-function lti_add_links_from_content_item(int $typeid, $courseid, string $contentitemsjson, string $placement) {
+function lti_add_links_from_content_item(int $typeid, int $courseid, string $contentitemsjson, string $placement) {
+    global $CFG;
+    require_once($CFG->dirroot.'/mod/lti/lib.php');
     $tool = lti_get_type($typeid);
     // Validate parameters.
     if (!$tool) {
@@ -1625,15 +1628,19 @@ function lti_add_links_from_content_item(int $typeid, $courseid, string $content
     $config = new stdClass();
     $config->items = [];
     $items = $items->{'@graph'};
+    $prefix = $typeid.'-'.$courseid.'-'.round(microtime(true) * 1000).'-';
+    $index = 0;
     foreach ($items as $item) {
         if ($item->{'@type'} == 'LtiLinkItem') {
+            // TODO: XSS
             $ltilink = content_item_to_form($tool, $typeconfig, $item);
             $ltilink->typeid = $typeid;
-            $ltilink->permid = $typeid.'-'.round(microtime(true) * 1000);
+            $ltilink->permid = $prefix.$index;
             $ltilink->placement = $placement;
             $ltilink->id = lti_add_instance($ltilink, null);
             $ltilink->course = $courseid;
-            $item->ltilink = $ltilink;
+            $item->ltiurl = "/mod/lti/launchlti.php?permid={$ltilink->permid}";
+            $index++;
         }
         $config->items[] = $item;
     }
