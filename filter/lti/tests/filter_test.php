@@ -55,8 +55,8 @@ class filter_lti_testcase extends advanced_testcase {
         $context = context_course::instance($course->id);
         $filter = new filter_lti($context, array());
         $withltilink = "bla bla <a data-lti=\"embed\" href=\"https://nowhere?a=1\">test</a> bla bla";
-        $this->assertTrue(str_contains($filter->filter($withltilink), "<iframe class=\"ltiembed\" src=\"https://nowhere?a=1&courseid=$course->id\" style=\"width:90%;height:400px\">"));
-        $this->assertFalse(str_contains($filter->filter($withltilink), "<a "));
+        $this->assertEquals(strpos($filter->filter($withltilink), "<iframe class=\"ltiembed\" src=\"https://nowhere?a=1&course=$course->id\" style=\"width:90%;height:400px\">"), 8);
+        $this->assertFalse(strpos($filter->filter($withltilink), "<a "));
     }
 
     function test_filtering_embed_link_transform_with_widthheight() {
@@ -65,8 +65,8 @@ class filter_lti_testcase extends advanced_testcase {
         $context = context_course::instance($course->id);
         $filter = new filter_lti($context, array());
         $withltilink = "bla bla <a data-lti=\"embed;width:300px;height:440px\" href=\"https://nowhere\">test</a> bla bla";
-        $this->assertTrue(str_contains($filter->filter($withltilink), "<iframe class=\"ltiembed\" src=\"https://nowhere?courseid=$course->id\" style=\"width:300px;height:440px\">"));
-        $this->assertFalse(str_contains($filter->filter($withltilink), "<a "));
+        $this->assertEquals(strpos($filter->filter($withltilink), "<iframe class=\"ltiembed\" src=\"https://nowhere?course=$course->id\" style=\"width:300px;height:440px\">"), 8);
+        $this->assertFalse(strpos($filter->filter($withltilink), "<a "));
     }
     
     function test_filtering_notenmbed_addcourseid() {
@@ -75,6 +75,6 @@ class filter_lti_testcase extends advanced_testcase {
         $context = context_course::instance($course->id);
         $filter = new filter_lti($context, array());
         $withltilink = "bla bla <a data-lti=\"newwin\" href=\"https://nowhere\">test</a> bla bla";
-        $this->assertEquals("bla bla <a data-lti=\"newwin\" href=\"https://nowhere?courseid=$course->id\">test</a> bla bla", $filter->filter($withltilink));
+        $this->assertEquals("bla bla <a data-lti=\"newwin\" href=\"https://nowhere?course=$course->id\">test</a> bla bla", $filter->filter($withltilink));
     }
 }

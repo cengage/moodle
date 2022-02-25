@@ -111,7 +111,6 @@ function lti_add_instance($lti, $mform) {
     }
 
     $lti->id = $DB->insert_record('lti', $lti);
-
     if (isset($lti->instructorchoiceacceptgrades) && $lti->instructorchoiceacceptgrades == LTI_SETTING_ALWAYS) {
         if (!isset($lti->cmidnumber)) {
             $lti->cmidnumber = '';
@@ -595,6 +594,10 @@ function lti_grade_item_update($basiclti, $grades = null) {
     global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->dirroot.'/mod/lti/servicelib.php');
+ 
+    if (!isset($lti->coursemodule)) {
+        return 0;
+    }
 
     if (!lti_accepts_grades($basiclti)) {
         return 0;

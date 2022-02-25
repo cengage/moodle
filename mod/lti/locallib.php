@@ -1637,8 +1637,8 @@ function lti_add_links_from_content_item(int $typeid, int $courseid, string $con
             $ltilink->typeid = $typeid;
             $ltilink->permid = $prefix.$index;
             $ltilink->placement = $placement;
-            $ltilink->id = lti_add_instance($ltilink, null);
             $ltilink->course = $courseid;
+            $ltilink->id = lti_add_instance($ltilink, null);
             $item->ltiurl = "/mod/lti/launchlti.php?permid={$ltilink->permid}";
             $index++;
         }

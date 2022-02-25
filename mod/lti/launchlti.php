@@ -28,11 +28,11 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-$permid = required_param('permid', PARAM_INT); 
-$courseid = required_param('course', PARAM_INT); 
+$permid = required_param('permid', PARAM_TEXT);
+$courseid = required_param('course', PARAM_INT);
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$lti = $DB->get_record('lti', array('permid' => $permid, 'courseid' => $courseid), '*', MUST_EXIST);
 require_login($course);
+$lti = $DB->get_record('lti', array('permid' => $permid, 'course' => $courseid), '*', MUST_EXIST);
 
 $typeid = $lti->typeid;
 if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
@@ -41,7 +41,7 @@ if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
 if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        echo lti_initiate_login($course, $lti, $config);
+        echo lti_initiate_login($courseid, $lti, $config);
         exit;
     }
 }

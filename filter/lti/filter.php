@@ -21,8 +21,8 @@ class filter_lti extends moodle_text_filter {
                 && preg_match('/data-lti=\"([^\"]*)/', $val, $ltidatamatches) === 1  
                 && preg_match('/href=\"([^\"]*)/', $val, $hrefmatches) === 1) {
                 $href = $hrefmatches[1];
-                $sep = str_contains($href, '?')?'&':'?';
-                $href = $href.$sep."courseid=".$coursecontext->instanceid;
+                $sep = strpos($href, '?')===false?'?':'&';
+                $href = $href.$sep."course=".$coursecontext->instanceid;
                 if (strpos($ltidatamatches[1], 'embed') === 0) {
                     $width = '90%';
                     $height = '400px';

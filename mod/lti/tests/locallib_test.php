@@ -530,6 +530,12 @@ class locallib_test extends mod_lti_testcase {
                 "level" : "novice",
                 "mode" : "interactive"
               },
+              "lineItem": {
+                "scoreMaximum": 87,
+                "label": "Chapter 12 quiz",
+                "resourceId": "xyzpdq1234",
+                "tag": "originality"
+              },
               "url": "https://test/link1",
               "placementAdvice" : {
                 "presentationDocumentTarget" : "iframe"
@@ -548,14 +554,18 @@ class locallib_test extends mod_lti_testcase {
         $type = $this->create_type(new stdClass());
         $response = lti_add_links_from_content_item($type->id, $course->id, $contentitemstr, "testlinks");
         $this->assertEquals(count($response->items), 3);
-        $lti1 = $response->items[1]->ltilink;
+        $lti1 = $response->items[1];
+        $this->assertEquals($lti1->title, 'Link1');
+        $this->assertEquals($lti1->url, 'https://test/link1');
+        $this->assertEquals(0, strpos($lti1->ltiurl, '/mod/lti/launchlti.php?permid='.$type->id.'-'.$course->id.'-'));
+        $lti1 = $DB->get_record('lti', array('permid' => substr($lti1->ltiurl, strlen('/mod/lti/launchlti.php?permid=')), 'course' => $course->id), '*', MUST_EXIST);
         $this->assertEquals($lti1->name, 'Link1');
         $this->assertEquals($lti1->toolurl, 'https://test/link1');
         $lines = explode("\n", $lti1->instructorcustomparameters);
         $this->assertTrue(in_array('level=novice', $lines));
         $this->assertTrue(in_array('mode=interactive', $lines));
-        $lti2 = $response->items[2]->ltilink;
-        $this->assertEquals($lti2->name, 'Link2');
+        $lti2 = $response->items[2];
+        $this->assertEquals($lti2->title, 'Link2');
     }
 
     /**
@@ -1733,17 +1743,17 @@ MwIDAQAB
         $config->lti_clientid = 'some-client-id';
         $config->typeid = 'some-type-id';
         $config->lti_toolurl = 'some-lti-tool-url';
-
-        $request = lti_build_login_request($course->id, $instance->id, $instance, $config, 'basic-lti-launch-request');
+        $request = lti_build_login_request($course->id, $instance, $config, 'basic-lti-launch-request');
 
         $this->assertEquals($CFG->wwwroot, $request['iss']);
         $this->assertEquals('http://some-lti-tool-url', $request['target_link_uri']);
         $this->assertEquals(123456789, $request['login_hint']);
         $hint = json_decode($request['lti_message_hint']);
         $this->assertEquals($instance->id, $hint->id);
-        $this->assertEquals(preg_match('/^ltilaunch[0-9]+$/', $hint->launchid), 1);
+        $this->assertEquals(preg_match('/^ltilaunch[0-9]+_[0-9]+$/', $hint->launchid), 1);
         $this->assertEquals('some-client-id', $request['client_id']);
         $this->assertEquals('some-type-id', $request['lti_deployment_id']);
+        // Load from db the link to see that it exists
     }
 
     /**
