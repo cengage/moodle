@@ -142,7 +142,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
 } else {
     $content = '';
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        $content = lti_initiate_login($cm->course, $lti, $config);
+        $content = lti_initiate_login($cm->course, $cm->id, $lti, $config);
     }
 
     // Build the allowed URL, since we know what it will be from $lti->toolurl,

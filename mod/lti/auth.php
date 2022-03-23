@@ -70,16 +70,10 @@ $launchid = $ltimessagehint->launchid;
 if ($ok) {
     list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 5);
     unset($SESSION->$launchid);
-    $ok = !$id || ($id == $ltimessagehint->id);
+    $config = lti_get_type_type_config($typeid);
+    $ok = ($clientid === $config->lti_clientid);
     if (!$ok) {
-        $error = 'invalid_request';
-        $desc = 'Hint doesn\'t match Session state';
-    } else {
-        $config = lti_get_type_type_config($typeid);
-        $ok = ($clientid === $config->lti_clientid);
-        if (!$ok) {
-            $error = 'unauthorized_client';
-        }
+        $error = 'unauthorized_client';
     }
 }
 if ($ok && ($loginhint !== $USER->id)) {

@@ -41,7 +41,7 @@ if (empty($typeid) && ($tool = lti_get_tool_by_url_match($lti->toolurl))) {
 if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        echo lti_initiate_login($courseid, $lti, $config);
+        echo lti_initiate_login($courseid, null, $lti, $config);
         exit;
     }
 }

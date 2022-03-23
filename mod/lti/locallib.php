@@ -742,33 +742,6 @@ function lti_launch_tool($instance, $placement = '') {
 }
 
 /**
- * Initiates an LTI Launch from a transient lti instance (i.e. not a record in LTI table.)
- * This will echo the LTI launch HTML.
- *
- * @param stdClass $course the course being launched from
- * @param stdClass $instance the LTI launch instance
- * @param string $placement the placement from where this launch is happening.
- */
-function lti_initiate_launch_tool($course, $instance, $placement = '') {
-    // The typeid may no longer be valid so the real driver is the URL to launch.
-    $type = lti_get_tool_by_url_match($instance->toolurl, null, LTI_TOOL_STATE_CONFIGURED, $instance->typeid);
-    if (!$type) {
-        throw new moodle_exception('errornomatch', 'mod_lti');
-    }
-    $config = lti_get_type_type_config($type->id);
-
-    if ($placement === LTI_PLACEMENT_RICHTEXTEDITOR  && !$config->lti_asrichtexteditorplugin) {
-        throw new moodle_exception('errortoolnosupportforrichtext', 'mod_lti');
-    }
-    if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        $content = lti_initiate_login($course->id, null, $instance, $config);
-    } else {
-        $content = lti_launch_tool($instance, $placement);
-    }
-    echo $content;
-}
-
-/**
  * Prepares an LTI registration request message
  *
  * @param object $toolproxy  Tool Proxy instance object
@@ -3728,6 +3701,7 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * Generate the form for initiating a login request for an LTI 1.3 message
  *
  * @param int            $courseid  Course ID
+ * @param int            $cmid Course Module Id if launching a Course Module Link
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
@@ -3736,11 +3710,11 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $hint      Associative Array of data to add to hint
  * @return string
  */
-function lti_initiate_login($courseid, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
+function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '', $hint = []) {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $instance, $config, $messagetype, $hint, $title, $text);
+    $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $hint, $title, $text);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3766,19 +3740,20 @@ function lti_initiate_login($courseid, $instance, $config, $messagetype = 'basic
  * Prepares an LTI 1.3 login request
  *
  * @param int            $courseid  Course ID
+ * @param int|null       $cmid Course Module Id
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
  * @param array          $hint associative array that will be used as LTI hint
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $instance, $config, $messagetype, $hint=[], $title='', $text='') {
+function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $hint=[], $title='', $text='') {
     global $USER, $CFG, $SESSION;
     $ltihint = [];
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
         $launchid = 'ltilaunch'.$instance->id.'_'.rand();
-        $ltihint['id'] = $instance->id;
+        $ltihint['cmid'] = $cmid;
         $SESSION->$launchid = "{$courseid},{$config->typeid},{$instance->id},,";
     } else {
         $endpoint = $config->lti_toolurl;
