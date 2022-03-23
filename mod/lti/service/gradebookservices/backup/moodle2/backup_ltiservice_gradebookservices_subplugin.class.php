@@ -128,11 +128,32 @@ class backup_ltiservice_gradebookservices_subplugin extends backup_subplugin {
                               WHERE l.courseid = ?
                                 AND l.typeid = ?
                                 AND l.toolproxyid is null";
-            $lineitemsparams = ['courseid' => backup::VAR_COURSEID, backup_helper::is_sqlparam($typeid)];
+            if ($this->is_first_backup_step_for_type($typeid)) {
+                $lineitemssql.=" AND (l.ltilinkid=? or l.ltilinkid is null)";
+            } else {
+                $lineitemssql.=" AND l.ltilinkid=?";
+            }
+            $lineitemsparams = ['courseid' => backup::VAR_COURSEID, backup_helper::is_sqlparam($typeid), backup_helper::is_sqlparam($activityid)];
         }
 
         $lineitem->set_source_sql($lineitemssql, $lineitemsparams);
 
         return $subplugin;
+    }
+
+    /**
+     * Is this the 1st time this step is called for this backup?
+     *
+     * @return bool
+     */
+    private function is_first_backup_step_for_type($type) {
+        static $PREV_BACKUPS = [];
+        $key = $this->task->get_backupid().'_'.$type;
+        if (!in_array($key, $PREV_BACKUPS)) {
+            // trim array here
+            $PREV_BACKUPS[] = $key;
+            return true;
+        }
+        return false;
     }
 }

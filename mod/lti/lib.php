@@ -595,7 +595,7 @@ function lti_grade_item_update($basiclti, $grades = null) {
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->dirroot.'/mod/lti/servicelib.php');
  
-    if (!isset($lti->coursemodule)) {
+    if (!isset($basiclti->coursemodule)) {
         return 0;
     }
 
