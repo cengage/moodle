@@ -660,7 +660,7 @@ function lti_get_launch_data($instance, $nonce = '') {
             $serviceparameters = $service->get_launch_parameters('basic-lti-launch-request',
                     $course->id, $USER->id , $typeid, $instance->id);
             foreach ($serviceparameters as $paramkey => $paramvalue) {
-                $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $requestparams, $paramvalue,
+                $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $instance, $requestparams, $paramvalue,
                     $islti2);
             }
         }
@@ -1041,23 +1041,23 @@ function lti_build_custom_parameters($toolproxy, $tool, $instance, $params, $cus
     // has given permission.
     $custom = array();
     if ($customstr) {
-        $custom = lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $islti2);
+        $custom = lti_split_custom_parameters($toolproxy, $tool, $instance, $params, $customstr, $islti2);
     }
     if ($instructorcustomstr) {
-        $custom = array_merge(lti_split_custom_parameters($toolproxy, $tool, $params,
+        $custom = array_merge(lti_split_custom_parameters($toolproxy, $tool, $instance, $params,
             $instructorcustomstr, $islti2), $custom);
     }
     if ($islti2) {
-        $custom = array_merge(lti_split_custom_parameters($toolproxy, $tool, $params,
+        $custom = array_merge(lti_split_custom_parameters($toolproxy, $tool, $instance, $params,
             $tool->parameter, true), $custom);
         $settings = lti_get_tool_settings($tool->toolproxyid);
-        $custom = array_merge($custom, lti_get_custom_parameters($toolproxy, $tool, $params, $settings));
+        $custom = array_merge($custom, lti_get_custom_parameters($toolproxy, $tool, $instance, $params, $settings));
         if (!empty($instance->course)) {
             $settings = lti_get_tool_settings($tool->toolproxyid, $instance->course);
-            $custom = array_merge($custom, lti_get_custom_parameters($toolproxy, $tool, $params, $settings));
+            $custom = array_merge($custom, lti_get_custom_parameters($toolproxy, $tool, $instance, $params, $settings));
             if (!empty($instance->id)) {
                 $settings = lti_get_tool_settings($tool->toolproxyid, $instance->course, $instance->id);
-                $custom = array_merge($custom, lti_get_custom_parameters($toolproxy, $tool, $params, $settings));
+                $custom = array_merge($custom, lti_get_custom_parameters($toolproxy, $tool, $instance, $params, $settings));
             }
         }
     }
@@ -1196,7 +1196,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
             $serviceparameters = $service->get_launch_parameters('ContentItemSelectionRequest',
                 $course->id, $USER->id , $id);
             foreach ($serviceparameters as $paramkey => $paramvalue) {
-                $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $requestparams, $paramvalue,
+                $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter($toolproxy, $tool, $instance, $requestparams, $paramvalue,
                     $islti2);
             }
         }
@@ -1954,13 +1954,14 @@ function lti_get_enabled_capabilities($tool) {
  *
  * @param object    $toolproxy      Tool proxy instance object
  * @param object    $tool           Tool instance object
+ * @param object    $instance       LTI instance being launched
  * @param array     $params         LTI launch parameters
  * @param string    $customstr      String containing the parameters
  * @param boolean   $islti2         True if an LTI 2 tool is being launched
  *
  * @return array of custom parameters
  */
-function lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $islti2 = false) {
+function lti_split_custom_parameters($toolproxy, $tool, $instance, $params, $customstr, $islti2 = false) {
     $customstr = str_replace("\r\n", "\n", $customstr);
     $customstr = str_replace("\n\r", "\n", $customstr);
     $customstr = str_replace("\r", "\n", $customstr);
@@ -1973,7 +1974,7 @@ function lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $is
         }
         $key = trim(core_text::substr($line, 0, $pos));
         $val = trim(core_text::substr($line, $pos + 1, strlen($line)));
-        $val = lti_parse_custom_parameter($toolproxy, $tool, $params, $val, $islti2);
+        $val = lti_parse_custom_parameter($toolproxy, $tool, $instance, $params, $val, $islti2);
         $key2 = lti_map_keyname($key);
         $retval['custom_'.$key2] = $val;
         if (($islti2 || ($tool->ltiversion === LTI_VERSION_1P3)) && ($key != $key2)) {
@@ -1988,16 +1989,17 @@ function lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $is
  *
  * @param object    $toolproxy      Tool proxy instance object
  * @param object    $tool           Tool instance object
+ * @param object    $instance       LTI instance being launched
  * @param array     $params         LTI launch parameters
  * @param array     $parameters     Array containing the parameters
  *
  * @return array    Array of custom parameters
  */
-function lti_get_custom_parameters($toolproxy, $tool, $params, $parameters) {
+function lti_get_custom_parameters($toolproxy, $tool, $instance, $params, $parameters) {
     $retval = array();
     foreach ($parameters as $key => $val) {
         $key2 = lti_map_keyname($key);
-        $val = lti_parse_custom_parameter($toolproxy, $tool, $params, $val, true);
+        $val = lti_parse_custom_parameter($toolproxy, $tool, $instance, $params, $val, true);
         $retval['custom_'.$key2] = $val;
         if ($key != $key2) {
             $retval['custom_'.$key] = $val;
@@ -2011,13 +2013,14 @@ function lti_get_custom_parameters($toolproxy, $tool, $params, $parameters) {
  *
  * @param object    $toolproxy      Tool proxy instance object
  * @param object    $tool           Tool instance object
+ * @param object    $instance       LTI instance being launched
  * @param array     $params         LTI launch parameters
  * @param string    $value          Custom parameter value
  * @param boolean   $islti2         True if an LTI 2 tool is being launched
  *
  * @return string Parsed value of custom parameter
  */
-function lti_parse_custom_parameter($toolproxy, $tool, $params, $value, $islti2) {
+function lti_parse_custom_parameter($toolproxy, $tool, $instance, $params, $value, $islti2) {
     // This is required as {${$valarr[0]}->{$valarr[1]}}" may be using the USER or COURSE var.
     global $USER, $COURSE;
 
@@ -2042,7 +2045,7 @@ function lti_parse_custom_parameter($toolproxy, $tool, $params, $value, $islti2)
                             $value = format_string($value);
                         }
                     } else {
-                        $value = lti_calculate_custom_parameter($value1);
+                        $value = lti_calculate_custom_parameter($toolproxy, $tool, $instance, $params, $value1);
                     }
                 } else {
                     $val = $value;
@@ -2065,11 +2068,15 @@ function lti_parse_custom_parameter($toolproxy, $tool, $params, $value, $islti2)
 /**
  * Calculates the value of a custom parameter that has not been specified earlier
  *
+ * @param object    $toolproxy      Tool proxy instance object
+ * @param object    $tool           Tool instance object
+ * @param object    $instance       LTI instance being launched
+ * @param array     $params         LTI launch parameters
  * @param string    $value          Custom parameter value
  *
  * @return string Calculated value of custom parameter
  */
-function lti_calculate_custom_parameter($value) {
+function lti_calculate_custom_parameter($toolproxy, $tool, $instance, $params, $value) {
     global $USER, $COURSE;
 
     switch ($value) {
@@ -2089,6 +2096,16 @@ function lti_calculate_custom_parameter($value) {
             }
             $dt = new DateTime("@$COURSE->enddate", new DateTimeZone('UTC'));
             return $dt->format(DateTime::ATOM);
+        case 'ResourceLink.submission.endDateTime':
+            if ($instance) {
+                $completion_ts = \core_completion\api::get_completion_date('lti', $instance->id);
+                if ($completion_ts) {
+                    $dt = new DateTime();
+                    $dt->setTimezone(new DateTimeZone('UTC'));
+                    $dt->setTimestamp($completion_ts);
+                    return $dt->format(DateTime::ATOM);
+                }
+            }
     }
     return null;
 }
@@ -3832,6 +3849,7 @@ function lti_get_capabilities() {
        'ResourceLink.id' => 'resource_link_id',
        'ResourceLink.title' => 'resource_link_title',
        'ResourceLink.description' => 'resource_link_description',
+       'ResourceLink.submission.endDateTime' => null,
        'User.id' => 'user_id',
        'User.username' => '$USER->username',
        'Person.name.full' => 'lis_person_name_full',

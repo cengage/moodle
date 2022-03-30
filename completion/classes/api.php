@@ -43,6 +43,41 @@ class api {
     /**
      * Creates, updates or deletes an event for the expected completion date.
      *
+     * @param string $modulename The name of the module (eg. assign, quiz)
+     * @param \stdClass|int $instanceorid The instance object or ID.
+     * @return int|null completion time, null if completion is not enabled
+     */
+    public static function get_completion_date($modulename, $instanceorid) {
+        global $CFG, $DB;
+
+        $instance = null;
+        if (is_object($instanceorid)) {
+            $instance = $instanceorid;
+        } else {
+            $instance = $DB->get_record($modulename, array('id' => $instanceorid), '*', IGNORE_MISSING);
+        }
+        if (!$instance) {
+            return null;
+        }
+        $course = get_course($instance->course);
+        $completion = new \completion_info($course);
+        // Completion is disabled, so no actual date
+        if (!$completion->is_enabled()) {
+            return null;
+        }
+        $event = $DB->get_record('event',
+            array('modulename' => $modulename, 'instance' => $instance->id, 'eventtype' => self::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED),
+            '*', IGNORE_MISSING);
+
+        if ($event && isset($event->timestart)) {
+            return $event->timestart;
+        }
+        return null;
+    }
+
+    /**
+     * Creates, updates or deletes an event for the expected completion date.
+     *
      * @param int $cmid The course module id
      * @param string $modulename The name of the module (eg. assign, quiz)
      * @param \stdClass|int $instanceorid The instance object or ID.
