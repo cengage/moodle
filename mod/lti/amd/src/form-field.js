@@ -50,7 +50,8 @@ define(['jquery'],
             TEXT: 1,
             SELECT: 2,
             CHECKBOX: 3,
-            EDITOR: 4
+            EDITOR: 4,
+            COMPLETION_DATE: 5
         };
 
         /**
@@ -92,6 +93,19 @@ define(['jquery'],
 
                         // Set text to actual editor text area.
                         $(this.selector).val(value.text);
+                    }
+                    break;
+                case FormField.TYPES.COMPLETION_DATE:
+                    if (value) {
+                        const date = value.split(',');
+                        if (date.length === 5) {
+                            $(this.selector + "_year").val(date[0]);
+                            $(`${this.selector}_month option[value='${date[1]}]`).prop('selected', true);
+                            $(this.selector + "_day").val(date[2]);
+                            $(this.selector + "_hour").val(date[3]);
+                            $(this.selector + "_minute").val(date[4]);
+                            $(this.selector + "_enabled").prop('checked', true);
+                        }
                     }
                     break;
                 default:

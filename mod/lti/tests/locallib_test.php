@@ -1304,6 +1304,9 @@ MwIDAQAB
     public function test_lti_tool_configuration_from_content_item_single_gradable() {
         $this->resetAfterTest();
         $this->setAdminUser();
+        global $USER;
+        $prevtz = $USER->timezone;
+        $USER->timezone = 'America/New_York';
 
         $type = new \stdClass();
         $type->name = "Test tool";
@@ -1323,6 +1326,9 @@ MwIDAQAB
                 'tag' => 'final',
                 'scoreMaximum' => 10.0
             ],
+            'submission' => [
+                "endDateTime" => "2022-04-07T19:05:02Z"
+            ],
             'frame' => []
         ];
         $contentitemsjson13 = json_encode($contentitems);
@@ -1333,12 +1339,14 @@ MwIDAQAB
                                                            $type->ltiversion,
                                                            'ConsumerKey',
                                                            $json11);
+        $USER->timezone = $prevtz;
 
         $this->assertEquals($contentitems[0]['url'], $config->toolurl);
         $this->assertEquals(LTI_SETTING_ALWAYS, $config->instructorchoiceacceptgrades);
         $this->assertEquals($contentitems[0]['lineItem']['tag'], $config->lineitemtag);
         $this->assertEquals($contentitems[0]['lineItem']['resourceId'], $config->lineitemresourceid);
         $this->assertEquals($contentitems[0]['lineItem']['scoreMaximum'], $config->grade_modgrade_point);
+        $this->assertEquals('2022,04,07,15,05', $config->completionexpected);
     }
 
     /**

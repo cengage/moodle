@@ -1442,6 +1442,7 @@ function lti_verify_jwt_signature($typeid, $consumerkey, $jwtparam) {
  * @return stdClass Form config for the item
  */
 function content_item_to_form(object $tool, object $typeconfig, object $item) : stdClass {
+    global $USER;
     $config = new stdClass();
     $config->name = '';
     if (isset($item->title)) {
@@ -1529,6 +1530,13 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
             $customparameters[] = "{$key}={$value}";
         }
         $config->instructorcustomparameters = implode("\n", $customparameters);
+    }
+    if (isset($item->submission) && isset($item->submission->endDateTime)) {
+        $enddatetime = DateTime::createFromFormat(DateTimeInterface::ISO8601, $item->submission->endDateTime);
+        if ($enddatetime) {
+            $enddatetime = $enddatetime->setTimezone(new DateTimeZone(\core_date::get_user_timezone($USER)));
+            $config->completionexpected = $enddatetime->format('Y,m,d,H,i');
+        }
     }
     return $config;
 }
@@ -1698,6 +1706,9 @@ function lti_convert_content_items($param) {
                         $newitem->lineItem->scoreConstraints->{'@type'} = 'NumericLimits';
                         $newitem->lineItem->scoreConstraints->totalMaximum = $item->lineItem->scoreMaximum;
                     }
+                }
+                if (isset($item->submission) && isset($item->submission->endDateTime)) {
+                    $newitem->submission = $item->submission;
                 }
                 $items[] = $newitem;
             }
