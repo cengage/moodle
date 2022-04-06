@@ -74,21 +74,21 @@ class locallib_test extends mod_lti_testcase {
         $tool->enabledcapability = '';
         $tool->parameter = '';
         $tool->ltiversion = 'LTI-1p0';
-        $this->assertEquals(lti_split_custom_parameters(null, $tool, array(), "x=1\ny=2", false),
+        $this->assertEquals(lti_split_custom_parameters(null, $tool, null, array(), "x=1\ny=2", false),
             array('custom_x' => '1', 'custom_y' => '2'));
 
         // Check params with caps.
-        $this->assertEquals(lti_split_custom_parameters(null, $tool, array(), "X=1", true),
+        $this->assertEquals(lti_split_custom_parameters(null, $tool, null, array(), "X=1", true),
             array('custom_x' => '1', 'custom_X' => '1'));
 
         // Removed repeat of previous test with a semicolon separator.
 
-        $this->assertEquals(lti_split_custom_parameters(null, $tool, array(), 'Review:Chapter=1.2.56', true),
+        $this->assertEquals(lti_split_custom_parameters(null, $tool, null, array(), 'Review:Chapter=1.2.56', true),
             array(
                 'custom_review_chapter' => '1.2.56',
                 'custom_Review:Chapter' => '1.2.56'));
 
-        $this->assertEquals(lti_split_custom_parameters(null, $tool, array(),
+        $this->assertEquals(lti_split_custom_parameters(null, $tool, null, array(),
             'Complex!@#$^*(){}[]KEY=Complex!@#$^*;(){}[]½Value', true),
             array(
                 'custom_complex____________key' => 'Complex!@#$^*;(){}[]½Value',
@@ -98,7 +98,7 @@ class locallib_test extends mod_lti_testcase {
         $user = $this->getDataGenerator()->create_user(array('middlename' => 'SOMETHING'));
         $this->setUser($user);
         $this->assertEquals(array('custom_x' => '1', 'custom_y' => 'SOMETHING'),
-            lti_split_custom_parameters(null, $tool, array(), "x=1\ny=\$Person.name.middle", false));
+            lti_split_custom_parameters(null, $tool, null, array(), "x=1\ny=\$Person.name.middle", false));
     }
 
     /**
