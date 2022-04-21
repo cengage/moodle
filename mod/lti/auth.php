@@ -43,7 +43,7 @@ $responsetype = optional_param('response_type', '', PARAM_TEXT);
 $clientid = optional_param('client_id', '', PARAM_TEXT);
 $redirecturi = optional_param('redirect_uri', '', PARAM_URL);
 $loginhint = optional_param('login_hint', '', PARAM_TEXT);
-$ltimessagehintenc = optional_param('lti_message_hint', 0, PARAM_INT);
+$ltimessagehintenc = optional_param('lti_message_hint', '', PARAM_TEXT);
 $state = optional_param('state', '', PARAM_TEXT);
 $responsemode = optional_param('response_mode', '', PARAM_TEXT);
 $nonce = optional_param('nonce', '', PARAM_TEXT);
@@ -73,15 +73,11 @@ if ($ok && ($responsetype !== 'id_token')) {
 if ($ok) {
     $launchid = $ltimessagehint->launchid;
     list($courseid, $typeid, $id, $messagetype, $foruserid, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 7);
-    $ok = ($id !== $ltimessagehint);
+    unset($SESSION->$launchid);
+    $config = lti_get_type_type_config($typeid);
+    $ok = ($clientid === $config->lti_clientid);
     if (!$ok) {
-        $error = 'invalid_request';
-    } else {
-        $config = lti_get_type_type_config($typeid);
-        $ok = ($clientid === $config->lti_clientid);
-        if (!$ok) {
-            $error = 'unauthorized_client';
-        }
+        $error = 'unauthorized_client';
     }
 }
 if ($ok && ($loginhint !== $USER->id)) {

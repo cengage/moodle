@@ -116,6 +116,7 @@ function lti_get_jwt_message_type_mapping() {
         'basic-lti-launch-request' => 'LtiResourceLinkRequest',
         'ContentItemSelectionRequest' => 'LtiDeepLinkingRequest',
         'LtiDeepLinkingResponse' => 'ContentItemSelection',
+        'LtiSubmissionReviewRequest' => 'LtiSubmissionReviewRequest',
     );
 }
 
@@ -3564,7 +3565,7 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * Generate the form for initiating a login request for an LTI 1.3 message
  *
  * @param int            $courseid  Course ID
- * @param int            $id        LTI instance ID
+ * @param int            $cmid        LTI instance ID
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
@@ -3573,13 +3574,11 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param int            $foruserid Id of the user targeted by the launch
  * @return string
  */
-function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
+function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
         $text = '', $foruserid = 0) {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $foruserid);
-    $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
-        base64_encode($text);
+    $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3599,7 +3598,7 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
         "</script>\n";
 
     return $r;
-,}
+}
 
 /**
  * Prepares an LTI 1.3 login request
@@ -3613,13 +3612,13 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
  * @return array Login request parameters
  */
 function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0) {
-    global $USER, $CFG;
+    global $USER, $CFG, $SESSION;
     $ltihint = [];
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
         $launchid = 'ltilaunch'.$instance->id.'_'.rand();
         $ltihint['cmid'] = $cmid;
-        $SESSION->$launchid = "{$courseid},{$config->typeid},{$instance->id},$messagetype,$foruserid,,";
+        $SESSION->$launchid = "{$courseid},{$config->typeid},{$cmid},{$messagetype},{$foruserid},,";
     } else {
         $endpoint = $config->lti_toolurl;
         if (($messagetype === 'ContentItemSelectionRequest') && !empty($config->lti_toolurl_ContentItemSelectionRequest)) {
