@@ -257,6 +257,12 @@ function lti_get_jwt_claim_mapping() {
             'claim' => 'type',
             'isarray' => true
         ],
+        'for_user_id' => [
+            'suffix' => '',
+            'group' => 'for_user',
+            'claim' => 'id',
+            'isarray' => false
+        ],
         'lis_course_offering_sourcedid' => [
             'suffix' => '',
             'group' => 'lis',
@@ -531,7 +537,7 @@ function lti_get_instance_type(object $instance) : ?object {
  * @return array the endpoint URL and parameters (including the signature)
  * @since  Moodle 3.0
  */
-function lti_get_launch_data($instance, $nonce = '') {
+function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruserid = 0) {
     global $PAGE, $CFG, $USER;
 
     $tool = lti_get_instance_type($instance);
@@ -606,13 +612,13 @@ function lti_get_launch_data($instance, $nonce = '') {
 
     $course = $PAGE->course;
     $islti2 = isset($tool->toolproxyid);
-    $allparams = lti_build_request($instance, $typeconfig, $course, $typeid, $islti2);
+    $allparams = lti_build_request($instance, $typeconfig, $course, $typeid, $islti2, $messagetype, $foruserid);
     if ($islti2) {
         $requestparams = lti_build_request_lti2($tool, $allparams);
     } else {
         $requestparams = $allparams;
     }
-    $requestparams = array_merge($requestparams, lti_build_standard_message($instance, $orgid, $ltiversion));
+    $requestparams = array_merge($requestparams, lti_build_standard_message($instance, $orgid, $ltiversion, $messagetype));
     $customstr = '';
     if (isset($typeconfig['customparameters'])) {
         $customstr = $typeconfig['customparameters'];
@@ -833,10 +839,12 @@ function lti_build_sourcedid($instanceid, $userid, $servicesalt, $typeid = null,
  * @param object    $course         Course object
  * @param int|null  $typeid         Basic LTI tool ID
  * @param boolean   $islti2         True if an LTI 2 tool is being launched
+ * @param string    $messagetype    LTI Message Type for this launch
+ * @param int       $foruserid      User targeted by this launch
  *
  * @return array                    Request details
  */
-function lti_build_request($instance, $typeconfig, $course, $typeid = null, $islti2 = false) {
+function lti_build_request($instance, $typeconfig, $course, $typeid = null, $islti2 = false, $messagetype = 'basic-lti-launch-request', $foruserid = 0) {
     global $USER, $CFG;
 
     if (empty($instance->cmid)) {
@@ -853,6 +861,12 @@ function lti_build_request($instance, $typeconfig, $course, $typeid = null, $isl
         'context_label' => trim(html_to_text($course->shortname, 0)),
         'context_title' => trim(html_to_text($course->fullname, 0)),
     );
+    if ($foruserid) {
+        $requestparams['for_user_id'] = $foruserid;
+    }
+    if ($messagetype) {
+        $requestparams['type'] = $messagetype;
+    }
     if (!empty($instance->name)) {
         $requestparams['resource_link_title'] = trim(html_to_text($instance->name, 0));
     }
@@ -3556,13 +3570,14 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $messagetype   LTI message type
  * @param string         $title     Title of content item
  * @param string         $text      Description of content item
+ * @param int            $foruserid Id of the user targeted by the launch
  * @return string
  */
 function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
-        $text = '') {
+        $text = '', $foruserid = 0) {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype);
+    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype, $foruserid);
     $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id}," . base64_encode($title) . ',' .
         base64_encode($text);
 
@@ -3584,31 +3599,37 @@ function lti_initiate_login($courseid, $id, $instance, $config, $messagetype = '
         "</script>\n";
 
     return $r;
-}
+,}
 
 /**
  * Prepares an LTI 1.3 login request
  *
  * @param int            $courseid  Course ID
- * @param int            $id        LTI instance ID
+ * @param int            $cmid        Course Module instance ID
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
+ * @param int            $foruserid Id of the user targeted by the launch
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $id, $instance, $config, $messagetype) {
+function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0) {
     global $USER, $CFG;
-
+    $ltihint = [];
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
+        $launchid = 'ltilaunch'.$instance->id.'_'.rand();
+        $ltihint['cmid'] = $cmid;
+        $SESSION->$launchid = "{$courseid},{$config->typeid},{$instance->id},$messagetype,$foruserid,,";
     } else {
         $endpoint = $config->lti_toolurl;
         if (($messagetype === 'ContentItemSelectionRequest') && !empty($config->lti_toolurl_ContentItemSelectionRequest)) {
             $endpoint = $config->lti_toolurl_ContentItemSelectionRequest;
         }
+        $launchid = "ltilaunch_$messagetype".rand();
+        $SESSION->$launchid = "{$courseid},{$config->typeid},,{$messagetype},{$foruserid}," . base64_encode($title) . ',' . base64_encode($text);
     }
     $endpoint = trim($endpoint);
-
+    $ltihint['launchid'] = $launchid;
     // If SSL is forced make sure https is on the normal launch URL.
     if (isset($config->lti_forcessl) && ($config->lti_forcessl == '1')) {
         $endpoint = lti_ensure_url_is_https($endpoint);
@@ -3620,7 +3641,7 @@ function lti_build_login_request($courseid, $id, $instance, $config, $messagetyp
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;
     $params['login_hint'] = $USER->id;
-    $params['lti_message_hint'] = $id;
+    $params['lti_message_hint'] = json_encode($ltihint); 
     $params['client_id'] = $config->lti_clientid;
     $params['lti_deployment_id'] = $config->typeid;
     return $params;

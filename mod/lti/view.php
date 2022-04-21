@@ -53,6 +53,8 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID, or
 $l  = optional_param('l', 0, PARAM_INT);  // lti ID.
+$action = optional_param('action', '', PARAM_RAW);
+$foruser = optional_param('userid', 0, PARAM_INT);
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
 
 if ($l) {  // Two ways to specify the module.
@@ -144,7 +146,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
 } else {
     $content = '';
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        $content = lti_initiate_login($cm->course, $id, $lti, $config);
+        $content = lti_initiate_login($cm->course, $id, $lti, $config, $type, $foruserid);
     }
 
     // Build the allowed URL, since we know what it will be from $toolurl.
