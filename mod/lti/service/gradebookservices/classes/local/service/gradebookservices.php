@@ -143,6 +143,41 @@ class gradebookservices extends service_base {
         $mform->addHelpButton($selectelementname, $identifier, $this->get_component_id());
     }
 
+
+    /**
+     * For submission review, if there is a dedicated URL, use it as the target link.
+     *
+     * @param string $messagetype message type for this launch
+     * @param string $targetlinkuri current target link uri
+     * @param string|null $customstr concatenated list of custom parameters
+     * @param int $courseid
+     * @param object $lti LTI Instance.
+     */
+    public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid,
+        ?object $lti = null): array {
+        global $DB;
+        if ($messagetype == 'LtiSubmissionReviewRequest' && isset($lti->id)) {
+            $conditions = array('courseid' => $courseid, 'ltilinkid' => $lti->id);
+            $coupledlineitems = $DB->get_records('ltiservice_gradebookservices', $conditions);
+            if (count($coupledlineitems) == 1) {
+                $item = reset($coupledlineitems);
+                $url = $item->subreviewurl;
+                $subreviewparams = $item->subreviewparams;
+                if (!empty($url) && $url != 'DEFAULT') {
+                    $targetlinkuri = $url;
+                }
+                if (!empty($subreviewparams)) {
+                    if (!empty($customstr)) {
+                        $customstr .= "\n{$subreviewparams}";
+                    } else {
+                        $customstr = $subreviewparams;
+                    }
+                }
+            }
+        }
+        return [$targetlinkuri, $customstr];
+    }
+
     /**
      * Return an array of key/values to add to the launch parameters.
      *
@@ -620,9 +655,12 @@ class gradebookservices extends service_base {
      * @param object $ltiinstance The lti instance to which the grade item is coupled to
      * @param string|null $resourceid The resourceid to apply to the lineitem. If empty string which will be stored as null.
      * @param string|null $tag The tag to apply to the lineitem. If empty string which will be stored as null.
+     * @param string|null $subreviewurl The submission review target link URL
+     * @param string|null $subreviewparams The submission review custom parameters.
      *
      */
-    public static function update_coupled_gradebookservices(object $ltiinstance, ?string $resourceid, ?string $tag) : void {
+    public static function update_coupled_gradebookservices(object $ltiinstance,
+        ?string $resourceid, ?string $tag, ?string $subreviewurl, ?string $subreviewparams) : void {
         global $DB;
 
         if ($ltiinstance && $ltiinstance->typeid) {
@@ -644,7 +682,9 @@ class gradebookservices extends service_base {
                         'baseurl' => $baseurl,
                         'ltilinkid' => $ltiinstance->id,
                         'resourceid' => $resourceid,
-                        'tag' => $tag
+                        'tag' => $tag,
+                        'subreviewurl' => $subreviewurl,
+                        'subreviewparams' => $subreviewparams
                     ));
                 }
             }
@@ -657,7 +697,8 @@ class gradebookservices extends service_base {
      * @param object $lti LTI Instance.
      */
     public function instance_added(object $lti): void {
-        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null);
+        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
+            $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
     }
 
     /**
@@ -666,7 +707,8 @@ class gradebookservices extends service_base {
      * @param object $lti LTI Instance.
      */
     public function instance_updated(object $lti): void {
-        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null);
+        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
+            $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
     }
 
     /**

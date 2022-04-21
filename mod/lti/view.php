@@ -53,6 +53,8 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID, or
 $l  = optional_param('l', 0, PARAM_INT);  // lti ID.
+$action = optional_param('action', '', PARAM_TEXT);
+$foruserid = optional_param('user', 0, PARAM_INT);
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
 
 if ($l) {  // Two ways to specify the module.
@@ -126,13 +128,19 @@ if ($typeid) {
     $config = new stdClass();
     $config->lti_ltiversion = LTI_VERSION_1;
 }
-
+$launchurl = "launch.php?id={$cm->id}&triggerview=0";
+if ($action) {
+    $launchurl .= "&action={$action}";
+}
+if ($foruserid) {
+    $launchurl .= "&user={$foruserid}";
+}
 if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     (($config->lti_ltiversion !== LTI_VERSION_1P3) || isset($SESSION->lti_initiatelogin_status))) {
     unset($SESSION->lti_initiatelogin_status);
     if (!$forceview) {
         echo "<script language=\"javascript\">//<![CDATA[\n";
-        echo "window.open('launch.php?id=" . $cm->id . "&triggerview=0','lti-" . $cm->id . "');";
+        echo "window.open('${launchurl}','lti-{$cm->id}');";
         echo "//]]\n";
         echo "</script>\n";
         echo "<p>".get_string("basiclti_in_new_window", "lti")."</p>\n";
@@ -143,13 +151,9 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     echo html_writer::end_tag('p');
 } else {
     $content = '';
-    if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        $content = lti_initiate_login($cm->course, $id, $lti, $config);
-    }
-
-    // Build the allowed URL, since we know what it will be from $toolurl.
-    // If the specified URL is invalid, the iframe won't load, but we still want to avoid parse related errors here.
-    // So we set an empty default allowed URL, and only build a real one if the parse is successful.
+    // Build the allowed URL, since we know what it will be from $lti->toolurl,
+    // If the specified toolurl is invalid the iframe won't load, but we still want to avoid parse related errors here.
+    // So we set an empty default allowed url, and only build a real one if the parse is successful.
     $ltiallow = '';
     $urlparts = parse_url($toolurl);
     if ($urlparts && array_key_exists('scheme', $urlparts) && array_key_exists('host', $urlparts)) {
@@ -165,7 +169,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
-    $attributes['src'] = 'launch.php?id=' . $cm->id . '&triggerview=0';
+    $attributes['src'] = $launchurl;
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .

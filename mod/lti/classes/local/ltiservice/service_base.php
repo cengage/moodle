@@ -256,6 +256,24 @@ abstract class service_base {
     }
 
     /**
+     * Called when the launch data is created, offering a possibility to alter the
+     * target link URI.
+     *
+     * @param string $messagetype message type for this launch
+     * @param string $targetlinkuri current target link uri
+     * @param null|string $customstr concatenated list of custom parameters
+     * @param int $courseid
+     * @param null|object $lti LTI Instance.
+     *
+     * @return string the target link URL to use
+     */
+    public function override_endpoint(string $messagetype, string $targetlinkuri,
+        ?string $customstr, int $courseid, ?object $lti = null): array {
+        return [$targetlinkuri, $customstr];
+    }
+
+
+    /**
      * Called when a new LTI Instance is deleted.
      *
      * @param int $id LTI Instance.
@@ -321,6 +339,8 @@ abstract class service_base {
 
     /**
      * Return an array of key/values to add to the launch parameters.
+     * It also supports altering the message type and the launch uri
+     * using respectively the keys: messagetype and launchurl.
      *
      * @param string $messagetype  'basic-lti-launch-request' or 'ContentItemSelectionRequest'.
      * @param string $courseid     The course id.
