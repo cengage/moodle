@@ -3569,16 +3569,16 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
+ * @param int            $foruserid Id of the user targeted by the launch
  * @param string         $title     Title of content item
  * @param string         $text      Description of content item
- * @param int            $foruserid Id of the user targeted by the launch
  * @return string
  */
-function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request', $title = '',
-        $text = '', $foruserid = 0) {
+function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request', $foruserid, $title = '',
+        $text = '') {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid);
+    $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3609,9 +3609,11 @@ function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype =
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
  * @param int            $foruserid Id of the user targeted by the launch
+ * @param string         $title     Title of content item
+ * @param string         $text      Description of content item
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0) {
+function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0, $title = '', $text = '') {
     global $USER, $CFG, $SESSION;
     $ltihint = [];
     if (!empty($instance)) {

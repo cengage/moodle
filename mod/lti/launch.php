@@ -52,6 +52,8 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
 $cmid = required_param('id', PARAM_INT); // Course Module ID.
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
+$action = optional_param('action', '', PARAM_TEXT);
+$foruserid = optional_param('user', 0, PARAM_INT);
 
 $cm = get_coursemodule_from_id('lti', $cmid, 0, false, MUST_EXIST);
 $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
@@ -64,7 +66,10 @@ if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
         if (!isset($SESSION->lti_initiatelogin_status)) {
-            echo lti_initiate_login($cm->course, $cmid, $lti, $config);
+            if ($action === 'gradeReport') {
+                $type = 'LtiSubmissionReviewRequest';
+            }
+            echo lti_initiate_login($cm->course, $cmid, $lti, $config, $type, $foruserid);
             exit;
         } else {
             unset($SESSION->lti_initiatelogin_status);
