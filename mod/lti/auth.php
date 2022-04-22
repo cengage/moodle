@@ -53,10 +53,14 @@ $ok = !empty($scope) && !empty($responsetype) && !empty($clientid) &&
       !empty($redirecturi) && !empty($loginhint) && !empty($ltimessagehintenc) &&
       !empty($nonce);
 
+if (!$ok) {
+    $error = 'invalid_request';
+}
 $ltimessagehint = json_decode($ltimessagehintenc);
 $ok = $ok && isset($ltimessagehint->launchid);
 if (!$ok) {
     $error = 'invalid_request';
+    $desc = 'No launch id in LTI hint';
 }
 if ($ok && ($scope !== 'openid')) {
     $ok = false;
@@ -66,8 +70,8 @@ if ($ok && ($responsetype !== 'id_token')) {
     $ok = false;
     $error = 'unsupported_response_type';
 }
-$launchid = $ltimessagehint->launchid;
 if ($ok) {
+    $launchid = $ltimessagehint->launchid;
     list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 5);
     unset($SESSION->$launchid);
     $config = lti_get_type_type_config($typeid);
