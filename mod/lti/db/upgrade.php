@@ -257,7 +257,7 @@ function xmldb_lti_upgrade($oldversion) {
 
             $dbman->create_table($table);
         }
-        upgrade_mod_savepoint(true, 2021052502, 'lti');
+        upgrade_mod_savepoint(true, 2022050401, 'lti');
     }
 
     return true;
