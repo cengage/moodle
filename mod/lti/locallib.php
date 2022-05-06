@@ -2955,6 +2955,7 @@ function lti_update_type($type, $config = null) {
             foreach ($courseids as $courseid) {
                 rebuild_course_cache($courseid, false, true);
             }
+        }
 
     }
 
