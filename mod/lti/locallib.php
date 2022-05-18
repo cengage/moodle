@@ -1517,11 +1517,23 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
                 $config->grade_modgrade_point = $maxscore;
                 $config->lineitemresourceid = '';
                 $config->lineitemtag = '';
+                $config->lineitemsubreviewurl = '';
+                $config->lineitemsubreviewparams = '';
                 if (isset($lineitem->assignedActivity) && isset($lineitem->assignedActivity->activityId)) {
                     $config->lineitemresourceid = $lineitem->assignedActivity->activityId?:'';
                 }
                 if (isset($lineitem->tag)) {
                     $config->lineitemtag = $lineitem->tag?:'';
+                }
+                if (isset($lineitem->submissionReview)) {
+                    $subreview = $lineitem->submissionReview;
+                    $config->lineitemsubreviewurl = 'DEFAULT';
+                    if (isset($subreview->url) && $subreview->url) {
+                        $config->lineitemsubreviewurl = $subreview->url;
+                    }
+                    if (isset($subreview->custom)) {
+                        $config->lineitemsubreviewparams = $subreview->custom?:'';
+                    }
                 }
             }
         }
@@ -1712,6 +1724,9 @@ function lti_convert_content_items($param) {
                         $newitem->lineItem->scoreConstraints = new stdClass();
                         $newitem->lineItem->scoreConstraints->{'@type'} = 'NumericLimits';
                         $newitem->lineItem->scoreConstraints->totalMaximum = $item->lineItem->scoreMaximum;
+                    }
+                    if (isset($item->lineItem->submissionReview)) {
+                        $newitem->lineItem->submissionReview = $item->lineItem->submissionReview;
                     }
                 }
                 $items[] = $newitem;
