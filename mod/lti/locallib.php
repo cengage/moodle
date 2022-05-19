@@ -1448,6 +1448,20 @@ function lti_verify_jwt_signature($typeid, $consumerkey, $jwtparam) {
 }
 
 /**
+ * Converts an array of custom parameters to a new line separated string.
+ * @param object params
+ *
+ * @return string
+ */
+function params_to_string(object $params) {
+    $customparameters = [];
+    foreach ($params as $key => $value) {
+        $customparameters[] = "{$key}={$value}";
+    }
+    return implode("\n", $customparameters);
+}
+
+/**
  * Converts LTI 1.1 Content Item for LTI Link to Form data.
  *
  * @param object $tool Tool for which the item is created for.
@@ -1532,7 +1546,7 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
                         $config->lineitemsubreviewurl = $subreview->url;
                     }
                     if (isset($subreview->custom)) {
-                        $config->lineitemsubreviewparams = $subreview->custom?:'';
+                        $config->lineitemsubreviewparams = params_to_string($subreview->custom);
                     }
                 }
             }
@@ -1551,11 +1565,7 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
         }
     }
     if (isset($item->custom)) {
-        $customparameters = [];
-        foreach ($item->custom as $key => $value) {
-            $customparameters[] = "{$key}={$value}";
-        }
-        $config->instructorcustomparameters = implode("\n", $customparameters);
+        $config->instructorcustomparameters = params_to_string($item->custom);
     }
     return $config;
 }
