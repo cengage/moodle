@@ -254,6 +254,23 @@ abstract class service_base {
     public function instance_updated(object $lti): void {
 
     }
+    
+    /**
+     * Called when the launch data is created, offering a possibility to alter the
+     * target link URI.
+     *
+     * @param string $messagetype message type for this launch
+     * @param string $targetlinkuri current target link uri
+     * @param int $courseid
+     * @param int $cmid Course Module ID being launched
+     * @param object $lti LTI Instance.
+     * 
+     * @return string the target link URL to use
+     */
+    public function init_launch(string $messagetype, string $targetlinkuri, int $courseid, int $cmid = null, string $lti = null): string {
+        return $targetlinkuri;
+    }
+
 
     /**
      * Called when a new LTI Instance is deleted.
@@ -321,6 +338,8 @@ abstract class service_base {
 
     /**
      * Return an array of key/values to add to the launch parameters.
+     * It also supports altering the message type and the launch uri
+     * using respectively the keys: messagetype and launchurl.
      *
      * @param string $messagetype  'basic-lti-launch-request' or 'ContentItemSelectionRequest'.
      * @param string $courseid     The course id.

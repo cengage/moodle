@@ -143,6 +143,31 @@ class gradebookservices extends service_base {
         $mform->addHelpButton($selectelementname, $identifier, $this->get_component_id());
     }
 
+
+    /**
+     * For submission review, if there is a dedicated URL, use it as the target link.
+     *
+     * @param string $messagetype message type for this launch
+     * @param string $targetlinkuri current target link uri
+     * @param int $courseid
+     * @param object $lti LTI Instance.
+     */
+    public function init_launch(string $messagetype, string $targetlinkuri, int $courseid, int $cmid = null, string $lti = null): string {
+        global $DB;
+        if ($messagetype == 'LtiSubmissionReviewRequest') {
+            $conditions = array('courseid' => $courseid, 'itemtype' => 'mod',
+                                'itemmodule' => 'lti', 'iteminstance' => $cmid);
+            $coupledlineitems = $DB->get_records('grade_items', $conditions);
+            if (count($coupledlineitems) == 1) {
+                $url = reset($coupledlineitems)->subreviewurl;
+                if (!empty($url) && $url != 'DEFAULT') {
+                    return $url;
+                } 
+            }
+        }
+        return $targetlinkuri;
+    }
+
     /**
      * Return an array of key/values to add to the launch parameters.
      *
