@@ -262,13 +262,12 @@ abstract class service_base {
      * @param string $messagetype message type for this launch
      * @param string $targetlinkuri current target link uri
      * @param int $courseid
-     * @param int $cmid Course Module ID being launched
-     * @param object $lti LTI Instance.
+     * @param null|object $lti LTI Instance.
      * 
      * @return string the target link URL to use
      */
-    public function init_launch(string $messagetype, string $targetlinkuri, int $courseid, int $cmid = null, string $lti = null): string {
-        return $targetlinkuri;
+    public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid, ?object $lti = null): array {
+        return [$targetlinkuri, $customstr];
     }
 
 

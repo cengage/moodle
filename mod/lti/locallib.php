@@ -624,6 +624,10 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruser
     if (isset($typeconfig['customparameters'])) {
         $customstr = $typeconfig['customparameters'];
     }
+    $services = lti_get_services();
+    foreach ($services as $service) {
+        [$endpoint, $customstr] = $service->override_endpoint($messagetype??'basic-lti-launch-request', $endpoint, $customstr, $instance->course, $instance);
+    }
     $requestparams = array_merge($requestparams, lti_build_custom_parameters($toolproxy, $tool, $instance, $allparams, $customstr,
         $instance->instructorcustomparameters, $islti2));
 
@@ -1546,7 +1550,7 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
                         $config->lineitemsubreviewurl = $subreview->url;
                     }
                     if (isset($subreview->custom)) {
-                        $config->lineitemsubreviewparams = params_to_string($subreview->custom);
+                        $config->lineitemsubreviewparams = $subreview->custom;
                     }
                 }
             }
@@ -3655,6 +3659,11 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
         $SESSION->$launchid = "{$courseid},{$config->typeid},,{$messagetype},{$foruserid}," . base64_encode($title) . ',' . base64_encode($text);
     }
     $endpoint = trim($endpoint);
+    $services = lti_get_services();
+    foreach ($services as $service) {
+        [$endpoint] = $service->override_endpoint($messagetype??'basic-lti-launch-request', $endpoint, '', $courseid, $instance);
+    }
+
     $ltihint['launchid'] = $launchid;
     // If SSL is forced make sure https is on the normal launch URL.
     if (isset($config->lti_forcessl) && ($config->lti_forcessl == '1')) {
@@ -3667,7 +3676,7 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;
     $params['login_hint'] = $USER->id;
-    $params['lti_message_hint'] = json_encode($ltihint); 
+    $params['lti_message_hint'] = json_encode($ltihint);
     $params['client_id'] = $config->lti_clientid;
     $params['lti_deployment_id'] = $config->typeid;
     return $params;

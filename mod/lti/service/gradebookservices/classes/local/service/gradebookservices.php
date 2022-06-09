@@ -152,20 +152,28 @@ class gradebookservices extends service_base {
      * @param int $courseid
      * @param object $lti LTI Instance.
      */
-    public function init_launch(string $messagetype, string $targetlinkuri, int $courseid, int $cmid = null, string $lti = null): string {
+    public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid, ?object $lti = null): array {
         global $DB;
-        if ($messagetype == 'LtiSubmissionReviewRequest') {
-            $conditions = array('courseid' => $courseid, 'itemtype' => 'mod',
-                                'itemmodule' => 'lti', 'iteminstance' => $cmid);
-            $coupledlineitems = $DB->get_records('grade_items', $conditions);
+        if ($messagetype == 'LtiSubmissionReviewRequest' && isset($lti->id)) {
+            $conditions = array('courseid' => $courseid, 'ltilinkid' => $lti->id);
+            $coupledlineitems = $DB->get_records('ltiservice_gradebookservices', $conditions);
             if (count($coupledlineitems) == 1) {
-                $url = reset($coupledlineitems)->subreviewurl;
+                $item = reset($coupledlineitems);
+                $url = $item->subreviewurl;
+                $subreviewparams = $item->subreviewparams;
                 if (!empty($url) && $url != 'DEFAULT') {
-                    return $url;
-                } 
+                    $targetlinkuri = $url;
+                }
+                if (!empty($subreviewparams)) {
+                    if (!empty($customstr)) {
+                        $customstr .= "\n{$subreviewparams}";
+                    } else {
+                        $customstr = $subreviewparams;
+                    }
+                }
             }
         }
-        return $targetlinkuri;
+        return [$targetlinkuri, $customstr];
     }
 
     /**
