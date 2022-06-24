@@ -1550,7 +1550,7 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
                         $config->lineitemsubreviewurl = $subreview->url;
                     }
                     if (isset($subreview->custom)) {
-                        $config->lineitemsubreviewparams = $subreview->custom;
+                        $config->lineitemsubreviewparams = params_to_string($subreview->custom);
                     }
                 }
             }
