@@ -1433,7 +1433,7 @@ MwIDAQAB
                 'scoreMaximum' => 10.0,
                 'submissionReview' => [
                     'url' => 'https://testsub.url',
-                    'custom' => 'a=b'
+                    'custom' => ['a' => 'b']
                 ]
             ],
             'frame' => []
@@ -1457,7 +1457,7 @@ MwIDAQAB
         $this->assertEquals($contentitems[1]['lineItem']['resourceId'], $config->multiple[1]->lineitemresourceid);
         $this->assertEquals($contentitems[1]['lineItem']['scoreMaximum'], $config->multiple[1]->grade_modgrade_point);
         $this->assertEquals($contentitems[1]['lineItem']['submissionReview']['url'], $config->multiple[1]->lineitemsubreviewurl);
-        $this->assertEquals($contentitems[1]['lineItem']['submissionReview']['custom'], $config->multiple[1]->lineitemsubreviewparams);
+        $this->assertEquals("a=b", $config->multiple[1]->lineitemsubreviewparams);
     }
 
     /**
