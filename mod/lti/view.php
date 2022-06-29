@@ -151,14 +151,6 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     echo html_writer::end_tag('p');
 } else {
     $content = '';
-    /*
-    if ($config->lti_ltiversion === LTI_VERSION_1P3) {
-        if ($action === 'gradeReport') {
-            $type = 'LtiSubmissionReviewRequest';
-        }
-        $content = lti_initiate_login($cm->course, $id, $lti, $config, $type, $foruserid);
-    }
-    */
     // Build the allowed URL, since we know what it will be from $lti->toolurl,
     // If the specified toolurl is invalid the iframe won't load, but we still want to avoid parse related errors here.
     // So we set an empty default allowed url, and only build a real one if the parse is successful.

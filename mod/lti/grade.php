@@ -36,4 +36,4 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 require_login($course, false, $cm);
 
 redirect(new moodle_url('/mod/lti/view.php', array(
-    'id' => $cm->id, 'action' => 'gradeReport', 'user'=>$userid)));
+    'id' => $cm->id, 'action' => 'gradeReport', 'user' => $userid)));

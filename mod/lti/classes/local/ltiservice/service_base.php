@@ -254,7 +254,7 @@ abstract class service_base {
     public function instance_updated(object $lti): void {
 
     }
-    
+
     /**
      * Called when the launch data is created, offering a possibility to alter the
      * target link URI.
@@ -263,10 +263,11 @@ abstract class service_base {
      * @param string $targetlinkuri current target link uri
      * @param int $courseid
      * @param null|object $lti LTI Instance.
-     * 
+     *
      * @return string the target link URL to use
      */
-    public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid, ?object $lti = null): array {
+    public function override_endpoint(string $messagetype, string $targetlinkuri,
+        ?string $customstr, int $courseid, ?object $lti = null): array {
         return [$targetlinkuri, $customstr];
     }
 

@@ -152,7 +152,8 @@ class gradebookservices extends service_base {
      * @param int $courseid
      * @param object $lti LTI Instance.
      */
-    public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid, ?object $lti = null): array {
+    public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid,
+        ?object $lti = null): array {
         global $DB;
         if ($messagetype == 'LtiSubmissionReviewRequest' && isset($lti->id)) {
             $conditions = array('courseid' => $courseid, 'ltilinkid' => $lti->id);
@@ -653,11 +654,11 @@ class gradebookservices extends service_base {
      * @param object $ltiinstance The lti instance to which the grade item is coupled to
      * @param string|null $resourceid The resourceid to apply to the lineitem. If empty string which will be stored as null.
      * @param string|null $tag The tag to apply to the lineitem. If empty string which will be stored as null.
-     * @param string|null $submissionReviewUrl The submission review target link URL.
-     * @param string|null $submissionReviewParams The submission review custom parameters.
+     * @param string|null $subreviewurl The submission review target link URL
+     * @param string|null $subreviewparams The submission review custom parameters.
      *
      */
-    public static function update_coupled_gradebookservices(object $ltiinstance, ?string $resourceid, ?string $tag, ?string $submissionReviewUrl, ?string $submissionReviewParams) : void {
+    public static function update_coupled_gradebookservices(object $ltiinstance, ?string $resourceid, ?string $tag, ?string $subreviewurl, ?string $subreviewparams) : void {
         global $DB;
 
         if ($ltiinstance && $ltiinstance->typeid) {
@@ -680,8 +681,8 @@ class gradebookservices extends service_base {
                         'ltilinkid' => $ltiinstance->id,
                         'resourceid' => $resourceid,
                         'tag' => $tag,
-                        'subreviewurl' => $submissionReviewUrl,
-                        'subreviewparams' => $submissionReviewParams
+                        'subreviewurl' => $subreviewurl,
+                        'subreviewparams' => $subreviewparams
                     ));
                 }
             }
@@ -694,7 +695,8 @@ class gradebookservices extends service_base {
      * @param object $lti LTI Instance.
      */
     public function instance_added(object $lti): void {
-        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null, $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
+        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
+            $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
     }
 
     /**
@@ -703,7 +705,8 @@ class gradebookservices extends service_base {
      * @param object $lti LTI Instance.
      */
     public function instance_updated(object $lti): void {
-        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null, $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
+        self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
+            $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
     }
 
     /**

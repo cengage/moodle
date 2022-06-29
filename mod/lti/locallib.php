@@ -626,7 +626,8 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruser
     }
     $services = lti_get_services();
     foreach ($services as $service) {
-        [$endpoint, $customstr] = $service->override_endpoint($messagetype??'basic-lti-launch-request', $endpoint, $customstr, $instance->course, $instance);
+        [$endpoint, $customstr] = $service->override_endpoint($messagetype ?? 'basic-lti-launch-request',
+            $endpoint, $customstr, $instance->course, $instance);
     }
     $requestparams = array_merge($requestparams, lti_build_custom_parameters($toolproxy, $tool, $instance, $allparams, $customstr,
         $instance->instructorcustomparameters, $islti2));
@@ -3603,8 +3604,8 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $text      Description of content item
  * @return string
  */
-function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request', $foruserid, $title = '',
-        $text = '') {
+function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request',
+        $foruserid, $title = '', $text = '') {
     global $SESSION;
 
     $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text);
@@ -3661,7 +3662,7 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
     $endpoint = trim($endpoint);
     $services = lti_get_services();
     foreach ($services as $service) {
-        [$endpoint] = $service->override_endpoint($messagetype??'basic-lti-launch-request', $endpoint, '', $courseid, $instance);
+        [$endpoint] = $service->override_endpoint($messagetype ?? 'basic-lti-launch-request', $endpoint, '', $courseid, $instance);
     }
 
     $ltihint['launchid'] = $launchid;
