@@ -162,7 +162,8 @@ define(
         var configToVariant = (config) => {
             const variant = {};
             ['name', 'toolurl', 'securetoolurl', 'instructorcustomparameters', 'icon', 'secureicon',
-                'launchcontainer', 'lineitemresourceid', 'lineitemtag'].forEach(
+                'launchcontainer', 'lineitemresourceid', 'lineitemtag', 'lineitemsubreviewurl',
+                'lineitemsubreviewparams'].forEach(
                 function(name) {
                     variant[name] = config[name] || '';
                 }
