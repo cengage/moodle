@@ -15,12 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page is the entry page into the quiz UI. Displays information about the
- * quiz to students and teachers, and lets students see their previous attempts.
+ * This page is the grade hook allowing LTI launches from gradebook.
  *
- * @package   mod_quiz
+ * @package   mod_lti
  * @category  grade
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @copyright 2022 Cengage Group  {@link https://cengage.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

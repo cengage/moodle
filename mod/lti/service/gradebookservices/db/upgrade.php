@@ -129,6 +129,5 @@ function xmldb_ltiservice_gradebookservices_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2022051900, 'ltiservice', 'gradebookservices');
     }
 
-
     return true;
 }

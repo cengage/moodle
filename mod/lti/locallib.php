@@ -850,7 +850,8 @@ function lti_build_sourcedid($instanceid, $userid, $servicesalt, $typeid = null,
  *
  * @return array                    Request details
  */
-function lti_build_request($instance, $typeconfig, $course, $typeid = null, $islti2 = false, $messagetype = 'basic-lti-launch-request', $foruserid = 0) {
+function lti_build_request($instance, $typeconfig, $course, $typeid = null, $islti2 = false,
+    $messagetype = 'basic-lti-launch-request', $foruserid = 0) {
     global $USER, $CFG;
 
     if (empty($instance->cmid)) {
@@ -1454,7 +1455,8 @@ function lti_verify_jwt_signature($typeid, $consumerkey, $jwtparam) {
 
 /**
  * Converts an array of custom parameters to a new line separated string.
- * @param object params
+ *
+ * @param object $params list of params to concatenate
  *
  * @return string
  */
@@ -3657,7 +3659,8 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
             $endpoint = $config->lti_toolurl_ContentItemSelectionRequest;
         }
         $launchid = "ltilaunch_$messagetype".rand();
-        $SESSION->$launchid = "{$courseid},{$config->typeid},,{$messagetype},{$foruserid}," . base64_encode($title) . ',' . base64_encode($text);
+        $SESSION->$launchid =
+            "{$courseid},{$config->typeid},,{$messagetype},{$foruserid}," . base64_encode($title) . ',' . base64_encode($text);
     }
     $endpoint = trim($endpoint);
     $services = lti_get_services();

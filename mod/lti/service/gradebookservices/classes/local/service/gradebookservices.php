@@ -149,6 +149,7 @@ class gradebookservices extends service_base {
      *
      * @param string $messagetype message type for this launch
      * @param string $targetlinkuri current target link uri
+     * @param string|null $customstr concatenated list of custom parameters
      * @param int $courseid
      * @param object $lti LTI Instance.
      */
@@ -658,7 +659,8 @@ class gradebookservices extends service_base {
      * @param string|null $subreviewparams The submission review custom parameters.
      *
      */
-    public static function update_coupled_gradebookservices(object $ltiinstance, ?string $resourceid, ?string $tag, ?string $subreviewurl, ?string $subreviewparams) : void {
+    public static function update_coupled_gradebookservices(object $ltiinstance,
+        ?string $resourceid, ?string $tag, ?string $subreviewurl, ?string $subreviewparams) : void {
         global $DB;
 
         if ($ltiinstance && $ltiinstance->typeid) {

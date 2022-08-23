@@ -220,10 +220,10 @@ class mod_lti_mod_form extends moodleform_mod {
 
         $mform->addElement('hidden', 'lineitemtag', '', array( 'id' => 'id_lineitemtag'));
         $mform->setType('lineitemtag', PARAM_TEXT);
-     
+
         $mform->addElement('hidden', 'lineitemsubreviewurl', '', array( 'id' => 'id_lineitemsubreviewurl'));
         $mform->setType('lineitemsubreviewurl', PARAM_TEXT);
-        
+
         $mform->addElement('hidden', 'lineitemsubreviewparams', '', array( 'id' => 'id_lineitemsubreviewparams'));
         $mform->setType('lineitemsubreviewparams', PARAM_TEXT);
 

@@ -261,6 +261,7 @@ abstract class service_base {
      *
      * @param string $messagetype message type for this launch
      * @param string $targetlinkuri current target link uri
+     * @param null|string $customstr concatenated list of custom parameters
      * @param int $courseid
      * @param null|object $lti LTI Instance.
      *
