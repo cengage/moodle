@@ -873,7 +873,7 @@ function lti_build_request($instance, $typeconfig, $course, $typeid = null, $isl
         $requestparams['for_user_id'] = $foruserid;
     }
     if ($messagetype) {
-        $requestparams['type'] = $messagetype;
+        $requestparams['lti_message_type'] = $messagetype;
     }
     if (!empty($instance->name)) {
         $requestparams['resource_link_title'] = trim(html_to_text($instance->name, 0));

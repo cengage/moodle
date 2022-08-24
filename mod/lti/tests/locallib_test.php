@@ -1721,9 +1721,9 @@ MwIDAQAB
     }
 
     /**
-     * Test default orgid is host if not specified in config (tool installed in earlier version of Moodle).
+     * Test for_user is passed as parameter when specified.
      */
-    public function test_lti_get_launch_data_default_organizationid_unset_usehost() {
+    public function test_lti_get_launch_data_with_for_user() {
         global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -1732,8 +1732,9 @@ MwIDAQAB
         $course = $this->getDataGenerator()->create_course();
         $type = $this->create_type($config);
         $link = $this->create_instance($type, $course);
-        $launchdata = lti_get_launch_data($link);
-        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], 'www.example.com');
+        $launchdata = lti_get_launch_data($link, '', '', 345);
+        $this->assertEquals($launchdata[1]['lti_message_type'], 'basic-lti-launch-request');
+        $this->assertEquals($launchdata[1]['for_user_id'], 345);
     }
 
     /**
