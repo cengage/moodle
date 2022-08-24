@@ -540,7 +540,7 @@ function lti_get_instance_type(object $instance) : ?object {
  */
 function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruserid = 0) {
     global $PAGE, $CFG, $USER;
-
+    $messagetype = $messagetype ? $messagetype : 'basic-lti-launch-request';
     $tool = lti_get_instance_type($instance);
     if ($tool) {
         $typeid = $tool->id;
@@ -626,7 +626,7 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruser
     }
     $services = lti_get_services();
     foreach ($services as $service) {
-        [$endpoint, $customstr] = $service->override_endpoint($messagetype ?? 'basic-lti-launch-request',
+        [$endpoint, $customstr] = $service->override_endpoint($messagetype,
             $endpoint, $customstr, $instance->course, $instance);
     }
     $requestparams = array_merge($requestparams, lti_build_custom_parameters($toolproxy, $tool, $instance, $allparams, $customstr,
@@ -720,12 +720,13 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruser
 /**
  * Launch an external tool activity.
  *
- * @param  stdClass $instance the external tool activity settings
+ * @param stdClass $instance the external tool activity settings
+ * @param int $foruserid for user param, optional
  * @return string The HTML code containing the javascript code for the launch
  */
-function lti_launch_tool($instance) {
+function lti_launch_tool($instance, $foruserid=0) {
 
-    list($endpoint, $parms) = lti_get_launch_data($instance);
+    list($endpoint, $parms) = lti_get_launch_data($instance, '', '', $foruserid);
     $debuglaunch = ( $instance->debuglaunch == 1 );
 
     $content = lti_post_launch_html($parms, $endpoint, $debuglaunch);

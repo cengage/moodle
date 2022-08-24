@@ -90,5 +90,5 @@ if ($triggerview) {
 }
 
 $lti->cmid = $cm->id;
-lti_launch_tool($lti);
+lti_launch_tool($lti, $foruserid);
 
