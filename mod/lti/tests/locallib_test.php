@@ -1009,7 +1009,7 @@ class locallib_test extends mod_lti_testcase {
             'for_user_id' => [
                 'suffix' => '',
                 'group' => 'for_user',
-                'claim' => 'id',
+                'claim' => 'user_id',
                 'isarray' => false
             ],
         ];

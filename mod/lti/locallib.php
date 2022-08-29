@@ -261,7 +261,7 @@ function lti_get_jwt_claim_mapping() {
         'for_user_id' => [
             'suffix' => '',
             'group' => 'for_user',
-            'claim' => 'id',
+            'claim' => 'user_id',
             'isarray' => false
         ],
         'lis_course_offering_sourcedid' => [
