@@ -850,13 +850,13 @@ function mod_lti_extend_navigation_course(navigation_node $parentnode, stdClass 
     foreach ($coursemenulinks as $type) {
         foreach ($type->menulinks as $menulink) {
             if ($menulink->selected) {
-                $coursenode->add(
+                $parentnode->add(
                     $menulink->label,
                     new moodle_url('/mod/lti/view.php', [
                     'course' => $course->id,
                     'coursenavid' => $menulink->id
                 ]),
-                    navigation_node::TYPE_CUSTOM,
+                    navigation_node::TYPE_SETTING,
                     null,
                     'ltimenu-'.$type->id.'-'.$menulink->id,
                     $icon
