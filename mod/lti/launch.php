@@ -69,7 +69,7 @@ if ($typeid) {
             if ($action === 'gradeReport') {
                 $type = 'LtiSubmissionReviewRequest';
             }
-            echo lti_initiate_login($cm->course, $cmid, $lti, $config, $type, $foruserid);
+            echo lti_initiate_login($cm->course, $cmid, $lti, $config, $type, '', '', $foruserid);
             exit;
         } else {
             unset($SESSION->lti_initiatelogin_status);

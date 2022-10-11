@@ -31,9 +31,9 @@ use ltiservice_gradebookservices\local\resources\results;
 use ltiservice_gradebookservices\local\resources\scores;
 use mod_lti\local\ltiservice\resource_base;
 use mod_lti\local\ltiservice\service_base;
+use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
-
 /**
  * A service implementing LTI Gradebook Services.
  *
@@ -143,7 +143,6 @@ class gradebookservices extends service_base {
         $mform->addHelpButton($selectelementname, $identifier, $this->get_component_id());
     }
 
-
     /**
      * For submission review, if there is a dedicated URL, use it as the target link.
      *
@@ -151,10 +150,12 @@ class gradebookservices extends service_base {
      * @param string $targetlinkuri current target link uri
      * @param string|null $customstr concatenated list of custom parameters
      * @param int $courseid
-     * @param object $lti LTI Instance.
+     * @param null|object $lti LTI Instance.
+     *
+     * @return array containing the target link URL and the custom params string to use.
      */
     public function override_endpoint(string $messagetype, string $targetlinkuri, ?string $customstr, int $courseid,
-        ?object $lti = null): array {
+            ?object $lti = null): array {
         global $DB;
         if ($messagetype == 'LtiSubmissionReviewRequest' && isset($lti->id)) {
             $conditions = array('courseid' => $courseid, 'ltilinkid' => $lti->id);
@@ -650,17 +651,17 @@ class gradebookservices extends service_base {
     }
 
     /**
-     * Updates the tag and resourceid values for a grade item coupled to an lti link instance.
+     * Updates the tag, resourceid and submission review values for a grade item coupled to an lti link instance.
      *
      * @param object $ltiinstance The lti instance to which the grade item is coupled to
      * @param string|null $resourceid The resourceid to apply to the lineitem. If empty string which will be stored as null.
      * @param string|null $tag The tag to apply to the lineitem. If empty string which will be stored as null.
-     * @param string|null $subreviewurl The submission review target link URL
+     * @param moodle_url|null $subreviewurl The submission review target link URL
      * @param string|null $subreviewparams The submission review custom parameters.
      *
      */
     public static function update_coupled_gradebookservices(object $ltiinstance,
-        ?string $resourceid, ?string $tag, ?string $subreviewurl, ?string $subreviewparams) : void {
+            ?string $resourceid, ?string $tag, ?\moodle_url $subreviewurl, ?string $subreviewparams) : void {
         global $DB;
 
         if ($ltiinstance && $ltiinstance->typeid) {
@@ -672,6 +673,8 @@ class gradebookservices extends service_base {
                 if ($gbs) {
                     $gbs->resourceid = $resourceid;
                     $gbs->tag = $tag;
+                    $gbs->subreviewurl = $subreviewurl->out(false);
+                    $gbs->subreviewparams = $subreviewparams;
                     $DB->update_record('ltiservice_gradebookservices', $gbs);
                 } else {
                     $baseurl = lti_get_type_type_config($ltiinstance->typeid)->lti_toolurl;
@@ -698,7 +701,8 @@ class gradebookservices extends service_base {
      */
     public function instance_added(object $lti): void {
         self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
-            $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
+            $lti->lineitemsubreviewurl ? new moodle_url($lti->lineitemsubreviewurl) : null,
+            $lti->lineitemsubreviewparams ?? null);
     }
 
     /**
@@ -708,7 +712,8 @@ class gradebookservices extends service_base {
      */
     public function instance_updated(object $lti): void {
         self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
-            $lti->lineitemsubreviewurl ?? null, $lti->lineitemsubreviewparams ?? null);
+            $lti->lineitemsubreviewurl ? new moodle_url($lti->lineitemsubreviewurl) : null,
+            $lti->lineitemsubreviewparams ?? null);
     }
 
     /**
@@ -719,11 +724,15 @@ class gradebookservices extends service_base {
     public function set_instance_form_values(object $defaultvalues): void {
         $defaultvalues->lineitemresourceid = '';
         $defaultvalues->lineitemtag = '';
+        $defaultvalues->subreviewurl = '';
+        $defaultvalues->subreviewparams = '';
         if (is_object($defaultvalues) && $defaultvalues->instance) {
             $gbs = self::find_ltiservice_gradebookservice_for_lti($defaultvalues->instance);
             if ($gbs) {
                 $defaultvalues->lineitemresourceid = $gbs->resourceid;
                 $defaultvalues->lineitemtag = $gbs->tag;
+                $defaultvalues->lineitemsubreviewurl = $gbs->subreviewurl;
+                $defaultvalues->lineitemsubreviewparams = $gbs->subreviewparams;
             }
         }
     }

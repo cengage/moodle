@@ -1364,7 +1364,6 @@ MwIDAQAB
         $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
         $typeid = lti_add_type($type, $config);
 
-        $generator = $this->getDataGenerator()->get_plugin_generator('mod_lti');
         $contentitems = [];
         $contentitems[] = [
             'type' => 'ltiResourceLink',

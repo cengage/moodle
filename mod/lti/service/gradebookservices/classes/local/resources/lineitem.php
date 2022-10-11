@@ -315,7 +315,7 @@ class lineitem extends resource_base {
             }
             $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
             if (empty($id)) {
-                $hint = optional_param('lti_message_hint', "", PARAM_RAW);
+                $hint = optional_param('lti_message_hint', "", PARAM_TEXT);
                 if ($hint) {
                     $hintdec = json_decode($hint);
                     if (isset($hintdec->cmid)) {

@@ -3602,13 +3602,13 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param stdClass|null  $instance  LTI instance
  * @param stdClass       $config    Tool type configuration
  * @param string         $messagetype   LTI message type
- * @param int            $foruserid Id of the user targeted by the launch
  * @param string         $title     Title of content item
  * @param string         $text      Description of content item
+ * @param int            $foruserid Id of the user targeted by the launch
  * @return string
  */
 function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request',
-        $foruserid, $title = '', $text = '') {
+        $title = '', $text = '', $foruserid = 0) {
     global $SESSION;
 
     $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text);
