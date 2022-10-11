@@ -1351,6 +1351,8 @@ MwIDAQAB
     }
 
     /**
+     * @covers ::lti_tool_configuration_from_content_item()
+     *
      * Test adding a single gradable item through content item.
      */
     public function test_lti_tool_configuration_from_content_item_single_gradable_subreview_default() {
@@ -1364,7 +1366,6 @@ MwIDAQAB
         $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
         $typeid = lti_add_type($type, $config);
 
-        $generator = $this->getDataGenerator()->get_plugin_generator('mod_lti');
         $contentitems = [];
         $contentitems[] = [
             'type' => 'ltiResourceLink',
@@ -1721,6 +1722,8 @@ MwIDAQAB
     }
 
     /**
+     * @covers ::lti_get_launch_data()
+     *
      * Test for_user is passed as parameter when specified.
      */
     public function test_lti_get_launch_data_with_for_user() {
@@ -1735,6 +1738,22 @@ MwIDAQAB
         $launchdata = lti_get_launch_data($link, '', '', 345);
         $this->assertEquals($launchdata[1]['lti_message_type'], 'basic-lti-launch-request');
         $this->assertEquals($launchdata[1]['for_user_id'], 345);
+    }
+
+    /**
+     * Test default orgid is host if not specified in config (tool installed in earlier version of Moodle).
+     */
+    public function test_lti_get_launch_data_default_organizationid_unset_usehost() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $config = new \stdClass();
+        $config->lti_organizationid = '';
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type($config);
+        $link = $this->create_instance($type, $course);
+        $launchdata = lti_get_launch_data($link);
+        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], 'www.example.com');
     }
 
     /**

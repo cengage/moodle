@@ -114,7 +114,6 @@ function xmldb_ltiservice_gradebookservices_upgrade($oldversion) {
     // Put any upgrade step following this.
 
     if ($oldversion < 2022051900) {
-        // Define field typeid to be added to lti_tool_settings.
         $table = new xmldb_table('ltiservice_gradebookservices');
         $field = new xmldb_field('subreviewurl', XMLDB_TYPE_TEXT, null, null, null, null, null);
         if (!$dbman->field_exists($table, $field)) {

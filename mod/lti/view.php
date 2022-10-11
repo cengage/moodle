@@ -87,6 +87,10 @@ $PAGE->set_context($context);
 require_login($course, true, $cm);
 require_capability('mod/lti:view', $context);
 
+if (!empty($foruserid) && (int)$foruserid !== (int)$USER->id) {
+    require_capability('gradereport/grader:view', $context);
+}
+
 $url = new moodle_url('/mod/lti/view.php', array('id' => $cm->id));
 $PAGE->set_url($url);
 
@@ -128,26 +132,24 @@ if ($typeid) {
     $config = new stdClass();
     $config->lti_ltiversion = LTI_VERSION_1;
 }
-$launchurl = "launch.php?id={$cm->id}&triggerview=0";
+$launchurl = new moodle_url('/mod/lti/launch.php', ['id' => $cm->id, 'triggerview' => 0]);
 if ($action) {
-    $launchurl .= "&action={$action}";
+    $launchurl->param('action', $action);;
 }
 if ($foruserid) {
-    $launchurl .= "&user={$foruserid}";
+    $launchurl->param('user', $foruserid);;
 }
-if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
-    (($config->lti_ltiversion !== LTI_VERSION_1P3) || isset($SESSION->lti_initiatelogin_status))) {
-    unset($SESSION->lti_initiatelogin_status);
+unset($SESSION->lti_initiatelogin_status);
+if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     if (!$forceview) {
         echo "<script language=\"javascript\">//<![CDATA[\n";
-        echo "window.open('${launchurl}','lti-{$cm->id}');";
+        echo "window.open('{$launchurl->out(false)}','lti-$cm->id');";
         echo "//]]\n";
         echo "</script>\n";
         echo "<p>".get_string("basiclti_in_new_window", "lti")."</p>\n";
     }
-    $url = new moodle_url('/mod/lti/launch.php', array('id' => $cm->id));
     echo html_writer::start_tag('p');
-    echo html_writer::link($url, get_string("basiclti_in_new_window_open", "lti"), array('target' => '_blank'));
+    echo html_writer::link($launchurl->out(false), get_string("basiclti_in_new_window_open", "lti"), array('target' => '_blank'));
     echo html_writer::end_tag('p');
 } else {
     $content = '';
@@ -169,7 +171,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW) &&
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
-    $attributes['src'] = $launchurl;
+    $attributes['src'] = $launchurl->out(false);
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .
