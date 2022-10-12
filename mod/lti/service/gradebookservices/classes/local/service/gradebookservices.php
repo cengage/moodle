@@ -34,6 +34,10 @@ use mod_lti\local\ltiservice\service_base;
 use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
 /**
  * A service implementing LTI Gradebook Services.
  *
@@ -525,6 +529,16 @@ class gradebookservices extends service_base {
                 $lineitem->resourceLinkId = strval($gbs->ltilinkid);
                 $lineitem->ltiLinkId = strval($gbs->ltilinkid);
             }
+            if (!empty($gbs->subreviewurl)) {
+                $submissionreview = new \stdClass();
+                if ($gbs->subreviewurl != 'DEFAULT') {
+                    $submissionreview->url = $gbs->subreviewurl;
+                }
+                if (!empty($gbs->subreviewparams)) {
+                    $submissionreview->custom = lti_split_parameters($gbs->subreviewparams);
+                }
+                $lineitem->submissionReview = $submissionreview;
+            }
         } else {
             $lineitem->tag = '';
             if (isset($item->iteminstance)) {
@@ -686,7 +700,7 @@ class gradebookservices extends service_base {
                         'ltilinkid' => $ltiinstance->id,
                         'resourceid' => $resourceid,
                         'tag' => $tag,
-                        'subreviewurl' => $subreviewurl,
+                        'subreviewurl' => $subreviewurl->out(false),
                         'subreviewparams' => $subreviewparams
                     ));
                 }
@@ -701,7 +715,7 @@ class gradebookservices extends service_base {
      */
     public function instance_added(object $lti): void {
         self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
-            $lti->lineitemsubreviewurl ? new moodle_url($lti->lineitemsubreviewurl) : null,
+            isset($lti->lineitemsubreviewurl) ? new moodle_url($lti->lineitemsubreviewurl) : null,
             $lti->lineitemsubreviewparams ?? null);
     }
 
@@ -712,7 +726,7 @@ class gradebookservices extends service_base {
      */
     public function instance_updated(object $lti): void {
         self::update_coupled_gradebookservices($lti, $lti->lineitemresourceid ?? null, $lti->lineitemtag ?? null,
-            $lti->lineitemsubreviewurl ? new moodle_url($lti->lineitemsubreviewurl) : null,
+            isset($lti->lineitemsubreviewurl) ? new moodle_url($lti->lineitemsubreviewurl) : null,
             $lti->lineitemsubreviewparams ?? null);
     }
 

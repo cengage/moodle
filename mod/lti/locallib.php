@@ -1998,17 +1998,13 @@ function lti_get_enabled_capabilities($tool) {
 }
 
 /**
- * Splits the custom parameters field to the various parameters
+ * Splits the custom parameters
  *
- * @param object    $toolproxy      Tool proxy instance object
- * @param object    $tool           Tool instance object
- * @param array     $params         LTI launch parameters
  * @param string    $customstr      String containing the parameters
- * @param boolean   $islti2         True if an LTI 2 tool is being launched
  *
  * @return array of custom parameters
  */
-function lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $islti2 = false) {
+function lti_split_parameters($customstr) {
     $customstr = str_replace("\r\n", "\n", $customstr);
     $customstr = str_replace("\n\r", "\n", $customstr);
     $customstr = str_replace("\r", "\n", $customstr);
@@ -2021,7 +2017,27 @@ function lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $is
         }
         $key = trim(core_text::substr($line, 0, $pos));
         $val = trim(core_text::substr($line, $pos + 1, strlen($line)));
-        $val = lti_parse_custom_parameter($toolproxy, $tool, $params, $val, $islti2);
+        $retval[$key] = $val;
+    }
+    return $retval;
+}
+
+/**
+ * Splits the custom parameters field to the various parameters
+ *
+ * @param object    $toolproxy      Tool proxy instance object
+ * @param object    $tool           Tool instance object
+ * @param array     $params         LTI launch parameters
+ * @param string    $customstr      String containing the parameters
+ * @param boolean   $islti2         True if an LTI 2 tool is being launched
+ *
+ * @return array of custom parameters
+ */
+function lti_split_custom_parameters($toolproxy, $tool, $params, $customstr, $islti2 = false) {
+    $splitted = lti_split_parameters($customstr);
+    $retval = array();
+    foreach (array_keys($splitted) as $key) {
+        $val = lti_parse_custom_parameter($toolproxy, $tool, $params, $splitted[$key], $islti2);
         $key2 = lti_map_keyname($key);
         $retval['custom_'.$key2] = $val;
         if (($islti2 || ($tool->ltiversion === LTI_VERSION_1P3)) && ($key != $key2)) {
