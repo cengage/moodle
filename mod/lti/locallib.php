@@ -1550,7 +1550,7 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
                 if (isset($lineitem->submissionReview)) {
                     $subreview = $lineitem->submissionReview;
                     $config->lineitemsubreviewurl = 'DEFAULT';
-                    if (isset($subreview->url) && $subreview->url) {
+                    if (!empty($subreview->url)) {
                         $config->lineitemsubreviewurl = $subreview->url;
                     }
                     if (isset($subreview->custom)) {

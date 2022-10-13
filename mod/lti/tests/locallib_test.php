@@ -1741,6 +1741,22 @@ MwIDAQAB
     }
 
     /**
+     * Test default orgid is host if not specified in config (tool installed in earlier version of Moodle).
+     */
+    public function test_lti_get_launch_data_default_organizationid_unset_usehost() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $config = new \stdClass();
+        $config->lti_organizationid = '';
+        $course = $this->getDataGenerator()->create_course();
+        $type = $this->create_type($config);
+        $link = $this->create_instance($type, $course);
+        $launchdata = lti_get_launch_data($link);
+        $this->assertEquals($launchdata[1]['tool_consumer_instance_guid'], 'www.example.com');
+    }
+
+    /**
      * Test default org id is set to host when config is usehost.
      */
     public function test_lti_get_launch_data_default_organizationid_set_usehost() {

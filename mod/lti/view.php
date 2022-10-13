@@ -87,6 +87,10 @@ $PAGE->set_context($context);
 require_login($course, true, $cm);
 require_capability('mod/lti:view', $context);
 
+if (!empty($foruserid) && (int)$foruserid !== (int)$USER->id) {
+    require_capability('gradereport/grader:view', $context);
+}
+
 $url = new moodle_url('/mod/lti/view.php', array('id' => $cm->id));
 $PAGE->set_url($url);
 
