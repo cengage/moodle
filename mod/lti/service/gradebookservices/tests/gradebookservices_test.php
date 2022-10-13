@@ -25,10 +25,13 @@ use ltiservice_gradebookservices\local\service\gradebookservices;
  * @category   test
  * @copyright  2020 Claude Vervoort <claude.vervoort@cengage.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass \mod_lti\service\gradebookservices\local\gradebookservices
  */
 class gradebookservices_test extends \advanced_testcase {
 
     /**
+     * @covers ::instance_added
+     *
      * Test saving a graded LTI with resource and tag info (as a result of
      * content item selection) creates a gradebookservices record
      * that can be retrieved using the gradebook service API.
@@ -64,6 +67,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::instance_added
+     *
      * Test saving a graded LTI with resource and tag info (as a result of
      * content item selection) creates a gradebookservices record
      * that can be retrieved using the gradebook service API.
@@ -94,6 +99,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::add_standalone_lineitem
+     *
      * Test saving a standalone LTI lineitem with resource and tag info
      * that can be retrieved using the gradebook service API.
      */
@@ -112,6 +119,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::find_ltiservice_gradebookservice_for_lti
+     *
      * Test line item URL is populated for coupled line item only
      * if there is not another line item bound to the lti instance,
      * since in that case there would be no rule to define which of
@@ -146,6 +155,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::override_endpoint
+     *
      * Test Submission Review URL and custom parameter is applied when the
      * launch is submission review.
      */
@@ -175,6 +186,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::override_endpoint
+     *
      * Test Submission Review URL and custom parameter is applied when the
      * launch is submission review.
      */
@@ -204,6 +217,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::get_launch_parameters
+     *
      * Test line item URL is populated for not coupled line item only
      * if there is a single line item attached to that lti instance.
      */
@@ -240,6 +255,8 @@ class gradebookservices_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::is_user_gradable_in_course
+     *
      * Test if a user can be graded in a course.
      */
     public function test_is_user_gradable_in_course() {

@@ -1351,6 +1351,8 @@ MwIDAQAB
     }
 
     /**
+     * @covers ::lti_tool_configuration_from_content_item()
+     *
      * Test adding a single gradable item through content item.
      */
     public function test_lti_tool_configuration_from_content_item_single_gradable_subreview_default() {
@@ -1720,6 +1722,8 @@ MwIDAQAB
     }
 
     /**
+     * @covers ::lti_get_launch_data()
+     *
      * Test for_user is passed as parameter when specified.
      */
     public function test_lti_get_launch_data_with_for_user() {

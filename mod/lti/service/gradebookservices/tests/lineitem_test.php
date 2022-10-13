@@ -24,15 +24,55 @@ use ltiservice_gradebookservices\local\service\gradebookservices;
  *
  * @package    ltiservice_gradebookservices
  * @category   test
- * @copyright  2022 Claude Vervoort <claude.vervoort@cengage.com>
+ * @copyright  2022 Cengage Group <claude.vervoort@cengage.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass \mod_lti\service\gradebookservices\local\resources\lineitem
  */
 class lineitem_test extends \advanced_testcase {
 
     /**
-     * Test updating the line item.
+     * @covers ::process_put_request
+     *
+     * Test updating the line item with submission review.
      */
-    public function test_lti_add_coupled_lineitem() {
+    public function test_update_lineitem_nosubreview() {
+        $gbservice = new gradebookservices();
+        $lineitemresource = new lineitem($gbservice);
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a tool type, associated with that proxy.
+
+        $typeid = $this->create_type();
+        $gbservice->set_type(lti_get_type($typeid));
+        $course = $this->getDataGenerator()->create_course();
+        $resourceid = 'test-resource-id';
+        $tag = 'tag';
+
+        $this->create_graded_lti($typeid, $course, $resourceid, $tag);
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
+        // The 1st item in the array is the items count.
+        $this->assertEquals(1, $gradeitems[0]);
+        $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
+        $this->assertFalse(isset($lineitem->submissionReview));
+        $lineitem->resourceId = $resourceid.'modified';
+        $lineitem->tag = $tag.'modified';
+        $lineitemresource->process_put_request(json_encode($lineitem), $gradeitems[1][0], $typeid);
+        $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
+        $this->assertFalse(isset($lineitem->submissionReview));
+        $this->assertEquals($resourceid.'modified', $lineitem->resourceId);
+        $this->assertEquals($tag.'modified', $lineitem->tag);
+    }
+
+    /**
+     * @covers ::process_put_request
+     *
+     * Test updating the line item with submission review.
+     */
+    public function test_update_lineitem_withsubreview() {
         $gbservice = new gradebookservices();
         $lineitemresource = new lineitem($gbservice);
         global $CFG;
@@ -65,6 +105,43 @@ class lineitem_test extends \advanced_testcase {
         $this->assertEquals($subreviewurl.'modified', $lineitem->submissionReview->url);
         $custom = $lineitem->submissionReview->custom;
         $this->assertEquals('a=3', join("\n", array_map(fn($k) => $k.'='.$custom[$k], array_keys($custom))));
+    }
+
+    /**
+     * @covers ::process_put_request
+     *
+     * Test updating the line item adding submission review data.
+     */
+    public function test_updatelineitem_addsubreview() {
+        $gbservice = new gradebookservices();
+        $lineitemresource = new lineitem($gbservice);
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a tool type, associated with that proxy.
+
+        $typeid = $this->create_type();
+        $gbservice->set_type(lti_get_type($typeid));
+        $course = $this->getDataGenerator()->create_course();
+        $resourceid = 'test-resource-id';
+        $tag = 'tag';
+        $subreviewurl = 'https://subreview.example.com';
+
+        $this->create_graded_lti($typeid, $course, $resourceid, $tag);
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
+        // The 1st item in the array is the items count.
+        $this->assertEquals(1, $gradeitems[0]);
+        $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
+        $this->assertFalse(isset($lineitem->submissionReview));
+        $lineitem->submissionReview = ['url' => $subreviewurl];
+        $lineitemresource->process_put_request(json_encode($lineitem), $gradeitems[1][0], $typeid);
+        $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
+        $this->assertTrue(isset($lineitem->submissionReview));
+        $this->assertEquals($subreviewurl, $lineitem->submissionReview->url);
+        $this->assertFalse(isset($submissionReview->custom));
     }
 
     /**
