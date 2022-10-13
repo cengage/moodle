@@ -682,7 +682,7 @@ class gradebookservices extends service_base {
             $gradeitem = $DB->get_record('grade_items', array('itemmodule' => 'lti', 'iteminstance' => $ltiinstance->id));
             if ($gradeitem) {
                 $resourceid = (isset($resourceid) && empty(trim($resourceid))) ? null : $resourceid;
-                $subreviewurlstr = $subreviewurl ? $subreviewurl->out(false): null;
+                $subreviewurlstr = $subreviewurl ? $subreviewurl->out(false) : null;
                 $tag = (isset($tag) && empty(trim($tag))) ? null : $tag;
                 $gbs = self::find_ltiservice_gradebookservice_for_lineitem($gradeitem->id);
                 if ($gbs) {

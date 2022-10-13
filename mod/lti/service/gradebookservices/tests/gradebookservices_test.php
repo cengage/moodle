@@ -63,7 +63,8 @@ class gradebookservices_test extends \advanced_testcase {
         $this->assertEquals($tag, $gbs->tag);
         $this->assertEquals($subreviewurl, $gbs->subreviewurl);
         $this->assertEquals($subreviewparams, $gbs->subreviewparams);
-        $this->assert_lineitems($course, $typeid, $ltiinstance->name, $ltiinstance, $resourceid, $tag, $subreviewurl, $subreviewparams);
+        $this->assert_lineitems($course, $typeid, $ltiinstance->name,
+            $ltiinstance, $resourceid, $tag, $subreviewurl, $subreviewparams);
     }
 
     /**
@@ -282,8 +283,8 @@ class gradebookservices_test extends \advanced_testcase {
      * @param object|null $ltiinstance lti instance related to that line item
      * @param string|null $resourceid resourceid the line item should have
      * @param string|null $tag tag the line item should have
-     * @param string|null $tag submission review url
-     * @param string|null $tag submission review custom params
+     * @param string|null $subreviewurl submission review url
+     * @param string|null $subreviewparams submission review custom params
      */
     private function assert_lineitems(object $course, int $typeid,
             string $label, ?object $ltiinstance, ?string $resourceid, ?string $tag,
@@ -340,8 +341,8 @@ class gradebookservices_test extends \advanced_testcase {
      * @param object $course course where to add the lti instance.
      * @param string|null $resourceid resource id
      * @param string|null $tag tag
-     * @param string|null $tag submission review url
-     * @param string|null $tag submission review custom params
+     * @param string|null $subreviewurl submission review url
+     * @param string|null $subreviewparams submission review custom params
      *
      * @return object lti instance created
      */

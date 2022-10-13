@@ -142,7 +142,7 @@ class lineitem extends resource_base {
      * @return string
      * @throws \Exception
      */
-    function process_put_request($body, $olditem, $typeid) {
+    public function process_put_request($body, $olditem, $typeid) {
         global $DB;
         $json = json_decode($body);
         if (empty($json) ||
@@ -183,7 +183,7 @@ class lineitem extends resource_base {
             if (isset($json->submissionReview)) {
                 $incomingurl = $json->submissionReview->url ?? 'DEFAULT';
                 if (isset($json->submissionReview->custom)) {
-                    $incomingparams = params_to_string($json->submissionReview->custom); 
+                    $incomingparams = params_to_string($json->submissionReview->custom);
                 }
             }
             if ($gbs->subreviewurl ?? null !== $incomingurl || $gbs->subreviewparams ?? null !== $incomingparams) {

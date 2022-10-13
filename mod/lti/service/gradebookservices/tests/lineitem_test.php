@@ -98,7 +98,7 @@ class lineitem_test extends \advanced_testcase {
         $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
         $lineitem->resourceId = $resourceid.'modified';
         $lineitem->submissionReview->url = $subreviewurl.'modified';
-        $lineitem->submissionReview->custom = ['a'=>'3'];
+        $lineitem->submissionReview->custom = ['a' => '3'];
         $lineitemresource->process_put_request(json_encode($lineitem), $gradeitems[1][0], $typeid);
         $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
         $this->assertEquals($resourceid.'modified', $lineitem->resourceId);
@@ -141,7 +141,7 @@ class lineitem_test extends \advanced_testcase {
         $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
         $this->assertTrue(isset($lineitem->submissionReview));
         $this->assertEquals($subreviewurl, $lineitem->submissionReview->url);
-        $this->assertFalse(isset($submissionReview->custom));
+        $this->assertFalse(isset($lineitem->submissionReview->custom));
     }
 
     /**
@@ -151,8 +151,8 @@ class lineitem_test extends \advanced_testcase {
      * @param object $course course where to add the lti instance.
      * @param string|null $resourceid resource id
      * @param string|null $tag tag
-     * @param string|null $tag submission review url
-     * @param string|null $tag submission review custom params
+     * @param string|null $subreviewurl submission review url
+     * @param string|null $subreviewparams submission review custom params
      *
      * @return object lti instance created
      */
@@ -186,5 +186,4 @@ class lineitem_test extends \advanced_testcase {
         $config->ltiservice_gradesynchronization = 2;
         return lti_add_type($type, $config);
     }
-
 }
