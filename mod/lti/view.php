@@ -143,7 +143,7 @@ unset($SESSION->lti_initiatelogin_status);
 if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     if (!$forceview) {
         echo "<script language=\"javascript\">//<![CDATA[\n";
-        echo "window.open('{$launchurl->out(false)}','lti-$cm->id');";
+        echo "window.open('{$launchurl->out(true)}','lti-$cm->id');";
         echo "//]]\n";
         echo "</script>\n";
         echo "<p>".get_string("basiclti_in_new_window", "lti")."</p>\n";
