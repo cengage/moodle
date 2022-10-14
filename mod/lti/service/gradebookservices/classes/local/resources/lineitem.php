@@ -142,7 +142,7 @@ class lineitem extends resource_base {
      * @return string
      * @throws \Exception
      */
-    public function process_put_request($body, $olditem, $typeid) {
+    private function process_put_request($body, $olditem, $typeid) {
         global $DB;
         $json = json_decode($body);
         if (empty($json) ||
