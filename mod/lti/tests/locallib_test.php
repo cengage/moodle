@@ -1353,6 +1353,50 @@ MwIDAQAB
     /**
      * @covers ::lti_tool_configuration_from_content_item()
      *
+     * Test adding a single gradable item through content item with an empty subreview url.
+     */
+    public function test_lti_tool_configuration_from_content_item_single_gradable_subreview_default_emptyurl() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $type = new \stdClass();
+        $type->name = "Test tool";
+        $type->baseurl = "http://example.com";
+        $config = new \stdClass();
+        $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
+        $typeid = lti_add_type($type, $config);
+
+        $contentitems = [];
+        $contentitems[] = [
+            'type' => 'ltiResourceLink',
+            'url' => 'http://example.com/messages/launch',
+            'title' => 'Test title',
+            'lineItem' => [
+                'resourceId' => 'r12345',
+                'tag' => 'final',
+                'scoreMaximum' => 10.0,
+                'submissionReview' => [
+                    'url' => ''
+                ]
+            ],
+            'frame' => []
+        ];
+        $contentitemsjson13 = json_encode($contentitems);
+        $json11 = lti_convert_content_items($contentitemsjson13);
+
+        $config = lti_tool_configuration_from_content_item($typeid,
+                                                           'ContentItemSelection',
+                                                           $type->ltiversion,
+                                                           'ConsumerKey',
+                                                           $json11);
+
+        $this->assertEquals('DEFAULT', $config->lineitemsubreviewurl);
+        $this->assertEquals('', $config->lineitemsubreviewparams);
+    }
+
+    /**
+     * @covers ::lti_tool_configuration_from_content_item()
+     *
      * Test adding a single gradable item through content item.
      */
     public function test_lti_tool_configuration_from_content_item_single_gradable_subreview_default() {
