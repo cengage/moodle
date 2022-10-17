@@ -67,6 +67,19 @@ require_once($CFG->dirroot . '/mod/lti/tests/mod_lti_testcase.php');
  */
 class locallib_test extends mod_lti_testcase {
 
+    /**
+     * @covers ::lti_split_parameters()
+     *
+     * Test the split parameters function
+     */
+    public function test_split_parameters() {
+        $this->assertEquals(lti_split_parameters(''), array());
+        $this->assertEquals(lti_split_parameters('a=1'), array('a'=>'1'));
+        $this->assertEquals(lti_split_parameters("a=1\nb=2"), array('a'=>'1','b'=>'2'));
+        $this->assertEquals(lti_split_parameters("a=1\n\rb=2"), array('a'=>'1','b'=>'2'));
+        $this->assertEquals(lti_split_parameters("a=1\r\nb=2"), array('a'=>'1','b'=>'2'));
+    }
+
     public function test_split_custom_parameters() {
         $this->resetAfterTest();
 

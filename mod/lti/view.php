@@ -171,7 +171,7 @@ if (($launchcontainer == LTI_LAUNCH_CONTAINER_WINDOW)) {
     $attributes['id'] = "contentframe";
     $attributes['height'] = '600px';
     $attributes['width'] = '100%';
-    $attributes['src'] = $launchurl->out(false);
+    $attributes['src'] = $launchurl;
     $attributes['allow'] = "microphone $ltiallow; " .
         "camera $ltiallow; " .
         "geolocation $ltiallow; " .
