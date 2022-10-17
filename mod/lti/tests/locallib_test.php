@@ -74,10 +74,10 @@ class locallib_test extends mod_lti_testcase {
      */
     public function test_split_parameters() {
         $this->assertEquals(lti_split_parameters(''), array());
-        $this->assertEquals(lti_split_parameters('a=1'), array('a'=>'1'));
-        $this->assertEquals(lti_split_parameters("a=1\nb=2"), array('a'=>'1','b'=>'2'));
-        $this->assertEquals(lti_split_parameters("a=1\n\rb=2"), array('a'=>'1','b'=>'2'));
-        $this->assertEquals(lti_split_parameters("a=1\r\nb=2"), array('a'=>'1','b'=>'2'));
+        $this->assertEquals(lti_split_parameters('a=1'), array('a' => '1'));
+        $this->assertEquals(lti_split_parameters("a=1\nb=2"), array('a' => '1', 'b' => '2'));
+        $this->assertEquals(lti_split_parameters("a=1\n\rb=2"), array('a' => '1', 'b' => '2'));
+        $this->assertEquals(lti_split_parameters("a=1\r\nb=2"), array('a' => '1', 'b' => '2'));
     }
 
     public function test_split_custom_parameters() {
