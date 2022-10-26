@@ -538,8 +538,8 @@ function lti_get_instance_type(object $instance) : ?object {
  * @return array the endpoint URL and parameters (including the signature)
  * @since  Moodle 3.0
  */
-function lti_get_launch_data($instance, $nonce = '', $messagetype = '', $foruserid = 0) {
-    global $PAGE, $CFG, $USER;
+function lti_get_launch_data($instance, $nonce = '', $messagetype = 'basic-lti-launch-request', $foruserid = 0) {
+    global $PAGE, $USER;
     $messagetype = $messagetype ? $messagetype : 'basic-lti-launch-request';
     $tool = lti_get_instance_type($instance);
     if ($tool) {
