@@ -68,6 +68,7 @@ class deeplinkservice extends service_base {
         if (empty($this->resources)) {
             $this->resources = array();
             $this->resources[] = new \ltiservice_deeplinkservice\local\resources\contextlinks($this);
+            $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         }
 
         return $this->resources;
@@ -108,7 +109,7 @@ class deeplinkservice extends service_base {
     }
 
     /**
-     * Get the JSON for existing links.
+     * Get existing links.
      *
      * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
      * @param \context_course   $context    Course context
@@ -133,13 +134,70 @@ class deeplinkservice extends service_base {
         };
         return array_map($func, $links);
     }
-
-    public function toLink($lti) {
-        return [
-            'title' => $lti->name
-        ];
+    
+    /**
+     * Get existing link.
+     *
+     * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
+     * @param \context_course   $context    Course context
+     * @param \course           $course     Course
+     * @param string            $role       User role requested (empty if none)
+     * @param int               $limitfrom  Position of first record to be returned
+     * @param int               $limitnum   Maximum number of records to be returned
+     * @param object            $lti        LTI instance record
+     * @param \core_availability\info_module $info Conditional availability information
+     *      for LTI instance (null if context-level request)
+     * @param \mod_lti\local\ltiservice\response $response       Response object for the request
+     *
+     * @return string
+     */
+    public function get_link($resource, $context, $course, $typeid, $linkid, $response) {
+        global $DB;
+        //$type = $DB->get_record('lti_types', array('id' => $typeid));
+        //TODO: eventually need to check by URL too for instances without typeid.
+        $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
+        return $this->toLink($lti);
     }
 
+    /**
+     * Update link.
+     *
+     * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
+     * @param \context_course   $context    Course context
+     * @param \course           $course     Course
+     * @param string            $role       User role requested (empty if none)
+     * @param int               $limitfrom  Position of first record to be returned
+     * @param int               $limitnum   Maximum number of records to be returned
+     * @param object            $lti        LTI instance record
+     * @param \core_availability\info_module $info Conditional availability information
+     *      for LTI instance (null if context-level request)
+     * @param \mod_lti\local\ltiservice\response $response       Response object for the request
+     *
+     * @return string
+     */
+    public function update_link($resource, $context, $course, $typeid, $linkid, $link, $response) {
+        global $DB;
+        //$type = $DB->get_record('lti_types', array('id' => $typeid));
+        //TODO: eventually need to check by URL too for instances without typeid.
+        $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
+        if (empty($link->custom)) {
+            $lti->instructorcustomparameters = '';
+        } else {
+            $lti->instructorcustomparameters = params_to_string( $link->custom );
+        }
+        $DB->update_record('lti', $lti);
+        return $this->toLink($lti);
+    }
+
+    public function toLink($lti) {
+        $link = [
+            'title' => $lti->name
+        ];
+        if (!empty($lti->instructorcustomparameters)) {
+            $link['custom'] = lti_split_parameters($lti->instructorcustomparameters);
+        }
+        return $link;
+    }
 
     /**
      * Adds form elements for membership add/edit page.
@@ -179,6 +237,9 @@ class deeplinkservice extends service_base {
         if (isset($tool->{$this->get_component_id()})) {
             if ($tool->{$this->get_component_id()} == parent::SERVICE_ENABLED && $this->is_used_in_context($typeid, $courseid)) {
                 $launchparameters['deeplink_context_url'] = '$DeepLinkService.contextUrl';
+                if (!empty($modlti)) {
+                    $launchparameters['deeplink_item_url'] = '$DeepLinkService.itemUrl';
+                }
             }
         }
         return $launchparameters;

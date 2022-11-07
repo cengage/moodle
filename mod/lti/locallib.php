@@ -448,9 +448,92 @@ function lti_get_jwt_claim_mapping() {
             'group' => 'tool_platform',
             'claim' => 'url',
             'isarray' => false
+<<<<<<< HEAD
         ]
     ]);
     return $mapping;
+=======
+        ],
+        'custom_context_memberships_v2_url' => [
+            'suffix' => 'nrps',
+            'group' => 'namesroleservice',
+            'claim' => 'context_memberships_url',
+            'isarray' => false
+        ],
+        'custom_context_memberships_versions' => [
+            'suffix' => 'nrps',
+            'group' => 'namesroleservice',
+            'claim' => 'service_versions',
+            'isarray' => true
+        ],
+        'custom_deeplink_context_url' => [
+            'suffix' => 'dl',
+            'group' => 'endpoint',
+            'claim' => 'contextitems',
+            'isarray' => false
+        ],
+        'custom_deeplink_item_url' => [
+            'suffix' => 'dl',
+            'group' => 'endpoint',
+            'claim' => 'item',
+            'isarray' => false
+        ],
+        'custom_gradebookservices_scope' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'scope',
+            'isarray' => true
+        ],
+        'custom_lineitems_url' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'lineitems',
+            'isarray' => false
+        ],
+        'custom_lineitem_url' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'lineitem',
+            'isarray' => false
+        ],
+        'custom_results_url' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'results',
+            'isarray' => false
+        ],
+        'custom_result_url' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'result',
+            'isarray' => false
+        ],
+        'custom_scores_url' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'scores',
+            'isarray' => false
+        ],
+        'custom_score_url' => [
+            'suffix' => 'ags',
+            'group' => 'endpoint',
+            'claim' => 'score',
+            'isarray' => false
+        ],
+        'lis_outcome_service_url' => [
+            'suffix' => 'bo',
+            'group' => 'basicoutcome',
+            'claim' => 'lis_outcome_service_url',
+            'isarray' => false
+        ],
+        'lis_result_sourcedid' => [
+            'suffix' => 'bo',
+            'group' => 'basicoutcome',
+            'claim' => 'lis_result_sourcedid',
+            'isarray' => false
+        ],
+    );
+>>>>>>> cad30e7d209 (deeplink: PUT and GET item)
 }
 
 /**
