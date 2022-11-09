@@ -89,7 +89,7 @@ class contextlinks extends resource_base {
                 throw new \Exception("Not Found: Course instance {$course->id} doesn't exist", 404);
             }
 
-            $links = $this->get_service()->get_links($this, $context, $course, $params['tool_code'], $limitfrom, $limitnum, $response);
+            $links = $this->get_service()->get_links($course, $params['tool_code'], $limitfrom, $limitnum);
 
             $response->set_body(json_encode(['items' => $links]));
 

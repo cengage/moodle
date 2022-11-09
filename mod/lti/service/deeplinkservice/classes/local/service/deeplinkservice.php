@@ -124,13 +124,13 @@ class deeplinkservice extends service_base {
      *
      * @return string
      */
-    public function get_links($resource, $context, $course, $typeid, $limitfrom, $limitnum, $response) {
+    public function get_links($course, $typeid, $limitfrom, $limitnum) {
         global $DB;
         //$type = $DB->get_record('lti_types', array('id' => $typeid));
         //TODO: eventually need to check by URL too for instances without typeid.
         $links = array_values($DB->get_records('lti', array('course' => $course->id, 'typeid' => $typeid)));
-        $func = function($l) {
-            return $this->toLink($l);
+        $func = function($l) use ($course, $typeid) {
+            return $this->toLink($course->id, $typeid, $l);
         };
         return array_map($func, $links);
     }
@@ -151,12 +151,12 @@ class deeplinkservice extends service_base {
      *
      * @return string
      */
-    public function get_link($resource, $context, $course, $typeid, $linkid, $response) {
+    public function get_link($course, $typeid, $linkid) {
         global $DB;
         //$type = $DB->get_record('lti_types', array('id' => $typeid));
         //TODO: eventually need to check by URL too for instances without typeid.
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
-        return $this->toLink($lti);
+        return $this->toLink($course->id, $typeid, $lti);
     }
 
     /**
@@ -175,23 +175,27 @@ class deeplinkservice extends service_base {
      *
      * @return string
      */
-    public function update_link($resource, $context, $course, $typeid, $linkid, $link, $response) {
+    public function update_link($course, $typeid, $linkid, $link) {
         global $DB;
         //$type = $DB->get_record('lti_types', array('id' => $typeid));
         //TODO: eventually need to check by URL too for instances without typeid.
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
+        $lti->name = $link->title ?? $lti->name;
         if (empty($link->custom)) {
             $lti->instructorcustomparameters = '';
         } else {
             $lti->instructorcustomparameters = params_to_string( $link->custom );
         }
         $DB->update_record('lti', $lti);
-        return $this->toLink($lti);
+        return $this->toLink($course->id, $typeid, $lti);
     }
 
-    public function toLink($lti) {
+    public function toLink($courseid, $typeid, $lti) {
+        $dlresource = $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         $link = [
-            'title' => $lti->name
+            'id' => $dlresource->get_link_endpoint($courseid, $typeid, $lti->id),
+            'title' => $lti->name,
+            'resourceLinkId' => $lti->id
         ];
         if (!empty($lti->instructorcustomparameters)) {
             $link['custom'] = lti_split_parameters($lti->instructorcustomparameters);

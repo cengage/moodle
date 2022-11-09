@@ -85,12 +85,12 @@ class deeplink extends resource_base {
             }
             switch ($response->get_request_method()) {
                 case self::HTTP_GET:
-                    $link = $this->get_service()->get_link($this, $context, $course, $params['tool_code'], $params['link_id'], $response);
+                    $link = $this->get_service()->get_link($course, $params['tool_code'], $params['link_id']);
                     $response->set_body(json_encode($link));
                     break;
                 case self::HTTP_PUT:
                     $link = json_decode($response->get_request_data());
-                    $updatedlink = $this->get_service()->update_link($this, $context, $course, $params['tool_code'], $params['link_id'], $link, $response);
+                    $updatedlink = $this->get_service()->update_link($course, $params['tool_code'], $params['link_id'], $link);
                     $response->set_body(json_encode($updatedlink));
                     $response->set_code(200);
                     break;
@@ -134,6 +134,13 @@ class deeplink extends resource_base {
         }
         return $value;
 
+    }
+
+    public function get_link_endpoint($courseid, $typeid, $linkid) {
+        $this->params['context_id'] = $courseid;
+        $this->params['link_id'] = $linkid;
+        $this->params['tool_code'] = $typeid;
+        return parent::get_endpoint();
     }
 
 }
