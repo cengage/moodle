@@ -352,4 +352,19 @@ class lineitem extends resource_base {
         }
         return $value;
     }
+
+    /**
+     * Builds the line item endpoint for the given parameters.
+     *
+     * @param int $courseid id of the course
+     * @param int $typeid id of the LTI Tool Type
+     * @param int $gradeitemid id of the grade item
+     *
+     * @return string
+     */
+    public function get_item_endpoint(int $courseid, int $typeid, int $gradeitemid) : string {
+        $this->params['item_id'] = $gradeitemid;
+        $this->params['context_id'] = $courseid;
+        return parent::get_endpoint()."?type_id={$typeid}";
+    }
 }
