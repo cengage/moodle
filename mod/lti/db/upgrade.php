@@ -112,15 +112,11 @@ function xmldb_lti_upgrade($oldversion) {
         // Lti savepoint reached.
         upgrade_mod_savepoint(true, 2022032900, 'lti');
     }
-    
+
     // Automatically generated Moodle v4.1.0 release upgrade line.
     // Put any upgrade step following this.
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> b523e1e8abb (MDL-67559 course nav fix upgrade script)
-    if ($oldversion < 2022050400) {
+    if ($oldversion < 2023010100) {
         // Create lti_course_nav_messages table.
         $ltimenutablename = 'lti_course_nav_messages';
 
@@ -140,11 +136,6 @@ function xmldb_lti_upgrade($oldversion) {
             $dbman->create_table($table);
         }
 
-        upgrade_mod_savepoint(true, 2022050400, 'lti');
-    }
-
-    if ($oldversion < 2022050401) {
-
         $placementstablename = 'lti_course_menu_placements';
         if (!$dbman->table_exists($placementstablename)) {
             $table = new xmldb_table($placementstablename);
@@ -161,7 +152,8 @@ function xmldb_lti_upgrade($oldversion) {
 
             $dbman->create_table($table);
         }
-        upgrade_mod_savepoint(true, 2022050401, 'lti');
+
+        upgrade_mod_savepoint(true, 2023010100, 'lti');
     }
 
     return true;
