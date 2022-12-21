@@ -52,12 +52,7 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-<<<<<<< HEAD
 $cmid = optional_param('id', 0, PARAM_INT); // Course Module ID.
-=======
-
-$id = optional_param('id', 0, PARAM_INT); // Course Module ID.
->>>>>>> ca0f2e5ae47 (course nav: fixing launches)
 $triggerview = optional_param('triggerview', 1, PARAM_BOOL);
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $ltitypeid = optional_param('ltitypeid', 0, PARAM_INT);

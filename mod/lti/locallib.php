@@ -3678,13 +3678,7 @@ function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype =
         $title = '', $text = '', $foruserid = 0) {
     global $SESSION;
 
-<<<<<<< HEAD
     $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text);
-=======
-    $params = lti_build_login_request($courseid, $id, $instance, $config, $messagetype);
-    $SESSION->lti_message_hint = "{$courseid},{$config->typeid},{$id},{$messagetype}," . base64_encode($title) . ',' .
-        base64_encode($text);
->>>>>>> a149b45b7ed (course nav: support 1.3 wip)
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3754,11 +3748,7 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
     $params['iss'] = $CFG->wwwroot;
     $params['target_link_uri'] = $endpoint;
     $params['login_hint'] = $USER->id;
-<<<<<<< HEAD
     $params['lti_message_hint'] = json_encode($ltihint);
-=======
-    $params['lti_message_hint'] = "{$id},{$messagetype}"; 
->>>>>>> a149b45b7ed (course nav: support 1.3 wip)
     $params['client_id'] = $config->lti_clientid;
     $params['lti_deployment_id'] = $config->typeid;
     return $params;
