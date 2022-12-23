@@ -47,6 +47,7 @@
  */
 
 use mod_lti\local\lti_coursenav_lib;
+use mod_lti\local\lti_message_type;
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
@@ -67,6 +68,7 @@ if ($cmid) {
     $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
     $context = context_module::instance($cm->id);
+    $msgtype = lti_message_type::BASIC_LAUNCH;
 
     if (is_guest($context, $USER) || !isloggedin()) {
         throw new moodle_exception('guestsarenotallowed', 'error');
@@ -76,6 +78,7 @@ if ($cmid) {
     $lti = lti_coursenav_lib::get()->get_lti_message($courseid, $coursenavid);
     $course = get_course($courseid);
     $context = context_course::instance($courseid);
+    $msgtype = lti_message_type::COURSE_NAV_LAUNCH;
 } else {
     // TODO FIX THIS
     throw new moodle_exception('cannotlaunch-nomsgid', 'error');
@@ -92,11 +95,10 @@ if ($typeid) {
     $config = lti_get_type_type_config($typeid);
     if ($config->lti_ltiversion === LTI_VERSION_1P3) {
         if (!isset($SESSION->lti_initiatelogin_status)) {
-            $msgtype = 'basic-lti-launch-request';
             if ($action === 'gradeReport') {
-                $msgtype = 'LtiSubmissionReviewRequest';
+                $msgtype = lti_message_type::SUBMISSION_REVIEW;
             }
-            echo lti_initiate_login($cm->course, $cmid, $lti, $config, $msgtype, '', '', $foruserid);
+            echo lti_initiate_login($course->id, $cmid, $lti, $config, $msgtype, '', '', $foruserid);
             exit;
         } else {
             unset($SESSION->lti_initiatelogin_status);

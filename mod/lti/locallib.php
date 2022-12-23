@@ -3720,7 +3720,8 @@ function lti_build_login_request($courseid, $cmid, $instance, $config, $messaget
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
         $launchid = 'ltilaunch'.$instance->id.'_'.rand();
         $ltihint['cmid'] = $cmid;
-        $SESSION->$launchid = "{$courseid},{$config->typeid},{$cmid},{$messagetype},{$foruserid},,";
+        $id = ($cmid??0)?$cmid:$instance->id;
+        $SESSION->$launchid = "{$courseid},{$config->typeid},{$id},{$messagetype},{$foruserid},,";
     } else {
         $endpoint = $config->lti_toolurl;
         if (($messagetype === 'ContentItemSelectionRequest') && !empty($config->lti_toolurl_ContentItemSelectionRequest)) {
