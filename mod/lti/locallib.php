@@ -3712,13 +3712,14 @@ function lti_post_launch_html($newparms, $endpoint, $debug=false) {
  * @param string         $title     Title of content item
  * @param string         $text      Description of content item
  * @param int            $foruserid Id of the user targeted by the launch
+ * @param array          $hint      Associative Array of data to add to hint
  * @return string
  */
 function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype = 'basic-lti-launch-request',
-        $title = '', $text = '', $foruserid = 0) {
+        $title = '', $text = '', $foruserid = 0, $hint = []) {
     global $SESSION;
 
-    $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text);
+    $params = lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid, $title, $text, $hint);
 
     $r = "<form action=\"" . $config->lti_initiatelogin .
         "\" name=\"ltiInitiateLoginForm\" id=\"ltiInitiateLoginForm\" method=\"post\" " .
@@ -3751,16 +3752,17 @@ function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype =
  * @param int            $foruserid Id of the user targeted by the launch
  * @param string         $title     Title of content item
  * @param string         $text      Description of content item
+ * @param array          $hint      Associative Array of data to add to hint
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0, $title = '', $text = '') {
+function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0, $title = '', $text = '', $hint = []) {
     global $USER, $CFG, $SESSION;
     $ltihint = [];
     if (!empty($instance)) {
         $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $config->lti_toolurl;
         $launchid = 'ltilaunch'.$instance->id.'_'.rand();
         $ltihint['cmid'] = $cmid;
-        $SESSION->$launchid = "{$courseid},{$config->typeid},{$cmid},{$messagetype},{$foruserid},,";
+        $SESSION->$launchid = "{$courseid},{$config->typeid},{$instance->id},{$messagetype},{$foruserid},,";
     } else {
         $endpoint = $config->lti_toolurl;
         if (($messagetype === 'ContentItemSelectionRequest') && !empty($config->lti_toolurl_ContentItemSelectionRequest)) {
