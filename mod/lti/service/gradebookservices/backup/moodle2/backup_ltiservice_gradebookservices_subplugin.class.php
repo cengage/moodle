@@ -154,7 +154,6 @@ class backup_ltiservice_gradebookservices_subplugin extends backup_subplugin {
         static $prevbackups = [];
         $key = $this->task->get_backupid().'_'.$type;
         if (!in_array($key, $prevbackups)) {
-            // trim array here.
             $prevbackups[] = $key;
             return true;
         }

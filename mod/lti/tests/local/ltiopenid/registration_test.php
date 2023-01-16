@@ -41,6 +41,8 @@ namespace mod_lti\local\ltiopenid;
  * @copyright  2020 Claude Vervoort, Cengage
  * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @coversDefaultClass \mod_lti\local\ltiopenid\registration_helper
  */
 class registration_test extends \advanced_testcase {
 
@@ -364,6 +366,8 @@ EOD;
     }
 
     /**
+     * @covers ::registration_to_config
+     *
      * Test the transformation from lti config to OpenId LTI Client Registration response
      * respects the deep linking placements.
      */

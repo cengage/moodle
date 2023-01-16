@@ -15,8 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This filter transforms LTI href to IFrame embed
- * and execute the LTI Launch.
+ * This filter transforms LTI href to IFrame embed and execute the LTI Launch.
  *
  * @package    filter
  * @subpackage lti
@@ -26,8 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * This filter transforms LTI href to IFrame embed
- * and execute the LTI Launch.
+ * This filter transforms LTI href to IFrame embed and execute the LTI Launch.
  *
  * @package    filter
  * @subpackage lti
@@ -38,8 +36,10 @@ class filter_lti extends moodle_text_filter {
 
     /**
      * Looks for LTI href and transforms them based on current context.
+     *
      * @param string $text text
-     * @param array options
+     * @param array $options
+     *
      * @return string possibly modified text
      */
     public function filter($text, array $options = array()) {

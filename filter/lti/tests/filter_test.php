@@ -32,6 +32,8 @@ require_once($CFG->dirroot . '/filter/lti/filter.php');
 /**
  * Tests for filter_lti
  *
+ * @package filter_lti
+ * @category test
  * @copyright 2021 Cengage Group
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \filter_lti\filter_lti
@@ -86,8 +88,8 @@ class filter_test extends advanced_testcase {
 
     /**
      * @covers ::filter
+     * 
      * Not embed enriches the href with the current course id.
-     *
      */
     public function test_filtering_notenmbed_addcourseid() {
         $this->resetAfterTest(true);
