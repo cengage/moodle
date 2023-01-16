@@ -250,10 +250,9 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
      * @return bool
      */
     private function is_first_backup_step() {
-        static $prev_backups = [];
-        if (!in_array($this->get_backupid(), $prev_backups)) {
-            // trim array here.
-            $prev_backups[] = $this->get_backupid();
+        static $prevbackups = [];
+        if (!in_array($this->get_backupid(), $prevbackups)) {
+            $prevbackups[] = $this->get_backupid();
             return true;
         }
         return false;

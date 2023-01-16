@@ -43,7 +43,7 @@ class filter_lti extends moodle_text_filter {
      * @return string possibly modified text
      */
     public function filter($text, array $options = array()) {
-   
+
         $coursecontext = $this->context->get_course_context(false);
         // LTI launches for now only execute in course contexts.
         if ($coursecontext && !is_string($text) || empty($text) || stripos($text, 'data-lti') === false ) {
@@ -58,11 +58,11 @@ class filter_lti extends moodle_text_filter {
         $newtext = '';
 
         foreach ($matches as $idx => $val) {
-            if (stripos($val, "<a ") === 0 
-                && preg_match('/data-lti=\"([^\"]*)/', $val, $ltidatamatches) === 1  
+            if (stripos($val, "<a ") === 0
+                && preg_match('/data-lti=\"([^\"]*)/', $val, $ltidatamatches) === 1
                 && preg_match('/href=\"([^\"]*)/', $val, $hrefmatches) === 1) {
                 $href = $hrefmatches[1];
-                $sep = strpos($href, '?') === false?'?':'&';
+                $sep = strpos($href, '?') === false ? '?' : '&';
                 $href = $href.$sep."course=".$coursecontext->instanceid;
                 if (strpos($ltidatamatches[1], 'embed') === 0) {
                     $width = '90%';

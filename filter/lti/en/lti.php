@@ -35,14 +35,9 @@
 /**
  * This file contains en_utf8 translation of the Basic LTI module
  *
- * @package mod_lti
- * @copyright  2009 Marc Alier, Jordi Piguillem, Nikolas Galanis
+ * @package filter_lti
+ * @copyright  2022 Claude Vervoort Cengage Group (claude.vervoort@cengage.com)
  *  marc.alier@upc.edu
- * @copyright  2009 Universitat Politecnica de Catalunya http://www.upc.edu
- * @author     Marc Alier
- * @author     Jordi Piguillem
- * @author     Nikolas Galanis
- * @author     Chris Scribner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

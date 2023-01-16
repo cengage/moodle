@@ -151,11 +151,11 @@ class backup_ltiservice_gradebookservices_subplugin extends backup_subplugin {
      * @return bool
      */
     private function is_first_backup_step_for_type($type) {
-        static $prev_backups = [];
+        static $prevbackups = [];
         $key = $this->task->get_backupid().'_'.$type;
-        if (!in_array($key, $prev_backups)) {
+        if (!in_array($key, $prevbackups)) {
             // trim array here.
-            $prev_backups[] = $key;
+            $prevbackups[] = $key;
             return true;
         }
         return false;

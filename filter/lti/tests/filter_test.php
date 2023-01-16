@@ -40,6 +40,7 @@ class filter_test extends advanced_testcase {
 
     /**
      * @covers ::filter
+     *
      * No LTI in payload means no LTI added.
      */
     public function test_filtering_no_lti() {
@@ -50,9 +51,10 @@ class filter_test extends advanced_testcase {
         $noltilinkhere = "bla bla <a href=\"https://nowhere\">test</a> bla bla";
         $this->assertEquals($noltilinkhere, $filter->filter($noltilinkhere));
     }
-    
+
     /**
      * @covers ::filter
+     *
      * LTI embed in payload adds an IFrame to payload.
      */
     public function test_filtering_embed_link_transform() {
@@ -61,12 +63,14 @@ class filter_test extends advanced_testcase {
         $context = context_course::instance($course->id);
         $filter = new filter_lti($context, array());
         $withltilink = "bla bla <a data-lti=\"embed\" href=\"https://nowhere?a=1\">test</a> bla bla";
-        $this->assertEquals(strpos($filter->filter($withltilink), "<iframe class=\"ltiembed\" src=\"https://nowhere?a=1&course=$course->id\" style=\"width:90%;height:400px\">"), 8);
+        $this->assertEquals(strpos($filter->filter($withltilink),
+            "<iframe class=\"ltiembed\" src=\"https://nowhere?a=1&course=$course->id\" style=\"width:90%;height:400px\">"), 8);
         $this->assertFalse(strpos($filter->filter($withltilink), "<a "));
     }
 
     /**
      * @covers ::filter
+     *
      * Height is set on the IFrame when specified.
      */
     public function test_filtering_embed_link_transform_with_widthheight() {
@@ -75,13 +79,15 @@ class filter_test extends advanced_testcase {
         $context = context_course::instance($course->id);
         $filter = new filter_lti($context, array());
         $withltilink = "bla bla <a data-lti=\"embed;width:300px;height:440px\" href=\"https://nowhere\">test</a> bla bla";
-        $this->assertEquals(strpos($filter->filter($withltilink), "<iframe class=\"ltiembed\" src=\"https://nowhere?course=$course->id\" style=\"width:300px;height:440px\">"), 8);
+        $this->assertEquals(strpos($filter->filter($withltilink),
+            "<iframe class=\"ltiembed\" src=\"https://nowhere?course=$course->id\" style=\"width:300px;height:440px\">"), 8);
         $this->assertFalse(strpos($filter->filter($withltilink), "<a "));
     }
-    
+
     /**
      * @covers ::filter
      * Not embed enriches the href with the current course id.
+     *
      */
     public function test_filtering_notenmbed_addcourseid() {
         $this->resetAfterTest(true);
