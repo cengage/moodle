@@ -46,5 +46,3 @@ if ($typeid) {
     }
 }
 lti_launch_tool($lti);
-
-

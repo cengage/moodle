@@ -486,9 +486,6 @@ class locallib_test extends mod_lti_testcase {
     }
 
     /**
-     * Test
-     */
-    /**
      * Test for lti_build_content_item_selection_request() with invalid presentation targets parameter.
      */
     public function test_lti_build_content_item_selection_request_invalid_presentationtargets() {
@@ -515,6 +512,9 @@ class locallib_test extends mod_lti_testcase {
         lti_build_content_item_selection_request($typeid, $course, $returnurl, '', '', [], $targets);
     }
 
+    /**
+     * Test links are added from a Content Item payload.
+     */
     public function test_lti_add_links_from_content_item() {
         global $DB;
         $contentitemstr = '{"@graph" : [
@@ -571,7 +571,8 @@ class locallib_test extends mod_lti_testcase {
         $this->assertEquals($lti1->title, 'Link1');
         $this->assertEquals($lti1->url, 'https://test/link1');
         $this->assertEquals(0, strpos($lti1->ltiurl, '/mod/lti/launchlti.php?permid='.$type->id.'-'.$course->id.'-'));
-        $lti1 = $DB->get_record('lti', array('permid' => substr($lti1->ltiurl, strlen('/mod/lti/launchlti.php?permid=')), 'course' => $course->id), '*', MUST_EXIST);
+        $lti1 = $DB->get_record('lti', array('permid' => substr($lti1->ltiurl, strlen('/mod/lti/launchlti.php?permid=')),
+            'course' => $course->id), '*', MUST_EXIST);
         $this->assertEquals($lti1->name, 'Link1');
         $this->assertEquals($lti1->toolurl, 'https://test/link1');
         $lines = explode("\n", $lti1->instructorcustomparameters);
@@ -1871,7 +1872,6 @@ MwIDAQAB
         $this->assertTrue(strpos($request['lti_message_hint'],  "\"launchid\":\"ltilaunch{$instance->id}_") > 0);
         $this->assertEquals('some-client-id', $request['client_id']);
         $this->assertEquals('some-type-id', $request['lti_deployment_id']);
-        // Load from db the link to see that it exists
     }
 
     /**

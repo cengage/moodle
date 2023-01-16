@@ -107,10 +107,10 @@ function xmldb_lti_upgrade($oldversion) {
 
     // Automatically generated Moodle v4.0.0 release upgrade line.
     // Put any upgrade step following this.
-    
+ 
     // Automatically generated Moodle v4.1.0 release upgrade line.
     // Put any upgrade step following this.
-    
+ 
     if ($oldversion < 2023011600) {
         $table = new xmldb_table('lti_types');
 

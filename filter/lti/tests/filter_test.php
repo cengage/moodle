@@ -22,6 +22,7 @@
  * @copyright 2021 Cengage Group
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace filter_lti;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -33,14 +34,15 @@ require_once($CFG->dirroot . '/filter/lti/filter.php');
  *
  * @copyright 2021 Cengage Group
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass \filter_lti\filter_lti
  */
-class filter_lti_testcase extends advanced_testcase {
+class filter_test extends advanced_testcase {
 
     /**
-     * Tests the filtering of lti hyperlinks
-     *
+     * @covers ::filter
+     * No LTI in payload means no LTI added.
      */
-    function test_filtering_no_lti() {
+    public function test_filtering_no_lti() {
         $this->resetAfterTest(true);
         $course = $this->getDataGenerator()->create_course();
         $context = context_course::instance($course->id);
@@ -49,7 +51,11 @@ class filter_lti_testcase extends advanced_testcase {
         $this->assertEquals($noltilinkhere, $filter->filter($noltilinkhere));
     }
     
-    function test_filtering_embed_link_transform() {
+    /**
+     * @covers ::filter
+     * LTI embed in payload adds an IFrame to payload.
+     */
+    public function test_filtering_embed_link_transform() {
         $this->resetAfterTest(true);
         $course = $this->getDataGenerator()->create_course();
         $context = context_course::instance($course->id);
@@ -59,7 +65,11 @@ class filter_lti_testcase extends advanced_testcase {
         $this->assertFalse(strpos($filter->filter($withltilink), "<a "));
     }
 
-    function test_filtering_embed_link_transform_with_widthheight() {
+    /**
+     * @covers ::filter
+     * Height is set on the IFrame when specified.
+     */
+    public function test_filtering_embed_link_transform_with_widthheight() {
         $this->resetAfterTest(true);
         $course = $this->getDataGenerator()->create_course();
         $context = context_course::instance($course->id);
@@ -69,7 +79,11 @@ class filter_lti_testcase extends advanced_testcase {
         $this->assertFalse(strpos($filter->filter($withltilink), "<a "));
     }
     
-    function test_filtering_notenmbed_addcourseid() {
+    /**
+     * @covers ::filter
+     * Not embed enriches the href with the current course id.
+     */
+    public function test_filtering_notenmbed_addcourseid() {
         $this->resetAfterTest(true);
         $course = $this->getDataGenerator()->create_course();
         $context = context_course::instance($course->id);

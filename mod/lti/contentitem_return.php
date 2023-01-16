@@ -83,7 +83,7 @@ $callback = optional_param('callback', '', PARAM_TEXT);
 if (empty($errormsg) && !empty($items)) {
     try {
         if ($callback) {
-            $returndata = lti_add_links_from_content_item($typeid, $courseid, $items, 'atto');
+            $returndata = lti_add_links_from_content_item($typeid, $courseid, $items, 'richtexteditor');
         } else {
             $returndata = lti_tool_configuration_from_content_item($typeid, $messagetype, $version, $consumerkey, $items);
         }

@@ -131,11 +131,12 @@ class backup_ltiservice_gradebookservices_subplugin extends backup_subplugin {
                                 AND l.typeid = ?
                                 AND l.toolproxyid is null";
             if ($this->is_first_backup_step_for_type($typeid)) {
-                $lineitemssql.=" AND (l.ltilinkid=? or l.ltilinkid is null)";
+                $lineitemssql .= " AND (l.ltilinkid=? or l.ltilinkid is null)";
             } else {
-                $lineitemssql.=" AND l.ltilinkid=?";
+                $lineitemssql .= " AND l.ltilinkid=?";
             }
-            $lineitemsparams = ['courseid' => backup::VAR_COURSEID, backup_helper::is_sqlparam($typeid), backup_helper::is_sqlparam($activityid)];
+            $lineitemsparams = ['courseid' => backup::VAR_COURSEID,
+                backup_helper::is_sqlparam($typeid), backup_helper::is_sqlparam($activityid)];
         }
 
         $lineitem->set_source_sql($lineitemssql, $lineitemsparams);
@@ -146,14 +147,15 @@ class backup_ltiservice_gradebookservices_subplugin extends backup_subplugin {
     /**
      * Is this the 1st time this step is called for this backup?
      *
+     * @param int $type id of the external tool
      * @return bool
      */
     private function is_first_backup_step_for_type($type) {
-        static $PREV_BACKUPS = [];
+        static $prev_backups = [];
         $key = $this->task->get_backupid().'_'.$type;
-        if (!in_array($key, $PREV_BACKUPS)) {
-            // trim array here
-            $PREV_BACKUPS[] = $key;
+        if (!in_array($key, $prev_backups)) {
+            // trim array here.
+            $prev_backups[] = $key;
             return true;
         }
         return false;

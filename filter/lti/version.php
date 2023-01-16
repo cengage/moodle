@@ -17,8 +17,8 @@
 /**
  * MathJax filter version information
  *
- * @package    filter_mathjaxloader
- * @copyright  2014 Damyon Wiese (damyon@moodle.com)
+ * @package    filter_lti
+ * @copyright  2022 Claude Vervoort Cengage Group (claude.vervoort@cengage.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

@@ -47,7 +47,9 @@ echo "
             <input type='hidden' name='ltitypeid' value='$ltitypeid'>
             <input type='hidden' name='custom' value='$custom'>
         </form>
-        <span id='nocourse' style='visibility:hidden'>Sorry, the launch to the external tool failed. Try clicking on the link again.</span>
+        <span id='nocourse' style='visibility:hidden'>
+            Sorry, the launch to the external tool failed. Try clicking on the link again.
+        </span>
         <script type='text/javascript'>
             var parentWin = window.parent || window.opener;
             if (parentWin.lti && parentWin.lti.course) {

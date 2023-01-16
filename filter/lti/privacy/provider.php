@@ -14,17 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Privacy Subsystem implementation for core_filters.
- *
- * @package    core_filters
- * @copyright  2018 Andrew Nicols <andrew@nicols.co.uk>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
-namespace core_filters\privacy;
-
-defined('MOODLE_INTERNAL') || die();
+namespace fitler_lti;
 
 /**
  * Privacy Subsystem for core_filters implementing null_provider.

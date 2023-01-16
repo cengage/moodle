@@ -160,7 +160,7 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         // Define sources.
         $ltirecord = $DB->get_record('lti', ['id' => $this->task->get_activityid()]);
         if ($this->is_first_backup_step()) {
-            $attoltis = $DB->get_records('lti', ['placement'=>'atto', 'course'=>$this->task->get_courseid()]);
+            $attoltis = $DB->get_records('lti', ['placement' => 'atto', 'course' => $this->task->get_courseid()]);
             $lti->set_source_array(array_merge([$ltirecord], $attoltis));
         } else {
             $lti->set_source_array([$ltirecord]);
@@ -250,10 +250,10 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
      * @return bool
      */
     private function is_first_backup_step() {
-        static $PREV_BACKUPS = [];
-        if (!in_array($this->get_backupid(), $PREV_BACKUPS)) {
-            // trim array here
-            $PREV_BACKUPS[] = $this->get_backupid();
+        static $prev_backups = [];
+        if (!in_array($this->get_backupid(), $prev_backups)) {
+            // trim array here.
+            $prev_backups[] = $this->get_backupid();
             return true;
         }
         return false;

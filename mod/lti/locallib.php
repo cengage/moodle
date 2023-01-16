@@ -1561,6 +1561,7 @@ function content_item_to_form(object $tool, object $typeconfig, object $item) : 
  * @param int $typeid The tool type ID.
  * @param int $courseid The course ID.
  * @param string $contentitemsjson The JSON string for the content_items parameter.
+ * @param string $placement of that link (for example, richtexteditor)
  * @return stdClass The array of module information objects.
  * @throws moodle_exception
  * @throws lti\OAuthException
@@ -1590,7 +1591,7 @@ function lti_add_links_from_content_item(int $typeid, int $courseid, string $con
     $index = 0;
     foreach ($items as $item) {
         if ($item->{'@type'} == 'LtiLinkItem') {
-            // TODO: XSS
+            // TODO: XSS.
             $ltilink = content_item_to_form($tool, $typeconfig, $item);
             $ltilink->typeid = $typeid;
             $ltilink->permid = $prefix.$index;
@@ -3755,7 +3756,8 @@ function lti_initiate_login($courseid, $cmid, $instance, $config, $messagetype =
  * @param array          $hint      Associative Array of data to add to hint
  * @return array Login request parameters
  */
-function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype, $foruserid=0, $title = '', $text = '', $hint = []) {
+function lti_build_login_request($courseid, $cmid, $instance, $config, $messagetype,
+    $foruserid=0, $title = '', $text = '', $hint = []) {
     global $USER, $CFG, $SESSION;
     $ltihint = [];
     if (!empty($instance)) {
