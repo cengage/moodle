@@ -540,13 +540,6 @@ function lti_get_launch_data($instance, $nonce = '', $messagetype = 'basic-lti-l
     $endpoint = !empty($instance->toolurl) ? $instance->toolurl : $typeconfig['toolurl'];
     $endpoint = trim($endpoint);
 
-    if ($placement) {
-        $desiredplacement = $placement . 'url';
-        if (!empty($instance->$desiredplacement)) {
-            $endpoint = $instance->$desiredplacement;
-        }
-    }
-
     // If the current request is using SSL and a secure tool URL is specified, use it.
     if (lti_request_is_using_ssl() && !empty($instance->securetoolurl)) {
         $endpoint = trim($instance->securetoolurl);

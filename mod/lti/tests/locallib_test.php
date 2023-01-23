@@ -219,7 +219,7 @@ class locallib_test extends mod_lti_testcase {
     /*
      * Verify that lti_build_request does handle resource_link_id as expected
      */
-    public function test_lti_buid_request_resource_link_id() {
+    public function test_lti_build_request_resource_link_id() {
         $this->resetAfterTest();
 
         self::setUser($this->getDataGenerator()->create_user());
@@ -564,7 +564,7 @@ class locallib_test extends mod_lti_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
-        $type = $this->create_type(new stdClass());
+        $type = $this->create_type(new \stdClass());
         $response = lti_add_links_from_content_item($type->id, $course->id, $contentitemstr, "testlinks");
         $this->assertEquals(count($response->items), 3);
         $lti1 = $response->items[1];
