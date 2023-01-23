@@ -19,8 +19,7 @@ namespace fitler_lti;
 /**
  * Privacy Subsystem for core_filters implementing null_provider.
  *
- * @package    filter
- * @subpackage lti
+ * @package    filter_lti
  * @copyright  2022 Claude Vervoort Cengage Group (claude.vervoort@cengage.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

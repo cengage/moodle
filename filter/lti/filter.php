@@ -17,18 +17,15 @@
 /**
  * This filter transforms LTI href to IFrame embed and execute the LTI Launch.
  *
- * @package    filter
- * @subpackage lti
+ * @package    filter_lti
  * @copyright  2022 onwards Claude Vervoort Cengage Group
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * This filter transforms LTI href to IFrame embed and execute the LTI Launch.
  *
- * @package    filter
- * @subpackage lti
+ * @package    filter_lti
  * @copyright  2022 onwards Claude Vervoort Cengage Group
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
