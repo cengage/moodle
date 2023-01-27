@@ -44,3 +44,4 @@
 defined('MOODLE_INTERNAL') || die;
 
 $string['filtername'] = 'External Tools';
+$string['privacy:reason'] = 'The LTI filter plugin does not store any personal data.';

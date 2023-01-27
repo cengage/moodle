@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace fitler_lti\privacy;
+/**
+ * Privacy Subsystem implementation for filter_lti.
+ *
+ * @package    filter_lti
+ * @copyright  2023 Claude Vervoort Cengage Group <claude.vervoort@cengage.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace filter_lti\privacy;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Privacy Subsystem for core_filters implementing null_provider.
  *
- * @package    filter_lti
  * @copyright  2022 Claude Vervoort Cengage Group (claude.vervoort@cengage.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
