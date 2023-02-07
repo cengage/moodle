@@ -30,7 +30,6 @@ use editor_tiny\plugin_with_configuration;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class plugininfo extends plugin implements
-    plugin_with_buttons,
     plugin_with_menuitems,
     plugin_with_configuration {
 
@@ -45,12 +44,6 @@ class plugininfo extends plugin implements
         //return has_capability('atto/lti:addembed', $context);
     }
     
-    public static function get_available_buttons(): array {
-        return [
-            'tiny_lti/lti',
-        ];
-    }
-
     public static function get_available_menuitems(): array {
         return [
             'tiny_lti/lti',
@@ -68,10 +61,9 @@ class plugininfo extends plugin implements
             'upload' => has_capability('moodle/lti:deploy', $context),
         ];
         $permissions['uploadandembed'] = $permissions['embed'] && $permissions['upload'];
-
+        list($context, $course, $cm) = get_context_info_array($context->id);
         return [
-            'permissions' => $permissions,
-            'storeinrepo' => true,
+            'courseId' => $course ? $course->id : null,
         ];
     }
 }
