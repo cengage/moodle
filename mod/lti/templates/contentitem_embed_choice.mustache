@@ -1,0 +1,59 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_lti/registration_upgrade_choice_page.mustache
+
+    This template provides the layout to display the upgrade choices
+    available when registering a tool for which there exists at least
+    one other tool with the same domain.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * startregurlenc: the URL provided by the tool to start the registration, url encoded
+    * tools: the list of tools matching the domain
+
+    Example context (json):
+    {
+        "startregurlenc":"https%3A%2F%2Fmytool.example%2Fregister",
+        "tools": [
+          {
+            "id": 222,
+            "name": "This is My LTI 1.1 tool",
+            "baseurl": "https://mytool.example",
+            "version": "LTI-1p0",
+            "sesskey": "785t9302"
+          }
+        ]
+    }
+
+}}
+<p>{{#str}}contentitem_embed_pick, mod_lti {{/str}}</p>
+<ul>
+{{#tools}}
+  <li><a href={{url}}>{{name}}</a>
+{{/tools}}
+</ul>
+<div>
+  <button type="button" class="btn btn-secondary" data-action="hide">{{#str}} cancel {{/str}}</button>
+</div>
+{{#js}}
+{{/js}}

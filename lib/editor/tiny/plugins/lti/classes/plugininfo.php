@@ -56,14 +56,14 @@ class plugininfo extends plugin implements
         array $fpoptions,
         ?\editor_tiny\editor $editor = null
     ): array {
-        $permissions = [
-            'embed' => has_capability('tiny/lti:addembed', $context),
-            'upload' => has_capability('moodle/lti:deploy', $context),
-        ];
-        $permissions['uploadandembed'] = $permissions['embed'] && $permissions['upload'];
         list($context, $course, $cm) = get_context_info_array($context->id);
+        $starturl = "";
+        if ($course) {
+            $url = new \moodle_url('/mod/lti/contentitem_embed_start.php', ['course'=>$course->id]);
+            $starturl = $url->out(false);
+        } 
         return [
-            'courseId' => $course ? $course->id : null,
+            'startUrl' => $starturl
         ];
     }
 }

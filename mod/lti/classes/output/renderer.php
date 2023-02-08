@@ -49,6 +49,18 @@ class renderer extends plugin_renderer_base {
     }
 
     /**
+     * Defer to template.
+     *
+     * @param contentitem_embed_choice_page $page
+     *
+     * @return string html for the page
+     */
+    public function render_contentitem_embed_choice_page($page) {
+        $data = $page->export_for_template($this);
+        return parent::render_from_template('mod_lti/contentitem_embed_choice', $data);
+    }
+
+    /**
      * Render the external registration return page
      *
      * @param tool_configure_page $page
