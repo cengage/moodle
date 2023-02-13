@@ -28,7 +28,8 @@ require_once($CFG->dirroot . '/mod/lti/lib.php');
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 $courseid = required_param('course', PARAM_INT);
-$callback = optional_param('callback', '', PARAM_TEXT);
+$callback = required_param('callback', PARAM_TEXT);
+$placement = required_param('placement', PARAM_TEXT);
 
 // Check access and capabilities.
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
@@ -40,13 +41,25 @@ require_capability('mod/lti:addcoursetool', $context);
 $ltitooltypes = lti_load_type_by_placement('richtexteditorplugin');
 
 $tooltypes = [];
+foreach($ltitooltypes as $tooltype) {
+    $launchurl = new moodle_url('/mod/lti/contentitem.php', [
+        "id"=>$tooltype->id,
+        "placement"=>$placement,
+        "callback"=>$callback,
+        "course"=>$course->id,
+    ]);
+    $tooltypes[] = [
+        'name'=>$tooltype->name,
+        'url'=>$launchurl->out(false),
+    ];
+}
 
 $pageurl = new moodle_url('/mod/lti/contentitem_embed_start.php');
 $PAGE->set_context($context);
 $PAGE->set_url($pageurl);
 $PAGE->set_pagelayout('maintenance');
 $output = $PAGE->get_renderer('mod_lti');
-$page = new \mod_lti\output\contentitem_embed_choice_page($ltitooltypes);
+$page = new \mod_lti\output\contentitem_embed_choice_page($tooltypes);
 echo $output->header();
 echo $output->render($page);
 echo $output->footer();

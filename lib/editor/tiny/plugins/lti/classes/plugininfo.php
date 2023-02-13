@@ -59,7 +59,7 @@ class plugininfo extends plugin implements
         list($context, $course, $cm) = get_context_info_array($context->id);
         $starturl = "";
         if ($course) {
-            $url = new \moodle_url('/mod/lti/contentitem_embed_start.php', ['course'=>$course->id]);
+            $url = new \moodle_url('/mod/lti/contentitem_embed_start.php', ['course'=>$course->id, 'placement'=>'richtexteditor']);
             $starturl = $url->out(false);
         } 
         return [
