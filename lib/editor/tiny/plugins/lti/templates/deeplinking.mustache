@@ -21,17 +21,7 @@
 
     Example context (json):
     {
-        "warnings": [
-            {
-                "description": "This is a warning message",
-                "nodeData": [{
-                    "text": "Text of content",
-                    "src": "https://example.com/image.png",
-                    "nodeName": "IMG",
-                    "nodeIndex": 0
-                }]
-            }
-        ]
+        "startUrl": "https://moodle.example.edu/mod/lti/contentitem_embed_start.php"
     }
 }}
-<iframe src="{{startUrl}}"></iframe>
+<iframe src="{{startUrl}}" style="width:100%;height:60vh;min-height:600px;" allow="fullscreen"></iframe>
