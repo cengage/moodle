@@ -42,8 +42,7 @@ style2 = underline, strike, subscript, superscript
 align = align
 insert = equation, charmap, table, clear
 undo = undo
-other = html
-lti = lti';
+other = html';
     $setting = new editor_atto_toolbar_setting('editor_atto/toolbar', $name, $desc, $default);
 
     $settings->add($setting);
