@@ -16,7 +16,7 @@
 
 /**
  *
- * Atto text editor LTI integration
+ * tiny text editor LTI integration
  *
  * @package    tiny_lti
  * @copyright  2023 Claude Vervoort Cengage Group <claude.vervoort@cengage.com>

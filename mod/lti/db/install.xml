@@ -169,7 +169,7 @@
         <INDEX NAME="token" UNIQUE="true" FIELDS="token"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="lti_embed" COMMENT="LTI links that are embedded in Atto Editors">
+    <TABLE NAME="lti_embed" COMMENT="LTI links that are embedded in Rich Text Editors">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="embedid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Id used to identify this link, preserved on copy"/>

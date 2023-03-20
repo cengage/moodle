@@ -41,7 +41,7 @@ class plugininfo extends plugin implements
     ): bool {
         return true;
         // Users must have permission to embed content.
-        //return has_capability('atto/lti:addembed', $context);
+        //return has_capability('tiny/lti:addembed', $context);
     }
     
     public static function get_available_menuitems(): array {

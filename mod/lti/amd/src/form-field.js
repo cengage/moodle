@@ -82,9 +82,9 @@ define(['jquery'],
 
                         // Set text in editor's editable content, if applicable.
                         // Check if it is an Atto editor.
-                        var attoEditor = $(this.selector + 'editable');
-                        if (attoEditor.length) {
-                            attoEditor.html(value.text);
+                        var tinyEditor = $(this.selector + 'editable');
+                        if (tinyEditor.length) {
+                            tinyEditor.html(value.text);
                         } else if (typeof tinyMCE !== 'undefined') {
                             // If the editor is not Atto, try to fallback to TinyMCE.
                             if (tinyMCE.majorVersion == "3") {

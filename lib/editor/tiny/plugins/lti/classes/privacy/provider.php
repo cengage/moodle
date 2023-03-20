@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for atto_lti.
+ * Privacy Subsystem implementation for tiny_lti.
  *
- * @package    atto_lti
+ * @package    tiny_lti
  * @copyright  2021 Claude Vervoort (Cengage Group)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace atto_lti\privacy;
+namespace tiny_lti\privacy;
 
 /**
- * Privacy Subsystem for atto_lti implementing null_provider.
+ * Privacy Subsystem for tiny_lti implementing null_provider.
  *
  * @copyright  2021 Claude Vervoort (Cengage Group)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

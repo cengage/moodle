@@ -21,7 +21,7 @@
  * up in the list of course activities. This file passes through the
  * resource_link_id without checking the database for it.
  *
- * @package    atto_lti
+ * @package    tiny_lti
  * @copyright  2020 The Regents of the University of California
  * @author     David Shepard
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

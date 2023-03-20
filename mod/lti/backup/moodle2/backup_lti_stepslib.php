@@ -160,8 +160,8 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         // Define sources.
         $ltirecord = $DB->get_record('lti', ['id' => $this->task->get_activityid()]);
         if ($this->is_first_backup_step()) {
-            $attoltis = $DB->get_records('lti', ['placement' => 'atto', 'course' => $this->task->get_courseid()]);
-            $lti->set_source_array(array_merge([$ltirecord], $attoltis));
+            $rtltis = $DB->get_records('lti', ['placement' => 'richtexteditorplugin', 'course' => $this->task->get_courseid()]);
+            $lti->set_source_array(array_merge([$ltirecord], $rtltis));
         } else {
             $lti->set_source_array([$ltirecord]);
         }
