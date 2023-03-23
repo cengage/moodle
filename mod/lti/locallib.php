@@ -1680,7 +1680,7 @@ function lti_convert_content_items($param) {
                         $newitem->mediaType = 'application/vnd.ims.lti.v1.ltilink';
                         break;
                     case 'link':
-                    case 'rich':
+                    case 'html':
                         $newitem->{'@type'} = 'ContentItem';
                         $newitem->mediaType = 'text/html';
                         break;

@@ -519,10 +519,21 @@ class locallib_test extends mod_lti_testcase {
         global $DB;
         $contentitemstr = '{"@graph" : [
             { "@type" : "ContentItem",
-              "@id" : ":item1",
-              "url" : "http://www.imsglobal.org",
+              "@id" : ":itemurl",
+              "url" : "http://www.moodle.org",
               "title" : "The IMS Global website",
               "mediaType" : "text/html"
+            },
+            { "@type" : "ContentItem",
+                "@id" : ":itemembed",
+                "title" : "<bold>embed me!</bold>",
+                "mediaType" : "text/html"
+            },
+            { "@type" : "FileItem",
+                "@id" : ":image",
+                "url" : "http://www.moodle.org/image",
+                "title" : "Go Moodle Go!",
+                "mediaType" : "image/*"
             },
             { "@type" : "LtiLinkItem",
               "@id" : ":item2",
@@ -553,7 +564,8 @@ class locallib_test extends mod_lti_testcase {
               "placementAdvice" : {
                 "presentationDocumentTarget" : "iframe"
               }
-            }, { "@type" : "LtiLinkItem",
+            },
+            { "@type" : "LtiLinkItem",
               "@id" : ":item3",
               "title" : "Link2",
               "mediaType" : "application/vnd.ims.lti.v1.ltilink",
@@ -566,8 +578,8 @@ class locallib_test extends mod_lti_testcase {
         $course = $this->getDataGenerator()->create_course();
         $type = $this->create_type(new \stdClass());
         $response = lti_add_links_from_content_item($type->id, $course->id, $contentitemstr, "testlinks");
-        $this->assertEquals(count($response->items), 3);
-        $lti1 = $response->items[1];
+        $this->assertEquals(count($response->items), 5);
+        $lti1 = $response->items[3];
         $this->assertEquals($lti1->title, 'Link1');
         $this->assertEquals($lti1->url, 'https://test/link1');
         $this->assertEquals(0, strpos($lti1->ltiurl, '/mod/lti/launchlti.php?permid='.$type->id.'-'.$course->id.'-'));
@@ -578,7 +590,7 @@ class locallib_test extends mod_lti_testcase {
         $lines = explode("\n", $lti1->instructorcustomparameters);
         $this->assertTrue(in_array('level=novice', $lines));
         $this->assertTrue(in_array('mode=interactive', $lines));
-        $lti2 = $response->items[2];
+        $lti2 = $response->items[4];
         $this->assertEquals($lti2->title, 'Link2');
     }
 
@@ -1362,6 +1374,23 @@ MwIDAQAB
                 'height' => 400
             ]
         ];
+        $contentitems[] = [
+            'type' => 'html',
+            'title' => 'EmbedMe',
+            'html' => '<b>embed me!</b>',
+        ];
+        $contentitems[] = [
+            'type' => 'link',
+            'title' => 'Link',
+            'text' => 'a link',
+            'url' => 'https://moodle.org',
+        ];
+        $contentitems[] = [
+            'type' => 'image',
+            'title' => 'Image',
+            'text' => 'an image',
+            'url' => 'https://moodle.org/moodle.svg',
+        ];
 
         $contentitems = json_encode($contentitems);
 
@@ -1404,12 +1433,35 @@ MwIDAQAB
         $objgraph3->{$strtype} = 'LtiLinkItem';
         $objgraph3->mediaType = 'application/vnd.ims.lti.v1.ltilink';
 
+        $objgraph4 = new \stdClass();
+        $objgraph4->{$strtype} = 'ContentItem';
+        $objgraph4->title = 'EmbedMe';
+        $objgraph4->text = '<b>embed me!</b>';
+        $objgraph4->mediaType = 'text/html';
+
+        $objgraph5 = new \stdClass();
+        $objgraph5->{$strtype} = 'ContentItem';
+        $objgraph5->title = 'Link';
+        $objgraph5->text = 'a link';
+        $objgraph5->url = 'https://moodle.org';
+        $objgraph5->mediaType = 'text/html';
+
+        $objgraph6 = new \stdClass();
+        $objgraph6->{$strtype} = 'FileItem';
+        $objgraph6->title = 'Image';
+        $objgraph6->text = 'an image';
+        $objgraph6->url = 'https://moodle.org/moodle.svg';
+        $objgraph6->mediaType = 'image/*';
+
         $expected = new \stdClass();
         $expected->{$strcontext} = 'http://purl.imsglobal.org/ctx/lti/v1/ContentItem';
         $expected->{$strgraph} = [];
         $expected->{$strgraph}[] = $objgraph;
         $expected->{$strgraph}[] = $objgraph2;
         $expected->{$strgraph}[] = $objgraph3;
+        $expected->{$strgraph}[] = $objgraph4;
+        $expected->{$strgraph}[] = $objgraph5;
+        $expected->{$strgraph}[] = $objgraph6;
 
         $this->assertEquals($expected, $jsondecode);
     }
