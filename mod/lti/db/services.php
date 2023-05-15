@@ -119,6 +119,15 @@ $functions = array(
         'ajax'          => true
     ],
 
+    'mod_lti_get_deeplinking_for_richtexteditor' => [
+        'classname'     => 'mod_lti\external\get_deeplinking_for_richtexteditor',
+        'methodname'    => 'execute',
+        'description'   => 'Get LTI Tool types available for deeplinking in a given context',
+        'type'          => 'read',
+        'capabilities'  => 'mod/lti:view',
+        'ajax'          => true
+    ],
+
     'mod_lti_create_tool_type' => array(
         'classname'     => 'mod_lti_external',
         'methodname'    => 'create_tool_type',
