@@ -26,4 +26,5 @@
 $string['erroroccurred'] = 'An error occurred adding this content';
 $string['lti'] = 'lti';
 $string['pluginname'] = 'Tiny embed LTI (External Tool)';
+$string['menuitem'] = 'External Tool';
 $string['privacy:metadata'] = 'The tiny_lti plugin does not store any personal data';
