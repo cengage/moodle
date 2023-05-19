@@ -16,6 +16,8 @@
 
 namespace tiny_lti;
 
+require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
 use context;
 use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
@@ -58,12 +60,24 @@ class plugininfo extends plugin implements
     ): array {
         list($context, $course, $cm) = get_context_info_array($context->id);
         $starturl = "";
+        $dloptions = [];
         if ($course) {
-            $url = new \moodle_url('/mod/lti/contentitem_embed_start.php', ['course'=>$course->id, 'placement'=>'richtexteditor']);
-            $starturl = $url->out(false);
+            $ltitooltypes = lti_available_type_for_placement($course->id, 'richtexteditorplugin');
+            foreach($ltitooltypes as $tooltype) {
+                $launchurl = new \moodle_url('/mod/lti/contentitem.php', [
+                    "id"=>$tooltype->id,
+                    "placement"=>$placement,
+                    "callback"=>$callback,
+                    "course"=>$course->id,
+                ]);
+                $dloptions[] = [
+                    'name'=>$tooltype->name,
+                    'url'=>$launchurl->out(false),
+                ];
+            }
         } 
         return [
-            'startUrl' => $starturl
+            'dloptions' => $dloptions
         ];
     }
 }

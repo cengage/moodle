@@ -2993,12 +2993,13 @@ function lti_update_type($type, $config) {
 /**
  * Get all types that can be placed in a specific placement.
  *
+ * @param int $courseid
  * @param string $placementname Either 'menulink' or
  * 'richtexteditorplugin'
  *
  * @return array array of tools
  */
-function lti_load_type_by_placement (string $placementname) {
+function lti_available_type_for_placement(int $courseid, string $placementname) {
     global $DB;
 
     $queryfield = [
