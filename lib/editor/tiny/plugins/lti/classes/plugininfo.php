@@ -41,9 +41,8 @@ class plugininfo extends plugin implements
         array $fpoptions,
         ?\editor_tiny\editor $editor = null
     ): bool {
+        // Permission is driven on a per tool basis if it allows Deep Linking for the current role.
         return true;
-        // Users must have permission to embed content.
-        //return has_capability('tiny/lti:addembed', $context);
     }
     
     public static function get_available_menuitems(): array {
@@ -58,11 +57,12 @@ class plugininfo extends plugin implements
         array $fpoptions,
         ?\editor_tiny\editor $editor = null
     ): array {
+        global $USER;
         list($context, $course, $cm) = get_context_info_array($context->id);
         $starturl = "";
         $dloptions = [];
         if ($course) {
-            $ltitooltypes = lti_available_type_for_placement($course->id, 'richtexteditorplugin');
+            $ltitooltypes = lti_available_type_for_placement($course->id, $USER, 'richtexteditorplugin');
             foreach($ltitooltypes as $tooltype) {
                 $launchurl = new \moodle_url('/mod/lti/contentitem.php', [
                     "id"=>$tooltype->id,

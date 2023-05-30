@@ -230,10 +230,13 @@ class mod_lti_edit_types_form extends moodleform {
         }
 
         $mform->addElement('checkbox', 'lti_asrichtexteditorplugin', get_string('placementasrichtexteditorplugin', 'lti'));
+        $mform->addElement('checkbox', 'lti_richtexteditorallowlearner', get_string('placementasrichtexteditorallowlearner', 'lti'));
+        $mform->disabledIf('lti_richtexteditorallowlearner', 'lti_asrichtexteditorplugin', 'notchecked');
         $mform->addElement('text', 'lti_richtexteditorurl', get_string('placementrichtexteditorurl', 'lti'), [
             'size' => '64'
         ]);
         $mform->setType('lti_richtexteditorurl', PARAM_URL);
+        $mform->disabledIf('lti_richtexteditorurl', 'lti_asrichtexteditorplugin', 'notchecked');
 
         $mform->addElement('hidden', 'oldicon');
         $mform->setType('oldicon', PARAM_URL);

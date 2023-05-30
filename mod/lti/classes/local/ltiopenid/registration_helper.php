@@ -187,6 +187,8 @@ class registration_helper {
                     if ($richtexteditor) {
                         $config->lti_asrichtexteditorplugin = 1;
                         $config->lti_richtexteditorurl = $value['target_link_uri'] ?? '';
+                        $allowlearner = isset($value['roles']) && in_array("http://purl.imsglobal.org/vocab/lis/v2/membership#Learner", $value['roles']);
+                        $config->lti_richtexteditorallowlearner = $allowlearner?1:0; 
                     }
                     array_push($messagesresponse, $value);
                 }
@@ -347,6 +349,10 @@ class registration_helper {
                 $contentitemmessage['target_link_uri'] = $config->richtexteditorurl;
             }
             $contentitemmessage['placements'] = ['RichTextEditor'];
+            if ($config->richtexteditorallowlearner ?? 0 == 1) {
+                $contentitemmessage['roles'] = ['http://purl.imsglobal.org/vocab/lis/v2/membership#Learner',
+                    'http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor'];
+            }
             $lticonfigurationresponse['messages'][] = $contentitemmessage;
         }
         if (isset($config->customparameters) && !empty($config->customparameters)) {

@@ -116,8 +116,9 @@ function xmldb_lti_upgrade($oldversion) {
 
         $fields = [];
         $fields[] = new xmldb_field('asrichtexteditorplugin', XMLDB_TYPE_INTEGER, 1, null, null, null, 0, 'asmenulink');
+        $fields[] = new xmldb_field('richtexteditorallowlearner', XMLDB_TYPE_INTEGER, 1, null, null, null, 0, 'asrichtexteditorplugin');
         $fields[] = new xmldb_field('richtexteditorurl', XMLDB_TYPE_TEXT, 'small',
-            null, false, null, null, 'asrichtexteditorplugin');
+            null, false, null, null, 'richtexteditorallowlearner');
         foreach ($fields as $field) {
             if (!$dbman->field_exists($table, $field)) {
                 $dbman->add_field($table, $field);

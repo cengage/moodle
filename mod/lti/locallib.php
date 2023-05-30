@@ -2757,6 +2757,8 @@ function lti_get_type_type_config($id) {
 
     $type->lti_richtexteditorurl = $basicltitype->richtexteditorurl;
 
+    $type->lti_richtexteditorallowlearner = $basicltitype->richtexteditorallowlearner;
+
     if (isset($config['resourcekey'])) {
         $type->lti_resourcekey = $config['resourcekey'];
     }
@@ -2913,10 +2915,15 @@ function lti_prepare_type_for_save($type, $config) {
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
     $type->asrichtexteditorplugin = false;
+    $type->richtexteditorallowlearner = false;
     if (isset($config->lti_asrichtexteditorplugin)) {
         $type->asrichtexteditorplugin = $config->lti_asrichtexteditorplugin;
+        if (isset($config->lti_richtexteditorallowlearner)) {
+            $type->richtexteditorallowlearner = $config->lti_asrichtexteditorallowlearner;
+        }
     }
     $type->richtexteditorurl = isset($config->lti_richtexteditorurl) ? $config->lti_richtexteditorurl : '';
+    $type->richtexteditorallowlearner = isset($config->lti_richtexteditorallowlearner) ? $config->lti_richtexteditorallowlearner : 0;
 
     $type->timemodified = time();
 
@@ -2994,12 +3001,12 @@ function lti_update_type($type, $config) {
  * Get all types that can be placed in a specific placement.
  *
  * @param int $courseid
- * @param string $placementname Either 'menulink' or
- * 'richtexteditorplugin'
+ * @param object $user User to which the placements would be displayed
+ * @param string $placementname Either 'menulink' or 'richtexteditorplugin'
  *
  * @return array array of tools
  */
-function lti_available_type_for_placement(int $courseid, string $placementname) {
+function lti_available_type_for_placement(int $courseid, object $user, string $placementname) {
     global $DB;
 
     $queryfield = [

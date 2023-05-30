@@ -172,6 +172,35 @@ EOD;
 EOD;
 
     /**
+     * @var string A minimalist client registration allowing student access to Deep Linking.
+     */
+    private $registrationminimaldlrtjsonlearner = <<<EOD
+    {
+        "application_type": "web",
+        "response_types": ["id_token"],
+        "grant_types": ["implict", "client_credentials"],
+        "initiate_login_uri": "https://client.example.org/lti/init",
+        "redirect_uris":
+        ["https://client.example.org/callback"],
+        "client_name": "Virtual Garden",
+        "jwks_uri": "https://client.example.org/.well-known/jwks.json",
+        "token_endpoint_auth_method": "private_key_jwt",
+        "https://purl.imsglobal.org/spec/lti-tool-configuration": {
+            "domain": "client.example.org",
+            "target_link_uri": "https://client.example.org/lti",
+            "messages": [
+                {
+                    "type": "LtiDeepLinkingRequest",
+                    "placements": ["ContentArea", "RichTextEditor"],
+                    "roles":["http://purl.imsglobal.org/vocab/lis/v2/membership#Learner",
+                    "http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor"]
+                }
+            ]
+        }
+    }
+EOD;
+
+    /**
      * Test the mapping from Registration JSON to LTI Config for a has-it-all tool registration.
      */
     public function test_to_config_full() {
@@ -374,10 +403,32 @@ EOD;
     public function test_config_to_registration_minimal_dlplacements() {
         $orig = json_decode($this->registrationminimaldlrtjson, true);
         $reghelper = registration_helper::get();
-        $reg = $reghelper->config_to_registration($reghelper->registration_to_config($orig, 'clid'), 12);
+        $conf = $reghelper->registration_to_config($orig, 'clid');
+        $this->assertEquals($conf->lti_richtexteditorallowlearner, 0);
+        $reg = $reghelper->config_to_registration($conf, 12);
         $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
         $this->assertEquals(['ContentArea'], $lti['messages'][0]['placements']);
         $this->assertEquals(['RichTextEditor'], $lti['messages'][1]['placements']);
+    }
+
+    /**
+     * @covers ::registration_to_config
+     *
+     * Test the transformation from lti config to OpenId LTI Client Registration response
+     * respects the deep linking placements allowing learners.
+     */
+    public function test_config_to_registration_minimal_dlplacements_allowlearners() {
+        $orig = json_decode($this->registrationminimaldlrtjsonlearner, true);
+        $reghelper = registration_helper::get();
+        $conf = $reghelper->registration_to_config($orig, 'clid');
+        $this->assertEquals($conf->lti_richtexteditorallowlearner, 1);
+        $reg = $reghelper->config_to_registration($conf, 12);
+        $lti = $reg['https://purl.imsglobal.org/spec/lti-tool-configuration'];
+        $this->assertEquals(['ContentArea'], $lti['messages'][0]['placements']);
+        $this->assertEquals(['RichTextEditor'], $lti['messages'][1]['placements']);
+        $this->assertTrue(isset($lti['messages']['roles']));
+        $this->assertTrue(in_array("http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor", $lti['messages']['roles']));
+        $this->assertTrue(in_array("http://purl.imsglobal.org/vocab/lis/v2/membership#Learner", $lti['messages']['roles']));
     }
 
     /**

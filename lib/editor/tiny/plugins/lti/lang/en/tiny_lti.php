@@ -18,8 +18,8 @@
  * Language file.
  *
  * @package    tiny_lti
- * @copyright  2020 The Regents of the University of California
- * @author     David Shepard
+ * @copyright  20230 Cengage Group
+ * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
