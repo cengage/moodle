@@ -228,7 +228,7 @@ EOD;
         $this->assertEquals(LTI_SETTING_ALWAYS, $config->lti_sendemailaddr);
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEquals('https://client.example.org/lti/dl', $config->lti_toolurl_ContentItemSelectionRequest);
-        $this->assertEquals(1, $config->lti_asrichtexteditorplugin);
+        $this->assertEquals(1, $config->lti_richtexteditorplugin);
         $this->assertEquals("https://client.example.org/lti/dlrt", $config->lti_richtexteditorurl);
     }
 
@@ -257,7 +257,7 @@ EOD;
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendname);
         $this->assertEquals(LTI_SETTING_NEVER, $config->lti_sendemailaddr);
         $this->assertEquals(0, $config->lti_contentitem);
-        $this->assertEquals(0, $config->lti_asrichtexteditorplugin);
+        $this->assertEquals(0, $config->lti_richtexteditorplugin);
     }
 
     /**
@@ -269,7 +269,7 @@ EOD;
         $config = registration_helper::get()->registration_to_config($registration, 'TheClientId');
         $this->assertEquals(1, $config->lti_contentitem);
         $this->assertEmpty($config->lti_toolurl_ContentItemSelectionRequest);
-        $this->assertEquals(0, $config->lti_asrichtexteditorplugin);
+        $this->assertEquals(0, $config->lti_richtexteditorplugin);
     }
 
     /**

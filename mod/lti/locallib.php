@@ -2753,11 +2753,16 @@ function lti_get_type_type_config($id) {
 
     $type->lti_secureicon = $basicltitype->secureicon;
 
-    $type->lti_asrichtexteditorplugin = $basicltitype->asrichtexteditorplugin;
 
-    $type->lti_richtexteditorurl = $basicltitype->richtexteditorurl;
-
-    $type->lti_richtexteditorallowlearner = $basicltitype->richtexteditorallowlearner;
+    if (isset($config['richtexteditorplugin'])) {
+        $type->lti_richtexteditorplugin = $config['richtexteditorplugin'];
+        if (isset($config['richtexteditorurl'])) {
+            $type->lti_richtexteditorurl = $config['richtexteditorurl'];
+        }
+        if (isset($config['richtexteditorallowlearner'])) {
+            $type->lti_richtexteditorallowlearner = $config['richtexteditorallowlearner'];
+        }
+    }
 
     if (isset($config['resourcekey'])) {
         $type->lti_resourcekey = $config['resourcekey'];
@@ -2914,16 +2919,6 @@ function lti_prepare_type_for_save($type, $config) {
         }
         $config->lti_toolurl_ContentItemSelectionRequest = $type->toolurl_ContentItemSelectionRequest;
     }
-    $type->asrichtexteditorplugin = false;
-    $type->richtexteditorallowlearner = false;
-    if (isset($config->lti_asrichtexteditorplugin)) {
-        $type->asrichtexteditorplugin = $config->lti_asrichtexteditorplugin;
-        if (isset($config->lti_richtexteditorallowlearner)) {
-            $type->richtexteditorallowlearner = $config->lti_asrichtexteditorallowlearner;
-        }
-    }
-    $type->richtexteditorurl = isset($config->lti_richtexteditorurl) ? $config->lti_richtexteditorurl : '';
-    $type->richtexteditorallowlearner = isset($config->lti_richtexteditorallowlearner) ? $config->lti_richtexteditorallowlearner : 0;
 
     $type->timemodified = time();
 
@@ -3008,12 +3003,19 @@ function lti_update_type($type, $config) {
  */
 function lti_available_type_for_placement(int $courseid, object $user, string $placementname) {
     global $DB;
+    if ($placementname === 'richtexteditor') {
+        $sql = "SELECT t.*
+            FROM {lti_types} t
+            JOIN {lti_types_config} c ON t.id = c.typeid
+            WHERE c.name = :rt and c.value = '1' and t.state=1 and (t.course = 1 or t.course = :courseid)" ;
 
-    $queryfield = [
-        'richtexteditorplugin' => 'asrichtexteditorplugin',
-    ][$placementname];
+        $role = lti_get_ims_role($user, null, $courseid, false);
 
-    return $DB->get_records('lti_types', [$queryfield => 1], 'name');
+        $params = ['courseid' => $courseid, 'rt' => $role === 'Learner' ? 'richtexteditorallowlearner' : 'richtexteditorplugin'];
+
+        return $DB->get_records_sql($sql, $params);
+    }
+    return [];
 }
 
 function lti_add_type($type, $config) {

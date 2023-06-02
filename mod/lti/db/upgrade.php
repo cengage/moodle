@@ -112,18 +112,6 @@ function xmldb_lti_upgrade($oldversion) {
     // Put any upgrade step following this.
 
     if ($oldversion < 2023011600) {
-        $table = new xmldb_table('lti_types');
-
-        $fields = [];
-        $fields[] = new xmldb_field('asrichtexteditorplugin', XMLDB_TYPE_INTEGER, 1, null, null, null, 0, 'asmenulink');
-        $fields[] = new xmldb_field('richtexteditorallowlearner', XMLDB_TYPE_INTEGER, 1, null, null, null, 0, 'asrichtexteditorplugin');
-        $fields[] = new xmldb_field('richtexteditorurl', XMLDB_TYPE_TEXT, 'small',
-            null, false, null, null, 'richtexteditorallowlearner');
-        foreach ($fields as $field) {
-            if (!$dbman->field_exists($table, $field)) {
-                $dbman->add_field($table, $field);
-            }
-        }
 
         $table = new xmldb_table('lti');
         $fields = [];

@@ -166,7 +166,7 @@ class registration_helper {
         $config->lti_icon = $logouri;
         $config->lti_coursevisible = LTI_COURSEVISIBLE_PRECONFIGURED;
         $config->lti_contentitem = 0;
-        $config->lti_asrichtexteditorplugin = 0;
+        $config->lti_richtexteditorplugin = 0;
         $config->lti_richtexteditorurl = "";
         // Sets Content Item.
         if (!empty($messages)) {
@@ -185,7 +185,7 @@ class registration_helper {
 
                     }
                     if ($richtexteditor) {
-                        $config->lti_asrichtexteditorplugin = 1;
+                        $config->lti_richtexteditorplugin = 1;
                         $config->lti_richtexteditorurl = $value['target_link_uri'] ?? '';
                         $allowlearner = isset($value['roles']) && in_array("http://purl.imsglobal.org/vocab/lis/v2/membership#Learner", $value['roles']);
                         $config->lti_richtexteditorallowlearner = $allowlearner?1:0; 
@@ -342,7 +342,7 @@ class registration_helper {
             }
             $lticonfigurationresponse['messages'][] = $contentitemmessage;
         }
-        if ($config->asrichtexteditorplugin ?? 0 == 1) {
+        if ($config->richtexteditorplugin ?? 0 == 1) {
             $contentitemmessage = [];
             $contentitemmessage['type'] = 'LtiDeepLinkingRequest';
             if (isset($config->richtexteditorurl)) {

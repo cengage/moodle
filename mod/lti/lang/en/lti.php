@@ -386,7 +386,7 @@ Tools which do not require secure communication from Moodle and do not provide a
 may not require a shared secret.';
 $string['pending'] = 'Pending';
 $string['placementasrichtexteditorallowlearner'] = 'With student access allowed';
-$string['placementasrichtexteditorplugin'] = 'As rich text editor plugin';
+$string['placementrichtexteditorplugin'] = 'As rich text editor plugin';
 $string['placementrichtexteditorurl'] = 'Rich text editor URL';
 $string['pluginadministration'] = 'External tool administration';
 $string['pluginname'] = 'External tool';

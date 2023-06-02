@@ -1341,6 +1341,61 @@ MwIDAQAB
         lti_verify_jwt_signature($typeid, 'consumerkey', '');
     }
 
+
+    /**
+     * Setup for Placement test.
+     */
+    private function test_lti_placement_for(bool $supportsrichtext, bool $allowlearner, bool $student, bool $match) {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $config = new \stdClass();
+        if ($supportsrichtext) {
+            $config->lti_richtexteditorplugin = 1;
+            $config->lti_richtexteditorallowlearner = $allowlearner ? 1 : 0;
+        }
+        $this->create_type($config);
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_and_enrol($course, $student ? 'student' : 'editingteacher');
+        $this->setUser($user);
+        $this->assertEquals($match?1:0, sizeof(lti_available_type_for_placement($course->id, $user, 'richtexteditor')));
+    }
+
+    /**
+     * Test various combination of roles and types for rich text placement avail.
+     */
+    public function test_lti_placement_no_placement() {
+        $this->test_lti_placement_for(false, false, false, false);
+    }
+
+    /**
+     * Test various combination of roles and types for rich text placement avail.
+     */
+    public function test_lti_placement_placement_instructor() {
+        $this->test_lti_placement_for(true, false, false, true);
+    }
+
+    /**
+     * Test various combination of roles and types for rich text placement avail.
+     */
+    public function test_lti_placement_placement_student_ok_student() {
+        $this->test_lti_placement_for(true, true, true, true);
+    }
+
+    /**
+     * Test various combination of roles and types for rich text placement avail.
+     */
+    public function test_lti_placement_placement_student_ok_instructor() {
+        $this->test_lti_placement_for(true, true, false, true);
+    }
+
+    /**
+     * Test various combination of roles and types for rich text placement avail.
+     */
+    public function test_lti_placement_placement_instructor_only_student() {
+        $this->test_lti_placement_for(true, false, true, false);
+    }
+
     /**
      * Test lti_convert_content_items().
      */
