@@ -450,6 +450,7 @@ function lti_get_jwt_claim_mapping() {
             'isarray' => false
         ]
     ]);
+    return $mapping;
 }
 
 /**

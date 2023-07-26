@@ -51,7 +51,7 @@ class contextlinks extends resource_base {
         $this->id = 'DeepLinkContextResource';
         $this->template = '/{context_id}/bindings/{tool_code}/contextlinks';
         //$this->variables[] = 'ToolProxyBinding.memberships.url';
-        $this->formats[] = 'application/vnd.1edtech.lti.deeplinkingitems+json';
+        $this->formats[] = 'application/vnd.1edtech.lti.contentitems+json';
         $this->methods[] = self::HTTP_GET;
     }
 

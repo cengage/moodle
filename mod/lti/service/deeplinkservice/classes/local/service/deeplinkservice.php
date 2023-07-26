@@ -43,19 +43,16 @@ require_once($CFG->dirroot . '/mod/lti/locallib.php');
 class deeplinkservice extends service_base {
 
     /** Scope for reading membership data */
-    const SCOPE_DEEPLINKING_READ = 'https://purl.imsglobal.org/spec/lti/scope/deeplinkingitem.readonly';
-    const SCOPE_DEEPLINKING_UPDATE = 'https://purl.imsglobal.org/spec/lti/scope/deeplinkingitem.update';
-    const SCOPE_DEEPLINKING_ALL = 'https://purl.imsglobal.org/spec/lti/scope/deeplinkingitem';
+    const SCOPE_DEEPLINKING_READ = 'https://purl.imsglobal.org/spec/lti-dl/scope/contentitem.read';
+    const SCOPE_DEEPLINKING_UPDATE = 'https://purl.imsglobal.org/spec/lti-dl/scope/contentitem.update';
 
     /**
      * Class constructor.
      */
     public function __construct() {
-
         parent::__construct();
         $this->id = 'deeplinkservice';
         $this->name = get_string($this->get_component_id(), $this->get_component_id());
-
     }
 
     /**
@@ -87,7 +84,6 @@ class deeplinkservice extends service_base {
         if ($ok) {
             $scopes[] = self::SCOPE_DEEPLINKING_READ;
             $scopes[] = self::SCOPE_DEEPLINKING_UPDATE;
-            $scopes[] = self::SCOPE_DEEPLINKING_ALL;
         }
         /*
         if ($ok && isset($this->get_typeconfig()[$this->get_component_id()]) &&
@@ -105,7 +101,7 @@ class deeplinkservice extends service_base {
      * @return array
      */
     public function get_scopes() {
-        return [self::SCOPE_DEEPLINKING_ALL, self::SCOPE_DEEPLINKING_READ, self::SCOPE_DEEPLINKING_UPDATE];
+        return [self::SCOPE_DEEPLINKING_READ, self::SCOPE_DEEPLINKING_UPDATE];
     }
 
     /**
@@ -239,14 +235,44 @@ class deeplinkservice extends service_base {
         $launchparameters = [];
         $tool = lti_get_type_type_config($typeid);
         if (isset($tool->{$this->get_component_id()})) {
-            if ($tool->{$this->get_component_id()} == parent::SERVICE_ENABLED && $this->is_used_in_context($typeid, $courseid)) {
-                $launchparameters['deeplink_context_url'] = '$DeepLinkService.contextUrl';
+            if ($tool->{$this->get_component_id()} == parent::SERVICE_ENABLED) {
+                $launchparameters['deeplink_contentitems_url'] = '$DeepLinkService.contextUrl';
                 if (!empty($modlti)) {
-                    $launchparameters['deeplink_item_url'] = '$DeepLinkService.itemUrl';
+                    $launchparameters['deeplink_contentitem_url'] = '$DeepLinkService.itemUrl';
                 }
+                $launchparameters['deeplink_scopes'] = implode(',', $this->get_scopes());
             }
         }
         return $launchparameters;
+    }
+
+    /**
+     * Return an array of key/claim mapping allowing LTI 1.1 custom parameters
+     * to be transformed to LTI 1.3 claims.
+     *
+     * @return array Key/value pairs of params to claim mapping.
+     */
+    public function get_jwt_claim_mappings(): array {
+        return [
+            'custom_deeplink_scopes' => [
+                'suffix' => 'lti-dl',
+                'group' => 'endpoint',
+                'claim' => 'scope',
+                'isarray' => true
+            ],
+            'custom_deeplink_contentitems_url' => [
+                'suffix' => 'dl',
+                'group' => 'endpoint',
+                'claim' => 'contentitems',
+                'isarray' => false
+            ],
+            'custom_deeplink_contentitem_url' => [
+                'suffix' => 'dl',
+                'group' => 'endpoint',
+                'claim' => 'contentitem',
+                'isarray' => false
+            ],
+        ];
     }
 
 }
