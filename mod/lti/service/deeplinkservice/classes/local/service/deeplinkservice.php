@@ -27,6 +27,7 @@ namespace ltiservice_deeplinkservice\local\service;
 
 use mod_lti\local\ltiservice\service_base;
 use moodle_url;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -61,15 +62,12 @@ class deeplinkservice extends service_base {
      * @return array
      */
     public function get_resources() {
-
         if (empty($this->resources)) {
             $this->resources = array();
             $this->resources[] = new \ltiservice_deeplinkservice\local\resources\contextlinks($this);
             $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         }
-
         return $this->resources;
-
     }
 
     /**
@@ -77,22 +75,12 @@ class deeplinkservice extends service_base {
      *
      * @return array
      */
-    public function get_permitted_scopes() {
-
-        $scopes = array();
-        $ok = !empty($this->get_type());
-        if ($ok) {
-            $scopes[] = self::SCOPE_DEEPLINKING_READ;
-            $scopes[] = self::SCOPE_DEEPLINKING_UPDATE;
-        }
-        /*
-        if ($ok && isset($this->get_typeconfig()[$this->get_component_id()]) &&
+    public function get_permitted_scopes():array {
+        if (!empty($this->get_type()) && isset($this->get_typeconfig()[$this->get_component_id()]) &&
             ($this->get_typeconfig()[$this->get_component_id()] == parent::SERVICE_ENABLED)) {
-            $scopes[] = self::SCOPE_MEMBERSHIPS_READ;
+            return $this->get_scopes();
         }
-        */
-        return $scopes;
-
+        return [];
     }
 
     /**
@@ -100,7 +88,7 @@ class deeplinkservice extends service_base {
      *
      * @return array
      */
-    public function get_scopes() {
+    public function get_scopes():array {
         return [self::SCOPE_DEEPLINKING_READ, self::SCOPE_DEEPLINKING_UPDATE];
     }
 
@@ -122,7 +110,6 @@ class deeplinkservice extends service_base {
      */
     public function get_links($course, $typeid, $limitfrom, $limitnum) {
         global $DB;
-        //$type = $DB->get_record('lti_types', array('id' => $typeid));
         //TODO: eventually need to check by URL too for instances without typeid.
         $links = array_values($DB->get_records('lti', array('course' => $course->id, 'typeid' => $typeid)));
         $func = function($l) use ($course, $typeid) {
@@ -169,12 +156,10 @@ class deeplinkservice extends service_base {
      *      for LTI instance (null if context-level request)
      * @param \mod_lti\local\ltiservice\response $response       Response object for the request
      *
-     * @return string
+     * @return array
      */
-    public function update_link($course, $typeid, $linkid, $link) {
+    public function update_link(stdClass $course, int $typeid, int $linkid, object $link):array {
         global $DB;
-        //$type = $DB->get_record('lti_types', array('id' => $typeid));
-        //TODO: eventually need to check by URL too for instances without typeid.
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
         $lti->name = $link->title ?? $lti->name;
         if (empty($link->custom)) {
@@ -186,7 +171,17 @@ class deeplinkservice extends service_base {
         return $this->toLink($course->id, $typeid, $lti);
     }
 
-    public function toLink($courseid, $typeid, $lti) {
+    /**
+     * Converts an LTI Link to the JSON representation.
+     * 
+     * @param int           $courseid   id of the course
+     * @param int           $typeid     id of the LTI Tool Type
+     * @param object        $lti        link definition
+     * 
+     * @return array
+     */
+
+    private function toLink(int $courseid, int $typeid, object $lti):array {
         $dlresource = $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         $link = [
             'id' => $dlresource->get_link_endpoint($courseid, $typeid, $lti->id),
@@ -200,7 +195,7 @@ class deeplinkservice extends service_base {
     }
 
     /**
-     * Adds form elements for membership add/edit page.
+     * Adds form elements for enabling the service.
      *
      * @param \MoodleQuickForm $mform
      */
@@ -236,11 +231,11 @@ class deeplinkservice extends service_base {
         $tool = lti_get_type_type_config($typeid);
         if (isset($tool->{$this->get_component_id()})) {
             if ($tool->{$this->get_component_id()} == parent::SERVICE_ENABLED) {
-                $launchparameters['deeplink_contentitems_url'] = '$DeepLinkService.contextUrl';
+                $launchparameters['deeplinking_contentitems_url'] = '$DeepLinkService.contextUrl';
                 if (!empty($modlti)) {
-                    $launchparameters['deeplink_contentitem_url'] = '$DeepLinkService.itemUrl';
+                    $launchparameters['deeplinking_contentitem_url'] = '$DeepLinkService.itemUrl';
                 }
-                $launchparameters['deeplink_scopes'] = implode(',', $this->get_scopes());
+                $launchparameters['deeplinking_scopes'] = implode(',', $this->get_scopes());
             }
         }
         return $launchparameters;
@@ -254,19 +249,19 @@ class deeplinkservice extends service_base {
      */
     public function get_jwt_claim_mappings(): array {
         return [
-            'custom_deeplink_scopes' => [
+            'custom_deeplinking_scopes' => [
                 'suffix' => 'lti-dl',
-                'group' => 'endpoint',
+                'group' => 'deeplinkingservice',
                 'claim' => 'scope',
                 'isarray' => true
             ],
-            'custom_deeplink_contentitems_url' => [
+            'custom_deeplinking_contentitems_url' => [
                 'suffix' => 'dl',
                 'group' => 'endpoint',
                 'claim' => 'contentitems',
                 'isarray' => false
             ],
-            'custom_deeplink_contentitem_url' => [
+            'custom_deeplinking_contentitem_url' => [
                 'suffix' => 'dl',
                 'group' => 'endpoint',
                 'claim' => 'contentitem',
