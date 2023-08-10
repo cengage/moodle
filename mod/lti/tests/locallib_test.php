@@ -1027,7 +1027,7 @@ class locallib_test extends mod_lti_testcase {
             ],
         ];
         $actual = lti_get_jwt_claim_mapping();
-        foreach($mapping as $mappingitem) {
+        foreach ($mapping as $mappingitem) {
             $this->assertContains($mappingitem, $actual);
         }
     }

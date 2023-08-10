@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains a class definition for the Context Memberships resource
+ * This file contains a class definition for the Deep Linking Service Items resource.
  *
- * @package    ltiservice_memberships
- * @copyright  2015 Vital Source Technologies http://vitalsource.com
- * @author     Stephen Vickers
+ * @package    ltiservice_deeplinkservice
+ * @copyright  2023 Cengage Group
+ * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,20 +27,19 @@
 namespace ltiservice_deeplinkservice\local\resources;
 
 use mod_lti\local\ltiservice\resource_base;
+use ltiservice_deeplinkservice\local\service\deeplinkservice;
 
-defined('MOODLE_INTERNAL') || die();
 
 /**
- * A resource implementing Context Memberships.
+ * A resource implementing Deep Linking Service Context.
  *
- * @package    ltiservice_memberships
- * @since      Moodle 3.0
- * @copyright  2015 Vital Source Technologies http://vitalsource.com
+ * @package    ltiservice_deeplinkservice
+ * @copyright  2023 Cengage Group
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class contextlinks extends resource_base {
 
- /**
+    /**
      * Class constructor.
      *
      * @param \ltiservice_memberships\local\service\memberships $service Service instance
@@ -48,9 +47,8 @@ class contextlinks extends resource_base {
     public function __construct($service) {
 
         parent::__construct($service);
-        $this->id = 'DeepLinkContextResource';
+        $this->id = 'DeepLinkingContextResource';
         $this->template = '/{context_id}/bindings/{tool_code}/contextlinks';
-        //$this->variables[] = 'ToolProxyBinding.memberships.url';
         $this->formats[] = 'application/vnd.1edtech.lti.contentitems+json';
         $this->methods[] = self::HTTP_GET;
     }
@@ -72,12 +70,22 @@ class contextlinks extends resource_base {
         }
 
         try {
-            /*
+            $scopes = [];
+            if ($response->get_request_method() === self::HTTP_GET) {
+                $scopes[] = deeplinkservice::SCOPE_DEEPLINKING_READ;
+            } else {
+                throw new \Exception("Operation not supported", 400);            
+            }
+            // For LTI 1.1, should we even bother?
+            $typeid = optional_param('type_id', null, PARAM_INT);
+
+            if (!$this->check_tool($typeid, $response->get_request_data(), $scopes)) {
+                    throw new \Exception(null, 401);
+            }
             if (!$this->check_tool($params['tool_code'], $response->get_request_data(),
-                array(memberships::SCOPE_MEMBERSHIPS_READ))) {
+                array())) {
                 throw new \Exception(null, 401);
             }
-            */
             if (!($course = $DB->get_record('course', array('id' => $params['context_id']), 'id,shortname,fullname',
                 IGNORE_MISSING))) {
                 throw new \Exception("Not Found: Course {$params['context_id']} doesn't exist", 404);

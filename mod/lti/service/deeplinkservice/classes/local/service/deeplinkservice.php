@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains a class definition for the LTI Gradebook Services
+ * This file contains a class definition for the LTI Deep Linking Service.
  *
- * @package    ltiservice_gradebookservices
- * @copyright  2017 Cengage Learning http://www.cengage.com
- * @author     Dirk Singels, Diego del Blanco, Claude Vervoort
+ * @package    ltiservice_deeplinkservice
+ * @copyright  2023 Cengage Group http://www.cengage.com
+ * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -35,16 +35,17 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 /**
- * A service implementing LTI Gradebook Services.
+ * A service implementing LTI Deep Linking Services.
  *
- * @package    ltiservice_gradebookservices
- * @copyright  2017 Cengage Learning http://www.cengage.com
+ * @package    ltiservice_deeplinkservice
+ * @copyright  2023 Cengage Group http://www.cengage.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class deeplinkservice extends service_base {
 
-    /** Scope for reading membership data */
+    /** Scope for reading tool's LTI Resource Links */
     const SCOPE_DEEPLINKING_READ = 'https://purl.imsglobal.org/spec/lti-dl/scope/contentitem.read';
+    /** Scope for updating tool's LTI Resource Links */
     const SCOPE_DEEPLINKING_UPDATE = 'https://purl.imsglobal.org/spec/lti-dl/scope/contentitem.update';
 
     /**
@@ -95,66 +96,48 @@ class deeplinkservice extends service_base {
     /**
      * Get existing links.
      *
-     * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
-     * @param \context_course   $context    Course context
      * @param \course           $course     Course
-     * @param string            $role       User role requested (empty if none)
+     * @param int               $typeid     LTI Tool Type ID
      * @param int               $limitfrom  Position of first record to be returned
      * @param int               $limitnum   Maximum number of records to be returned
-     * @param object            $lti        LTI instance record
-     * @param \core_availability\info_module $info Conditional availability information
-     *      for LTI instance (null if context-level request)
-     * @param \mod_lti\local\ltiservice\response $response       Response object for the request
      *
-     * @return string
+     * @return array
      */
     public function get_links($course, $typeid, $limitfrom, $limitnum) {
         global $DB;
-        //TODO: eventually need to check by URL too for instances without typeid.
+        // TODO: eventually need to check by URL too for instances without typeid.
         $links = array_values($DB->get_records('lti', array('course' => $course->id, 'typeid' => $typeid)));
         $func = function($l) use ($course, $typeid) {
-            return $this->toLink($course->id, $typeid, $l);
+            return $this->to_link($course->id, $typeid, $l);
         };
         return array_map($func, $links);
     }
-    
+
     /**
      * Get existing link.
      *
-     * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
-     * @param \context_course   $context    Course context
      * @param \course           $course     Course
-     * @param string            $role       User role requested (empty if none)
-     * @param int               $limitfrom  Position of first record to be returned
-     * @param int               $limitnum   Maximum number of records to be returned
-     * @param object            $lti        LTI instance record
-     * @param \core_availability\info_module $info Conditional availability information
-     *      for LTI instance (null if context-level request)
-     * @param \mod_lti\local\ltiservice\response $response       Response object for the request
+     * @param int               $typeid     LTI Tool Type ID
+     * @param int               $linkid     LTI Instance ID
      *
-     * @return string
+     * @return array
      */
     public function get_link($course, $typeid, $linkid) {
         global $DB;
         //$type = $DB->get_record('lti_types', array('id' => $typeid));
         //TODO: eventually need to check by URL too for instances without typeid.
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
-        return $this->toLink($course->id, $typeid, $lti);
+        return $this->to_link($course->id, $typeid, $lti);
     }
 
     /**
-     * Update link.
+     * Update LTI instance based on incoming Link. Only
+     * some attributes are actually updatable (title, url, custom params)
      *
-     * @param \mod_lti\local\ltiservice\resource_base $resource       Resource handling the request
-     * @param \context_course   $context    Course context
      * @param \course           $course     Course
-     * @param string            $role       User role requested (empty if none)
-     * @param int               $limitfrom  Position of first record to be returned
-     * @param int               $limitnum   Maximum number of records to be returned
-     * @param object            $lti        LTI instance record
-     * @param \core_availability\info_module $info Conditional availability information
-     *      for LTI instance (null if context-level request)
-     * @param \mod_lti\local\ltiservice\response $response       Response object for the request
+     * @param int               $typeid     LTI Tool Type ID
+     * @param int               $linkid     LTI Instance ID
+     * @param object            $link       Link Definition
      *
      * @return array
      */
@@ -167,21 +150,22 @@ class deeplinkservice extends service_base {
         } else {
             $lti->instructorcustomparameters = params_to_string( $link->custom );
         }
+        $lti->toolurl = $link->url ?? '';
         $DB->update_record('lti', $lti);
-        return $this->toLink($course->id, $typeid, $lti);
+        return $this->to_link($course->id, $typeid, $lti);
     }
 
     /**
      * Converts an LTI Link to the JSON representation.
-     * 
+     *
      * @param int           $courseid   id of the course
      * @param int           $typeid     id of the LTI Tool Type
      * @param object        $lti        link definition
-     * 
+     *
      * @return array
      */
 
-    private function toLink(int $courseid, int $typeid, object $lti):array {
+    private function to_link(int $courseid, int $typeid, object $lti):array {
         $dlresource = $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         $link = [
             'id' => $dlresource->get_link_endpoint($courseid, $typeid, $lti->id),

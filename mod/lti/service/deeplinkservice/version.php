@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the ltiservice_gradebookservices service.
+ * Version information for the ltiservice_deeplinkservice service.
  *
- * @package    ltiservice_gradebookservices
- * @copyright  2017 Cengage Learning http://www.cengage.com
- * @author     Dirk Singels, Diego del Blanco, Claude Vervoort
+ * @package    ltiservice_deeplinkservice
+ * @copyright  2023 Cengage Group
+ * @author     Claude Vervoort
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
