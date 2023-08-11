@@ -124,8 +124,7 @@ class deeplinkservice extends service_base {
      */
     public function get_link($course, $typeid, $linkid) {
         global $DB;
-        //$type = $DB->get_record('lti_types', array('id' => $typeid));
-        //TODO: eventually need to check by URL too for instances without typeid.
+        // TODO: eventually need to check by URL too for instances without typeid.
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
         return $this->to_link($course->id, $typeid, $lti);
     }
@@ -164,7 +163,6 @@ class deeplinkservice extends service_base {
      *
      * @return array
      */
-
     private function to_link(int $courseid, int $typeid, object $lti):array {
         $dlresource = $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         $link = [

@@ -47,7 +47,6 @@ class deeplink extends resource_base {
         parent::__construct($service);
         $this->id = 'DeepLinkResource';
         $this->template = '/{context_id}/bindings/{tool_code}/contextlinks/{link_id}';
-        //$this->variables[] = 'ToolProxyBinding.memberships.url';
         $this->formats[] = 'application/vnd.1edtech.lti.contentitem+json';
         $this->methods[] = self::HTTP_GET;
         $this->methods[] = self::HTTP_PUT;
@@ -70,7 +69,7 @@ class deeplink extends resource_base {
             } else if ($response->get_request_method() === self::HTTP_PUT) {
                 $scopes[] = deeplinkservice::SCOPE_DEEPLINKING_UPDATE;
             } else {
-                throw new \Exception("Operation not supported", 400);            
+                throw new \Exception("Operation not supported", 400);
             }
             // For LTI 1.1, should we even bother?
             $typeid = optional_param('type_id', null, PARAM_INT);
@@ -142,7 +141,16 @@ class deeplink extends resource_base {
 
     }
 
-    public function get_link_endpoint($courseid, $typeid, $linkid) {
+    /**
+     * Get the link endpoint.
+     *
+     * @param int $courseid course id;
+     * @param int $typeid type id;
+     * @param int $linkid link id
+     *
+     * @return string
+     */
+    public function get_link_endpoint(int $courseid, int $typeid, int $linkid):string {
         $this->params['context_id'] = $courseid;
         $this->params['link_id'] = $linkid;
         $this->params['tool_code'] = $typeid;

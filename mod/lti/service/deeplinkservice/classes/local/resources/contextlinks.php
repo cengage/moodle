@@ -74,7 +74,7 @@ class contextlinks extends resource_base {
             if ($response->get_request_method() === self::HTTP_GET) {
                 $scopes[] = deeplinkservice::SCOPE_DEEPLINKING_READ;
             } else {
-                throw new \Exception("Operation not supported", 400);            
+                throw new \Exception("Operation not supported", 400);
             }
             // For LTI 1.1, should we even bother?
             $typeid = optional_param('type_id', null, PARAM_INT);
@@ -127,5 +127,4 @@ class contextlinks extends resource_base {
         return $value;
 
     }
-
 }

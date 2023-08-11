@@ -30,8 +30,6 @@ use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\userlist;
 use \core_privacy\local\request\approved_userlist;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for ltiservice_deeplinkservice.
  *
