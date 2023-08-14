@@ -42,19 +42,75 @@ class deeplinkservice_test extends \advanced_testcase {
 
         $type1id = $this->create_type('tool1');
         $type2id = $this->create_type('tool2');
-        
+
         $service = new dlservice();
         $service->set_type(lti_get_type($type1id));
-        
+
         $course = $this->getDataGenerator()->create_course();
 
         $this->create_lti($type1id, $course, 'tool1_link1');
-        $this->create_lti($type1id, $course, 'tool1_link2');
+        $this->create_lti($type1id, $course, 'tool1_link2_graded', true);
         $this->create_lti($type2id, $course, 'tool2_link1');
 
         $links = $service->get_links($course, $type1id, 0, 0);
         $this->assertEquals(2, sizeof($links));
-        $this->assert_link($links[0]);
+        $this->assert_link((object)$links[0], '');
+        $this->assert_link((object)$links[1], '');
+    }
+
+   /**
+     * @covers ::get_link
+     *
+     * Tests getting existing tool link in the expected format.
+     */
+    public function test_get_link() {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $type1id = $this->create_type('tool1');
+
+        $service = new dlservice();
+        $service->set_type(lti_get_type($type1id));
+
+        $course = $this->getDataGenerator()->create_course();
+
+        $lti = $this->create_lti($type1id, $course, 'tool1_link1');
+
+        $link = $service->get_link($course, $type1id, $lti->id);
+        $this->assert_link((object)$link, '');
+    }
+
+   /**
+     * @covers ::update_link
+     *
+     * Tests updating a link url and parameters.
+     */
+    public function test_update_link() {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $type1id = $this->create_type('tool1');
+
+        $service = new dlservice();
+        $service->set_type(lti_get_type($type1id));
+
+        $course = $this->getDataGenerator()->create_course();
+
+        $lti = $this->create_lti($type1id, $course, 'tool1_link1');
+
+        $link = (object)$service->get_link($course, $type1id, $lti->id);
+        $variant = 'updated';
+        $link->url = $link->url.$variant;
+        $link->custom['b'] = $link->custom['b'].$variant;
+        $link->custom = (object)$link->custom;
+        $service->update_link($course, $type1id, $lti->id, $link);
+        $this->assert_link((object)$service->get_link($course, $type1id, $lti->id), $variant);
     }
 
      /**
@@ -62,22 +118,37 @@ class deeplinkservice_test extends \advanced_testcase {
       *
       * @param int $typeid Type Id of the LTI Tool.
       * @param object $course course where to add the lti instance.
+      * @param bool $graded if the link is a graded link.
       *
       * @return object lti instance created
       */
-      private function create_lti(int $typeid, object $course, string $name) : object {
+      private function create_lti(int $typeid, object $course, string $name, bool $graded = false) : object {
         $lti = ['course' => $course->id,
             'typeid' => $typeid,
             'name' => $name,
             'toolurl' => 'https://test.toolurl/'.$name,
-            'custom' => 'a=1,b=2',
+            'instructorcustomparameters' => "a=1\nb=2!1",
             'instructorchoiceacceptgrades' => LTI_SETTING_NEVER];
+        if ($graded) {
+            $lti['instructorchoiceacceptgrades'] = LTI_SETTING_ALWAYS;
+            $lti['grade'] = 10;
+            $lti['lineitemresourceid'] = 'rid_'.$name;
+        }
         return $this->getDataGenerator()->create_module('lti', $lti, array());
     }
 
-    private function assert_link(object $link) {
-        $name = $link->name;
+    private function assert_link(object $link, string $variant) {
+        $name = $link->title;
         $this->assertNotNull($name);
+        $this->assertEquals('ltiResourceLink', $link->type);
+        $this->assertEquals('https://test.toolurl/'.$name.$variant, $link->url);
+        $this->assertEquals('1', $link->custom['a']);
+        $this->assertEquals('2!1'.$variant, $link->custom['b']);
+        if (strpos($name, 'graded') !== false) {
+            $this->assertNotEmpty($link->lineItemId);
+        } else {
+            $this->assertEmpty($link->lineItemId ?? '');
+        }
     }
 
     /**

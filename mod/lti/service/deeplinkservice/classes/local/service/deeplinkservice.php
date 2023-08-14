@@ -26,6 +26,8 @@
 namespace ltiservice_deeplinkservice\local\service;
 
 use mod_lti\local\ltiservice\service_base;
+use ltiservice_gradebookservices\local\resources\lineitem as lineitemres;
+use ltiservice_gradebookservices\local\service\gradebookservices as gbservice;
 use moodle_url;
 use stdClass;
 
@@ -103,7 +105,7 @@ class deeplinkservice extends service_base {
      *
      * @return array
      */
-    public function get_links($course, $typeid, $limitfrom, $limitnum) {
+    public function get_links(object $course, int $typeid, int $limitfrom, int $limitnum) : array {
         global $DB;
         // TODO: eventually need to check by URL too for instances without typeid.
         $links = array_values($DB->get_records('lti', array('course' => $course->id, 'typeid' => $typeid)));
@@ -122,7 +124,7 @@ class deeplinkservice extends service_base {
      *
      * @return array
      */
-    public function get_link($course, $typeid, $linkid) {
+    public function get_link(object $course, int $typeid, int $linkid) : array {
         global $DB;
         // TODO: eventually need to check by URL too for instances without typeid.
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
@@ -164,14 +166,24 @@ class deeplinkservice extends service_base {
      * @return array
      */
     private function to_link(int $courseid, int $typeid, object $lti):array {
+        global $DB;
         $dlresource = $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         $link = [
             'id' => $dlresource->get_link_endpoint($courseid, $typeid, $lti->id),
+            'type' => 'ltiResourceLink',
             'title' => $lti->name,
-            'resourceLinkId' => $lti->id
+            'resourceLinkId' => $lti->id,
+            'url' => $lti->toolurl ?? ''
         ];
         if (!empty($lti->instructorcustomparameters)) {
             $link['custom'] = lti_split_parameters($lti->instructorcustomparameters);
+        }
+        $gradeitems = grade_get_grades($courseid, 'mod', 'lti', $lti->id);
+        if ($gradeitems && $gradeitems->items) {
+            $gbs = new gbservice();
+            $gbs->set_type($DB->get_record('lti_types', array('id' => $typeid)));
+            $ltires = new lineitemres($gbs);
+            $link['lineItemId'] = $ltires->get_item_endpoint($courseid, $typeid, $gradeitems->items[0]->id);
         }
         return $link;
     }
