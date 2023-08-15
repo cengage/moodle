@@ -142,7 +142,7 @@ class deeplinkservice extends service_base {
      *
      * @return array
      */
-    public function update_link(stdClass $course, int $typeid, int $linkid, object $link):array {
+    public function update_link(stdClass $course, int $typeid, int $linkid, object $link) : array {
         global $DB;
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
         $lti->name = $link->title ?? $lti->name;
@@ -166,7 +166,7 @@ class deeplinkservice extends service_base {
      * @return array
      */
     private function to_link(int $courseid, int $typeid, object $lti):array {
-        global $DB;
+        global $CFG, $DB;
         $dlresource = $this->resources[] = new \ltiservice_deeplinkservice\local\resources\deeplink($this);
         $link = [
             'id' => $dlresource->get_link_endpoint($courseid, $typeid, $lti->id),
@@ -178,6 +178,7 @@ class deeplinkservice extends service_base {
         if (!empty($lti->instructorcustomparameters)) {
             $link['custom'] = lti_split_parameters($lti->instructorcustomparameters);
         }
+        require_once($CFG->libdir . '/gradelib.php');
         $gradeitems = grade_get_grades($courseid, 'mod', 'lti', $lti->id);
         if ($gradeitems && $gradeitems->items) {
             $gbs = new gbservice();
@@ -244,20 +245,20 @@ class deeplinkservice extends service_base {
     public function get_jwt_claim_mappings(): array {
         return [
             'custom_deeplinking_scopes' => [
-                'suffix' => 'lti-dl',
+                'suffix' => 'dl',
                 'group' => 'deeplinkingservice',
                 'claim' => 'scope',
                 'isarray' => true
             ],
             'custom_deeplinking_contentitems_url' => [
                 'suffix' => 'dl',
-                'group' => 'endpoint',
+                'group' => 'deeplinkingservice',
                 'claim' => 'contentitems',
                 'isarray' => false
             ],
             'custom_deeplinking_contentitem_url' => [
                 'suffix' => 'dl',
-                'group' => 'endpoint',
+                'group' => 'deeplinkingservice',
                 'claim' => 'contentitem',
                 'isarray' => false
             ],

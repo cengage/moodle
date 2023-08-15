@@ -91,13 +91,21 @@ class contextlinks extends resource_base {
                 throw new \Exception("Not Found: Course {$params['context_id']} doesn't exist", 404);
             }
             if (!$this->get_service()->is_allowed_in_context($params['tool_code'], $course->id)) {
-                throw new \Exception(null, 404);
+                throw new \Exception("Not used in context", 403);
             }
             if (!($context = \context_course::instance($course->id))) {
                 throw new \Exception("Not Found: Course instance {$course->id} doesn't exist", 404);
             }
-
-            $links = $this->get_service()->get_links($course, $params['tool_code'], $limitfrom, $limitnum);
+            $rlid = optional_param('rlid', null, PARAM_INT);
+            if ($rlid) {
+                $links = [];
+                $link = $this->get_service()->get_link($course, $params['tool_code'], $rlid);
+                if ($link) {
+                    $links[] = $link;
+                }
+            } else {
+                $links = $this->get_service()->get_links($course, $params['tool_code'], $limitfrom, $limitnum);
+            }
 
             $response->set_body(json_encode(['items' => $links]));
 

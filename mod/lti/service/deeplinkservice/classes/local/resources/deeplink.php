@@ -27,6 +27,7 @@
 namespace ltiservice_deeplinkservice\local\resources;
 
 use mod_lti\local\ltiservice\resource_base;
+use ltiservice_deeplinkservice\local\service\deeplinkservice;
 
 /**
  * A resource implementing Deep Linking Item Service.

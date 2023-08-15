@@ -11,7 +11,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received t, see <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ltiservice_deeplinkservice;
 
@@ -28,7 +29,7 @@ use ltiservice_deeplinkservice\local\service\deeplinkservice as dlservice;
  */
 class deeplinkservice_test extends \advanced_testcase {
 
-   /**
+    /**
      * @covers ::get_links
      *
      * Tests getting existing tool links in the expected format.
@@ -53,7 +54,7 @@ class deeplinkservice_test extends \advanced_testcase {
         $this->create_lti($type2id, $course, 'tool2_link1');
 
         $links = $service->get_links($course, $type1id, 0, 0);
-        $this->assertEquals(2, sizeof($links));
+        $this->assertEquals(2, count($links));
         $this->assert_link((object)$links[0], '');
         $this->assert_link((object)$links[1], '');
     }
@@ -137,6 +138,12 @@ class deeplinkservice_test extends \advanced_testcase {
         return $this->getDataGenerator()->create_module('lti', $lti, array());
     }
 
+    /**
+     * Asserts a link is valid.
+     *
+     * @param object $link link to verify
+     * @param string variant if the link is updated
+     */
     private function assert_link(object $link, string $variant) {
         $name = $link->title;
         $this->assertNotNull($name);
