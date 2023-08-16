@@ -42,7 +42,7 @@ class contextlinks extends resource_base {
     /**
      * Class constructor.
      *
-     * @param \ltiservice_memberships\local\service\memberships $service Service instance
+     * @param \ltiservice_deeplinkservice\local\service\deeplinkservice $service Service instance
      */
     public function __construct($service) {
 

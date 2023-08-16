@@ -365,6 +365,6 @@ class lineitem extends resource_base {
     public function get_item_endpoint(int $courseid, int $typeid, int $gradeitemid) : string {
         $this->params['item_id'] = $gradeitemid;
         $this->params['context_id'] = $courseid;
-        return parent::get_endpoint()."?type_id={$typeid}";        
+        return parent::get_endpoint()."?type_id={$typeid}";
     }
 }

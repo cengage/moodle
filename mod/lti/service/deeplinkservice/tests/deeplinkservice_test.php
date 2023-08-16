@@ -59,7 +59,7 @@ class deeplinkservice_test extends \advanced_testcase {
         $this->assert_link((object)$links[1], '');
     }
 
-   /**
+    /**
      * @covers ::get_link
      *
      * Tests getting existing tool link in the expected format.
@@ -84,7 +84,7 @@ class deeplinkservice_test extends \advanced_testcase {
         $this->assert_link((object)$link, '');
     }
 
-   /**
+    /**
      * @covers ::update_link
      *
      * Tests updating a link url and parameters.
@@ -114,16 +114,17 @@ class deeplinkservice_test extends \advanced_testcase {
         $this->assert_link((object)$service->get_link($course, $type1id, $lti->id), $variant);
     }
 
-     /**
-      * Inserts an lti instance.
-      *
-      * @param int $typeid Type Id of the LTI Tool.
-      * @param object $course course where to add the lti instance.
-      * @param bool $graded if the link is a graded link.
-      *
-      * @return object lti instance created
-      */
-      private function create_lti(int $typeid, object $course, string $name, bool $graded = false) : object {
+    /**
+     * Inserts an lti instance.
+     *
+     * @param int $typeid Type Id of the LTI Tool.
+     * @param object $course course where to add the lti instance.
+     * @param string $name name of the link
+     * @param bool $graded if the link is a graded link.
+     *
+     * @return object lti instance created
+     */
+    private function create_lti(int $typeid, object $course, string $name, bool $graded = false) : object {
         $lti = ['course' => $course->id,
             'typeid' => $typeid,
             'name' => $name,
@@ -142,7 +143,8 @@ class deeplinkservice_test extends \advanced_testcase {
      * Asserts a link is valid.
      *
      * @param object $link link to verify
-     * @param string variant if the link is updated
+     * @param string $variant if the link is updated
+     *
      */
     private function assert_link(object $link, string $variant) {
         $name = $link->title;
@@ -160,6 +162,9 @@ class deeplinkservice_test extends \advanced_testcase {
 
     /**
      * Creates a new LTI Tool Type.
+     *
+     * @param string $name name of the tool
+     *
      */
     private function create_type(string $name) {
         $type = new \stdClass();

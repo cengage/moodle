@@ -98,7 +98,7 @@ class deeplinkservice extends service_base {
     /**
      * Get existing links.
      *
-     * @param \course           $course     Course
+     * @param object            $course     Course
      * @param int               $typeid     LTI Tool Type ID
      * @param int               $limitfrom  Position of first record to be returned
      * @param int               $limitnum   Maximum number of records to be returned
@@ -118,7 +118,7 @@ class deeplinkservice extends service_base {
     /**
      * Get existing link.
      *
-     * @param \course           $course     Course
+     * @param object            $course     Course
      * @param int               $typeid     LTI Tool Type ID
      * @param int               $linkid     LTI Instance ID
      *
@@ -135,14 +135,14 @@ class deeplinkservice extends service_base {
      * Update LTI instance based on incoming Link. Only
      * some attributes are actually updatable (title, url, custom params)
      *
-     * @param \course           $course     Course
+     * @param object            $course     Course
      * @param int               $typeid     LTI Tool Type ID
      * @param int               $linkid     LTI Instance ID
      * @param object            $link       Link Definition
      *
      * @return array
      */
-    public function update_link(stdClass $course, int $typeid, int $linkid, object $link) : array {
+    public function update_link(object $course, int $typeid, int $linkid, object $link) : array {
         global $DB;
         $lti = $DB->get_record('lti', array('course' => $course->id, 'typeid' => $typeid, 'id' => $linkid));
         $lti->name = $link->title ?? $lti->name;

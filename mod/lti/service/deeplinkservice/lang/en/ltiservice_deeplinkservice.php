@@ -15,12 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'ltiservice_memberships', language 'en'
+ * Strings for component 'ltiservice_deeplinkservice', language 'en'
  *
- * @package    ltiservice_memberships
- * @copyright  2015 Vital Source Technologies http://vitalsource.com
- * @author     Stephen Vickers
- * @
+ * @package    ltiservice_deeplinkservice
+ * @copyright  Cengage Group 2023
+ * @author     Claude Vervoort
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['allow'] = 'Use this service to retrieve tool\'s links and update them';
