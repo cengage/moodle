@@ -51,6 +51,10 @@ class registration_helper {
     const SCOPE_NRPS = 'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly';
     /** Tool Settings scope */
     const SCOPE_TOOL_SETTING = 'https://purl.imsglobal.org/spec/lti-ts/scope/toolsetting';
+    /** Deep Linking Service scope read */
+    const SCOPE_DEEPLINKING_READ = 'https://purl.imsglobal.org/spec/lti-dl/scope/contentitem.read';
+    /** Deep Linking Service scope update */
+    const SCOPE_DEEPLINKING_UPDATE = 'https://purl.imsglobal.org/spec/lti-dl/scope/contentitem.update';
 
     /** Indicates the token is to create a new registration */
     const REG_TOKEN_OP_NEW_REG = 'reg';
@@ -195,6 +199,9 @@ class registration_helper {
         $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
 
         // Sets Service info based on scopes.
+        // TODO: this ideally should just be handled based on installed
+        // tools and not require to hard code here each time a
+        // service is added.
         $config->lti_acceptgrades = LTI_SETTING_NEVER;
         $config->ltiservice_gradesynchronization = 0;
         $config->ltiservice_memberships = 0;
@@ -227,6 +234,11 @@ class registration_helper {
             // Sets Tool Settings info.
             if (in_array(self::SCOPE_TOOL_SETTING, $scopes)) {
                 $config->ltiservice_toolsettings = 1;
+            }
+
+            // Sets Tool Settings info.
+            if (in_array(self::SCOPE_DEEPLINKING_READ, $scopes)) {
+                $config->ltiservice_deeplinkservice = 1;
             }
         }
 
@@ -345,6 +357,10 @@ class registration_helper {
         }
         if ($config->ltiservice_toolsettings ?? 0 == 1) {
             $scopesresponse[] = self::SCOPE_TOOL_SETTING;
+        }
+        if ($config->ltiservice_deeplinkservice ?? 0 == 1) {
+            $scopesresponse[] = self::SCOPE_DEEPLINKING_READ;
+            $scopesresponse[] = self::SCOPE_DEEPLINKING_UPDATE;
         }
         $registrationresponse['scope'] = implode(' ', $scopesresponse);
 
